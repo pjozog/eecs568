@@ -137,40 +137,61 @@ public class MultiGaussian
         return null;
     }
 
-
-    public static void main(String args[])
+    //Compare sample mean and covariance to ground truth mean and
+    //covariance
+    public static void testMultiGaussian()
     {
-        // Insert your test code here.
-	ArrayList<double[]> data = new ArrayList<double[]>();
+	//Our "ground" truth distribution: idependent normal gaussian
+	double[][] P = new double[2][2];
+	P[0][0] = 1; P[0][1] = .5;
+	P[1][1] = 1; P[1][0] = .5;
 
-	// data.add(new double[]{1.0,2.0,5.2});
-	// data.add(new double[]{2.0,3.1,7.0});
-	// data.add(new double[]{1.1,3.1,6.4});
+	double[] u = new double[2];
+	u[0] = 0;
+	u[1] = 0;
 
-	data.add(new double[]{1.0, 0.0});
-	data.add(new double[]{0.0, 1.0});
-	data.add(new double[]{0.1, .85});
+	MultiGaussian trueMultiGaussian = new MultiGaussian(P, u);
 
-	MultiGaussian gauss = new MultiGaussian(data);
+	Random rand = new Random();
+	ArrayList<double[]> samples = new ArrayList<double[]>();
+	for (int i = 0; i < 1000; i++)
+	    samples.add(trueMultiGaussian.sample(rand));
 
-	System.out.println("Chi2 value");
-	System.out.println(gauss.chi2(new double[]{.1,1.1}));
-	System.out.println("");
-
-	System.out.println("Sample mean");
-	for (int i = 0; i<data.get(0).length; i++) {
-	    System.out.println(gauss.getMean()[i]);
+	MultiGaussian testMultiGaussian = new MultiGaussian(samples);
+	
+	System.out.println("Sample Mean (should be 0 vector):");
+	double[] mean = testMultiGaussian.getMean();
+	for (int row = 0; row<mean.length; row++) {
+	    System.out.println(testMultiGaussian.getMean()[row]);
 	}
 	System.out.println("");
 
-	System.out.println("Sample Covariance");
-	for (int i = 0; i < data.get(0).length; ++i) {
-	    for (int j = 0; j < data.get(0).length; ++j) {
-		System.out.print(gauss.getCovariance()[i][j] + " ");
-	    }	    
+	System.out.println("Covariance (should be [1 .5; .5 1]):");
+	double[][] covariance = testMultiGaussian.getCovariance();
+	for (int row = 0; row < covariance.length; row++) {
+	    for (int col = 0; col < covariance[0].length; col++) {
+		System.out.print(covariance[row][col] + " ");
+	    }
 	    System.out.println();
 	}
 	System.out.println("");
 	
+	System.out.println("Sample from ground truth distribution:");
+	double[] sample = trueMultiGaussian.sample(new Random());
+	for (int row = 0; row < sample.length; row++)
+	    System.out.println(sample[row]);
+	System.out.println("");
+
+	System.out.println("Sample's Chi2 value:");
+	System.out.println(trueMultiGaussian.chi2(sample));
+	System.out.println("");
+
+    }
+
+    public static void main(String args[])
+    {
+        // Insert your test code here.
+	testMultiGaussian();
+
     }
 }

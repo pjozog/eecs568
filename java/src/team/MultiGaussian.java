@@ -141,7 +141,7 @@ public class MultiGaussian
     //covariance
     public static void testMultiGaussian()
     {
-	//Our "ground" truth distribution: idependent normal gaussian
+	//Our "ground" truth distribution: correlated normal gaussian
 	double[][] P = new double[2][2];
 	P[0][0] = 1; P[0][1] = .5;
 	P[1][1] = 1; P[1][0] = .5;
@@ -154,19 +154,19 @@ public class MultiGaussian
 
 	Random rand = new Random();
 	ArrayList<double[]> samples = new ArrayList<double[]>();
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < 100000; i++)
 	    samples.add(trueMultiGaussian.sample(rand));
 
 	MultiGaussian testMultiGaussian = new MultiGaussian(samples);
 	
-	System.out.println("Sample Mean (should be 0 vector):");
+	System.out.println("Sample mean (should be 0 vector):");
 	double[] mean = testMultiGaussian.getMean();
 	for (int row = 0; row<mean.length; row++) {
 	    System.out.println(testMultiGaussian.getMean()[row]);
 	}
 	System.out.println("");
 
-	System.out.println("Covariance (should be [1 .5; .5 1]):");
+	System.out.println("Sample covariance (should be [1 .5; .5 1]):");
 	double[][] covariance = testMultiGaussian.getCovariance();
 	for (int row = 0; row < covariance.length; row++) {
 	    for (int col = 0; col < covariance[0].length; col++) {
@@ -176,15 +176,21 @@ public class MultiGaussian
 	}
 	System.out.println("");
 	
-	System.out.println("Sample from ground truth distribution:");
-	double[] sample = trueMultiGaussian.sample(new Random());
-	for (int row = 0; row < sample.length; row++)
-	    System.out.println(sample[row]);
+	double[] sample0 = new double[]{0, 0};
+	double[] sample1 = new double[]{.5, .5};
+
+	System.out.println("chi2 values for [0; 0]:");
+	System.out.print("Ground Truth: ");
+	System.out.println(trueMultiGaussian.chi2(sample0));
+	System.out.print("Test:         ");
+	System.out.println(testMultiGaussian.chi2(sample0));
 	System.out.println("");
 
-	System.out.println("Sample's Chi2 value:");
-	System.out.println(trueMultiGaussian.chi2(sample));
-	System.out.println("");
+	System.out.println("chi2 values for [.5; .5]:");
+	System.out.print("Ground Truth: ");
+	System.out.println(trueMultiGaussian.chi2(sample1));
+	System.out.print("Test:         ");
+	System.out.println(testMultiGaussian.chi2(sample1));
 
     }
 

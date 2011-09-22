@@ -56,12 +56,6 @@ public class MultiGaussian
 
 	double[][] XPrimeT = LinAlg.copy(LinAlg.transpose(XPrime));
 
-	// for (int i = 0; i < sampleLength; i++) {
-	//     for (int j = 0; j<sampleLength; j++) {
-	// 	System.out.print(XPrimeT[i][j] + " ");		
-	//     }
-	//     System.out.println();
-	// }
 	this.P = LinAlg.scale(LinAlg.matrixAB(XPrime, XPrimeT), 1.0/N);
 	
     }
@@ -85,8 +79,6 @@ public class MultiGaussian
     **/
     public double[] sample(Random r)
     {
-        // XXX The code below is NOT correct, but demonstrates some of
-        // the APIs you might use.
 
 	Matrix L;
 	CholeskyDecomposition chol = new CholeskyDecomposition(new Matrix(this.P));
@@ -94,15 +86,15 @@ public class MultiGaussian
 
 	//The mean
 	double[] b = this.u;
-	//The covariance:
 
+	//The N(0,1) samples
         double x[] = new double[u.length];
         for (int i = 0; i < x.length; i++) {
             x[i] = r.nextGaussian();
         }
 
 	//We need to multiply x by "A", which is just L from above, and add b
-	// y = L*x + b;
+	// ie: y = L*x + b;
 	double[] y;
 	y = LinAlg.add(LinAlg.matrixAB(L.copyArray(), x), b);
 
@@ -114,10 +106,7 @@ public class MultiGaussian
     **/
     public double chi2(double[] x)
     {
-	double[] xMinusU = LinAlg.subtract(x, this.u);
-	// for (int i = 0; i < xMinusU.length; i++)
-	//     System.out.println(xMinusU[i]);
-
+	double[] xMinusU      = LinAlg.subtract(x, this.u);
 	double[][] inverseCov = LinAlg.inverse(this.P);
 	if (inverseCov == null)
 	    return -1;
@@ -137,11 +126,12 @@ public class MultiGaussian
         return null;
     }
 
-    //Compare sample mean and covariance to ground truth mean and
-    //covariance
+    /** Compare sample mean and covariance to ground truth mean and
+	covariance
+    **/
     public static void testMultiGaussian()
     {
-	//Our "ground" truth distribution: correlated normal gaussian
+	//Our "ground truth"" distribution: correlated gaussian
 	double[][] P = new double[2][2];
 	P[0][0] = 1; P[0][1] = .5;
 	P[1][1] = 1; P[1][0] = .5;
@@ -150,6 +140,7 @@ public class MultiGaussian
 	u[0] = 0;
 	u[1] = 0;
 
+	//Instantiate MVG with true covariance and mean
 	MultiGaussian trueMultiGaussian = new MultiGaussian(P, u);
 
 	Random rand = new Random();
@@ -157,39 +148,37 @@ public class MultiGaussian
 	for (int i = 0; i < 100000; i++)
 	    samples.add(trueMultiGaussian.sample(rand));
 
+	//Instantiate other MVG with samples drawn from MVG above.  It
+	//should have the same mean and covariance...
 	MultiGaussian testMultiGaussian = new MultiGaussian(samples);
 	
 	System.out.println("Sample mean (should be 0 vector):");
 	double[] mean = testMultiGaussian.getMean();
-	for (int row = 0; row<mean.length; row++) {
-	    System.out.println(testMultiGaussian.getMean()[row]);
-	}
+	ArrayUtil.print1dArray(mean);
 	System.out.println("");
 
-	System.out.println("Sample covariance (should be [1 .5; .5 1]):");
+	System.out.printf("Sample covariance (should be [%.1f %.1f; %.1f %.1f]):\n", 
+			  P[0][0], P[0][1], P[1][0], P[1][1]);
 	double[][] covariance = testMultiGaussian.getCovariance();
-	for (int row = 0; row < covariance.length; row++) {
-	    for (int col = 0; col < covariance[0].length; col++) {
-		System.out.print(covariance[row][col] + " ");
-	    }
-	    System.out.println();
-	}
+	ArrayUtil.print2dArray(covariance);
 	System.out.println("");
 	
 	double[] sample0 = new double[]{0, 0};
 	double[] sample1 = new double[]{.5, .5};
 
-	System.out.println("chi2 values for [0; 0]:");
-	System.out.print("Ground Truth: ");
+	//Compare chi2 to what we determined in MATLAB (trivial case)
+	System.out.println("chi2 values for X = [0; 0] (should be 0)");
+	System.out.print("Exact MVG:  ");
 	System.out.println(trueMultiGaussian.chi2(sample0));
-	System.out.print("Test:         ");
+	System.out.print("Sample MVG: ");
 	System.out.println(testMultiGaussian.chi2(sample0));
 	System.out.println("");
 
-	System.out.println("chi2 values for [.5; .5]:");
-	System.out.print("Ground Truth: ");
+	//Compare chi2 to what we determined in MATLAB (more arbitrary case)
+	System.out.println("chi2 values for X = [.5; .5] (should be 1/3):");
+	System.out.print("True MVG:   ");
 	System.out.println(trueMultiGaussian.chi2(sample1));
-	System.out.print("Test:         ");
+	System.out.print("Sample MVG: ");
 	System.out.println(testMultiGaussian.chi2(sample1));
 
     }

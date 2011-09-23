@@ -14,7 +14,7 @@ public class Radar
 {
     public static void main(String []args){
 
-	JFrame jf = new JFrame("VisDemo");
+	JFrame jf = new JFrame("Radar Test");
         jf.setSize(640,480);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

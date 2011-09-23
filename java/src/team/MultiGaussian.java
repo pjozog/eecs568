@@ -1,14 +1,21 @@
 package team;
 
+import javax.swing.*; // For JFrame
+import java.awt.*; // For BorderLayout
+import java.util.*;
+
+import april.vis.*; // For VisCanvas etc
+import april.util.*; // For Parameter GUI
 import april.jmat.*;
 
-import java.util.*;
 
 /** Represents a multi-variate Gaussian distribution. This is a
  * template for EECS568; you should fill in the methods below.
  **/
 public class MultiGaussian
 {
+
+    private final double DEG_TO_RAD = Math.PI/180.0;
     /** The mean **/
     double u[];
 
@@ -106,8 +113,8 @@ public class MultiGaussian
     **/
     public double chi2(double[] x)
     {
-	double[] xMinusU      = LinAlg.subtract(x, this.u);
-	double[][] inverseCov = LinAlg.inverse(this.P);
+	double[] xMinusU      = LinAlg.subtract(x, getMean());
+	double[][] inverseCov = LinAlg.inverse(getCovariance());
 	if (inverseCov == null)
 	    return -1;
 
@@ -122,8 +129,39 @@ public class MultiGaussian
     **/
     public ArrayList<double[]> getContour(double chi2)
     {
-        //  XXX Write me
-        return null;
+	ArrayList<double[]> result = new ArrayList<double[]>();
+	
+	double[][] invCov = LinAlg.inverse(getCovariance());
+	
+	double a = invCov[0][0];
+	double b = invCov[1][1];
+	
+	//same as [1][0] hopefully
+	double c = invCov[0][1];
+	
+	for(int theta = 0; theta < 359; theta++){
+	    double thetaRad = theta * DEG_TO_RAD;
+	    double alpha = Math.sqrt(chi2/
+				(a * Math.pow(Math.cos(thetaRad), 2) + 
+				 b * Math.pow(Math.sin(thetaRad), 2) + 
+				 2 * c * Math.cos(thetaRad) * Math.sin(thetaRad))
+				);
+	
+	    double [] mu = getMean();
+	    double [] box = new double [2];
+	    
+	    box[0] = alpha * Math.cos(thetaRad);
+	    box[1] = alpha * Math.sin(thetaRad);
+	    
+	    double [] p  = LinAlg.add(mu, box);
+	    result.add(p);
+	}
+	
+	
+
+      
+	
+        return result;
     }
 
     /** Compare sample mean and covariance to ground truth mean and
@@ -186,7 +224,98 @@ public class MultiGaussian
     public static void main(String args[])
     {
         // Insert your test code here.
-	testMultiGaussian();
+	
+        // Initialization
+        JFrame jf = new JFrame("VisDemo");
+        jf.setSize(640,480);
+        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        final VisWorld vw = new VisWorld();
+        VisLayer vl = new VisLayer(vw);
+        VisCanvas vc = new VisCanvas(vl);
+
+        ParameterGUI pg = new ParameterGUI();
+        pg.addDoubleSlider("sig1", "Sigma 1-1", 0.0001, 10, 2.0);
+        pg.addDoubleSlider("sig2", "Sigma 2-2", 0.0001, 10, 2.0);
+        pg.addDoubleSlider("sig12","Sigma 1-2", 0.0001, 10, 2.0);
+
+	pg.addDoubleSlider("meanx", "Mean X",   -10, 10, 0);
+	pg.addDoubleSlider("meany", "Mean Y",   -10, 10, 0);
+
+
+      
+        jf.setLayout(new BorderLayout());
+        jf.add(vc,BorderLayout.CENTER);
+        jf.add(pg,BorderLayout.SOUTH);
+
+
+        jf.setVisible(true);
+
+        // Drawing code
+        {
+            VisGrid vg = new VisGrid(new Color(.5f,.5f,.5f),
+                                     new Color(1.0f,1.0f,1.0f,0.0f));
+
+            VisWorld.Buffer vb = vw.getBuffer("grid");
+            vb.setDrawOrder(-100);
+            vb.addBack(new VisDepthTest(false,vg));
+            vb.swap();
+        }
+
+
+        pg.addListener(new ParameterListener(){
+                public void parameterChanged(ParameterGUI pg, String name)
+                {
+                    if (name.equals("sig1") || name.equals("sig2") || name.equals("sig12")
+			||  name.equals("meanx") || name.equals("meany")) {
+			ArrayList<double[]> points  = new ArrayList<double[]>();
+                        
+			
+			Random rand = new Random();
+                        		
+			double [] means = new double[]{pg.gd("meanx"), pg.gd("meany")};
+			double [][] cov = new double[2][2];
+			
+			cov[0][0] = pg.gd("sig1"); 
+			cov[0][1] = pg.gd("sig12"); 
+			cov[1][0] = pg.gd("sig12"); 
+			cov[1][1] = pg.gd("sig2"); 
+
+
+			MultiGaussian gauss = new MultiGaussian(cov, means);
+			
+                        for (int i = 0; i < 1000; i++) {
+			    
+                            double pt[] = gauss.sample(rand);
+
+			    points.add(pt);
+			   
+                        }
+
+                        VisVertexData vd = new VisVertexData(points);
+
+                        VisColorData vcd = new VisColorData();
+
+                        for (double pt[] : points) {
+                            
+			    int col = 0xff0000ff;
+                            
+                            vcd.add(col);
+                        }
+
+
+                        VisWorld.Buffer vb = vw.getBuffer("cloud");
+                        vb.addBack(new VisPoints(vd, vcd, 4));
+                        // vb.addBack(new VisLines(vd,vcd, 4, VisLines.TYPE.LINES));
+                        vb.swap();
+                    }
+                }
+            });
+
+
+
+
+	
 
     }
 }

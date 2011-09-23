@@ -242,7 +242,7 @@ public class MultiGaussian
         ParameterGUI pg = new ParameterGUI();
         pg.addDoubleSlider("sig1", "Sigma 1-1", 0.0001, 10, 2.0);
         pg.addDoubleSlider("sig2", "Sigma 2-2", 0.0001, 10, 2.0);
-        pg.addDoubleSlider("sig12","Sigma 1-2", 0.0001, 10, 2.0);
+        pg.addDoubleSlider("sig12","Sigma 1-2",    -10, 10, 2.0);
 
 	pg.addDoubleSlider("meanx", "Mean X",   -10, 10, 0);
 	pg.addDoubleSlider("meany", "Mean Y",   -10, 10, 0);

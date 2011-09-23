@@ -285,7 +285,8 @@ public class MultiGaussian
                         		
 			double [] means = new double[]{pg.gd("meanx"), pg.gd("meany")};
 			double [][] cov = new double[2][2];
-			
+					
+
 			cov[0][0] = pg.gd("sig1"); 
 			cov[0][1] = pg.gd("sig12"); 
 			cov[1][0] = pg.gd("sig12"); 
@@ -295,13 +296,21 @@ public class MultiGaussian
 			MultiGaussian gauss = new MultiGaussian(cov, means);
 			
 			int randomPoints = 1000;
+			int count = 0;
+			
                         for (int i = 0; i < randomPoints; i++) {
 			    
                             double pt[] = gauss.sample(rand);
-
+			    double mdist = gauss.chi2(pt);
+			    if (mdist < Math.pow(pg.gd("stddev"), 2)){
+				count++;
+			    }		
 			    points.add(pt);
 			   
                         }
+			System.out.print("Percentage of points inside elipse: ");
+			System.out.println(count/(double)randomPoints);
+
 
 			double chi2 = Math.pow(pg.gd("stddev"), 2);;
 			ArrayList<double[]> contourPoints = gauss.getContour(chi2);

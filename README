@@ -1,0 +1,13 @@
+PS1 Readme:
+
+1. Run ant in eecs568/java
+
+2. Make sure april.jar in in CLASSPATH
+
+3. Run task 2 as follows:
+   - java team.MultiGaussian
+
+4. Run task 3 as follows:
+   - java team.Radar
+   - make sure to zoom out, since the default mean range value is
+     500m.

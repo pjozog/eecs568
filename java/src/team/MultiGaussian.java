@@ -242,15 +242,16 @@ public class MultiGaussian
 
 
 	ParameterGUI pg = new ParameterGUI();
-        pg.addDoubleSlider("sig1", "Sigma 1-1", 0.0001, 10, 2.0);
+        pg.addDoubleSlider("sig1", "Sigma 1-1", 0.0001, 10, 3.0);
         pg.addDoubleSlider("sig2", "Sigma 2-2", 0.0001, 10, 2.0);
-        pg.addDoubleSlider("sig12","Sigma 1-2",    -10, 10, 2.0);
+        pg.addDoubleSlider("sig12","Sigma 1-2",    -10, 10, 1.0);
 
 	pg.addDoubleSlider("meanx", "Mean X",   -10, 10, 0);
 	pg.addDoubleSlider("meany", "Mean Y",   -10, 10, 0);
 
 	pg.addDoubleSlider("stddev",  "Std Dev",    0, 5, 0); 
 
+	pg.addString("percent", "Percent of Points in Contour", "");
       
         jf.setLayout(new BorderLayout());
         jf.add(vc,BorderLayout.CENTER);
@@ -273,10 +274,12 @@ public class MultiGaussian
 
         pg.addListener(new ParameterListener(){
                 public void parameterChanged(ParameterGUI pg, String name)
-                {
+                { 
+		   
                     if (name.equals("sig1") || name.equals("sig2") 
 			|| name.equals("sig12") ||  name.equals("meanx") 
 			|| name.equals("meany") || name.equals("stddev")) {
+		
 			ArrayList<double[]> points  = new ArrayList<double[]>();
                         
 			
@@ -290,6 +293,7 @@ public class MultiGaussian
 			cov[0][1] = pg.gd("sig12"); 
 			cov[1][0] = pg.gd("sig12"); 
 			cov[1][1] = pg.gd("sig2"); 
+		
 
 
 			MultiGaussian gauss = new MultiGaussian(cov, means);
@@ -311,7 +315,7 @@ public class MultiGaussian
 			points.addAll(contourPoints);
 		       
 
-
+			pg.ss("percent", "" + rand.nextInt());
 
 
                         VisVertexData vd = new VisVertexData(points);
@@ -331,12 +335,8 @@ public class MultiGaussian
 
 			}
 
-			VisFont vfont = new VisFont(new Font("Sans Serif", Font.PLAIN, 25));
                         VisWorld.Buffer vb = vw.getBuffer("cloud");
                         vb.addBack(new VisPoints(vd, vcd, 4));
-			vb.addBack(new VisChain(LinAlg.translate(-5, 5, 1),
-						LinAlg.scale(0.1, 0.1, 0.1),
-						vfont.makeText("Text test", Color.cyan)));
                         // vb.addBack(new VisLines(vd,vcd, 4, VisLines.TYPE.LINES));
                         vb.swap();
                     }
@@ -345,6 +345,8 @@ public class MultiGaussian
 
 
 	
-
+	//Ping the gui to show up without slider movement.
+	pg.notifyListeners("stddev");
+	
     }
 }

@@ -12,6 +12,7 @@ import april.jmat.*;
 
 public class Radar
 {
+
     public static void main(String []args){
 
 	JFrame jf = new JFrame("Radar Test");
@@ -26,15 +27,16 @@ public class Radar
         pg.addDoubleSlider("sigRange", "Range Sigma", 0.0001, 100, 50.0);
         pg.addDoubleSlider("sigTheta", "Theta Sigma", 0.0001, 0.5, 0.15);
         pg.addDoubleSlider("sigCross","Range/Theta Covariance",    -10, 10, 0.0);
-	pg.addDoubleSlider("meanRange", "Range Mean (m)",   0, 1000, 100);
-	pg.addDoubleSlider("meanTheta", "Theta Mean (degrees)",   -180, 180, 0);
+	pg.addDoubleSlider("meanRange", "Range Mean (m)",   0, 1000, 500);
+	pg.addDoubleSlider("meanTheta", "Theta Mean (radians)",   -Math.PI, Math.PI, 0);
       
         jf.setLayout(new BorderLayout());
         jf.add(vc,BorderLayout.CENTER);
         jf.add(pg,BorderLayout.SOUTH);
 
-
         jf.setVisible(true);
+
+	System.out.println("Don't forget to zoom out");
 	
         pg.addListener(new ParameterListener() {
 	    public void parameterChanged(ParameterGUI pg, String name)
@@ -74,12 +76,12 @@ public class Radar
 			}
 
 			//0 is r, 1 is theta
-			double r = sample[0];
+			double r     = sample[0];
 			double theta = sample[1];
        
-			double x = r * Math.cos(theta);
-			double y = r * Math.sin(theta);
-			double pt[] = new double[]{x, y};
+			double x     = r * Math.cos(theta);
+			double y     = r * Math.sin(theta);
+			double pt[]  = new double[]{x, y};
 			points.add(pt);
 
 		    }
@@ -100,7 +102,9 @@ public class Radar
 
 		    double [][] jacT        = LinAlg.copy(LinAlg.transpose(jac));
 		    double [][] projCovXY   = LinAlg.copy(LinAlg.matrixAB(jac, LinAlg.matrixAB(cov, jacT)));
-		    double [] projMeanXY    = LinAlg.copy(LinAlg.matrixAB(jac, gauss.getMean()));
+		    double [] projMeanXY    = new double[2];
+		    projMeanXY[0]           = rMean * Math.cos(thetaMean);
+		    projMeanXY[1]           = rMean * Math.sin(thetaMean);
 		    MultiGaussian projGauss = new MultiGaussian(projCovXY, projMeanXY);
 
 		    ArrayList<double[]> projContour = projGauss.getContour(chi2);

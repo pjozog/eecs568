@@ -147,10 +147,10 @@ public class MultiGaussian
 	for(int theta = 0; theta < 359; theta++){
 	    double thetaRad = theta * DEG_TO_RAD;
 	    double alpha = Math.sqrt(chi2/
-				(a * Math.pow(Math.cos(thetaRad), 2) + 
-				 b * Math.pow(Math.sin(thetaRad), 2) + 
-				 2 * c * Math.cos(thetaRad) * Math.sin(thetaRad))
-				);
+				     (a * Math.pow(Math.cos(thetaRad), 2) + 
+				      b * Math.pow(Math.sin(thetaRad), 2) + 
+				      2 * c * Math.cos(thetaRad) * Math.sin(thetaRad))
+				     );
 	
 	    double [] mu = getMean();
 	    double [] box = new double [2];
@@ -312,9 +312,9 @@ public class MultiGaussian
 			    points.add(pt);
 			   
                         }
-			System.out.print("Percentage of points inside elipse: ");
-			System.out.println(count/(double)randomPoints);
 
+			double percentInside = (double)count / randomPoints;
+			pg.ss("percent", "" + percentInside);
 
 			double chi2 = Math.pow(pg.gd("stddev"), 2);;
 			ArrayList<double[]> contourPoints = gauss.getContour(chi2);
@@ -324,7 +324,6 @@ public class MultiGaussian
 			points.addAll(contourPoints);
 		       
 
-			pg.ss("percent", "" + rand.nextInt());
 
 
                         VisVertexData vd = new VisVertexData(points);

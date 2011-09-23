@@ -46,17 +46,17 @@ public class Radar
 		    name.equals("meanRange") ||
 		    name.equals("meanTheta")) {
 
-		    double rMean     = 100;
-		    double thetaMean = 0;
-	
+		    double rMean     = pg.gd("meanRange");
+		    double thetaMean = pg.gd("meanTheta");
+
 		    //Starting with r, ending with theta
 		    double mean []   = new double[]{pg.gd("meanRange"), pg.gd("meanTheta")};
 		    double cov[][]   = new double[2][2];
 
-		    cov[0][0] = pg.gd("sigRange");
-		    cov[0][1] = pg.gd("sigCross");
-		    cov[1][0] = pg.gd("sigCross");
-		    cov[1][1] = pg.gd("sigTheta");
+		    cov[0][0] = Math.pow(pg.gd("sigRange"), 2);
+		    cov[0][1] = Math.pow(pg.gd("sigCross"), 2);
+		    cov[1][0] = Math.pow(pg.gd("sigCross"), 2);
+		    cov[1][1] = Math.pow(pg.gd("sigTheta"), 2);
 
 		    MultiGaussian gauss = new MultiGaussian(cov, mean);
 

@@ -299,14 +299,11 @@ public class MultiGaussian
 			double [] means = new double[]{pg.gd("meanx"), pg.gd("meany")};
 			double [][] cov = new double[2][2];
 					
-
-			cov[0][0] = pg.gd("sig1"); 
-			cov[0][1] = pg.gd("sig12"); 
-			cov[1][0] = pg.gd("sig12"); 
-			cov[1][1] = pg.gd("sig2"); 
+			cov[0][0] = Math.pow(pg.gd("sig1"), 2);
+			cov[0][1] = Math.pow(pg.gd("sig12"), 2);
+			cov[1][0] = Math.pow(pg.gd("sig12"), 2);
+			cov[1][1] = Math.pow(pg.gd("sig2"), 2);
 		
-
-
 			MultiGaussian gauss = new MultiGaussian(cov, means);
 			
 			int randomPoints = 1000;

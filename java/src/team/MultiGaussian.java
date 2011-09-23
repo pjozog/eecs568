@@ -132,6 +132,11 @@ public class MultiGaussian
 	ArrayList<double[]> result = new ArrayList<double[]>();
 	
 	double[][] invCov = LinAlg.inverse(getCovariance());
+
+	if(invCov == null){
+
+	    return null;
+	}
 	
 	double a = invCov[0][0];
 	double b = invCov[1][1];
@@ -242,6 +247,7 @@ public class MultiGaussian
 	pg.addDoubleSlider("meanx", "Mean X",   -10, 10, 0);
 	pg.addDoubleSlider("meany", "Mean Y",   -10, 10, 0);
 
+	pg.addDoubleSlider("stddev",  "Std Dev",    0, 5, 0); 
 
       
         jf.setLayout(new BorderLayout());
@@ -266,8 +272,9 @@ public class MultiGaussian
         pg.addListener(new ParameterListener(){
                 public void parameterChanged(ParameterGUI pg, String name)
                 {
-                    if (name.equals("sig1") || name.equals("sig2") || name.equals("sig12")
-			||  name.equals("meanx") || name.equals("meany")) {
+                    if (name.equals("sig1") || name.equals("sig2") 
+			|| name.equals("sig12") ||  name.equals("meanx") 
+			|| name.equals("meany") || name.equals("stddev")) {
 			ArrayList<double[]> points  = new ArrayList<double[]>();
                         
 			
@@ -284,7 +291,8 @@ public class MultiGaussian
 
 			MultiGaussian gauss = new MultiGaussian(cov, means);
 			
-                        for (int i = 0; i < 1000; i++) {
+			int randomPoints = 1000;
+                        for (int i = 0; i < randomPoints; i++) {
 			    
                             double pt[] = gauss.sample(rand);
 
@@ -292,17 +300,33 @@ public class MultiGaussian
 			   
                         }
 
+			double chi2 = Math.pow(pg.gd("stddev"), 2);;
+			ArrayList<double[]> contourPoints = gauss.getContour(chi2);
+			if(contourPoints == null){
+			    return;   
+			}
+			points.addAll(contourPoints);
+		       
+
+
+
+
                         VisVertexData vd = new VisVertexData(points);
 
                         VisColorData vcd = new VisColorData();
 
-                        for (double pt[] : points) {
-                            
-			    int col = 0xff0000ff;
-                            
-                            vcd.add(col);
-                        }
+			
+			for(int i = 0; i < points.size() ; i++){
+			    int col = 0;
+			    if(i < 1000){
+				col = 0xff0000ff;
+			    }
+			    else{
+				col = 0xffff0000;
+			    }
+			    vcd.add(col);
 
+			}
 
                         VisWorld.Buffer vb = vw.getBuffer("cloud");
                         vb.addBack(new VisPoints(vd, vcd, 4));
@@ -311,8 +335,6 @@ public class MultiGaussian
                     }
                 }
             });
-
-
 
 
 	

@@ -223,15 +223,25 @@ public class MultiGaussian
 	System.out.println(trueMultiGaussian.chi2(sample1));
 	System.out.print("Sample MVG: ");
 	System.out.println(testMultiGaussian.chi2(sample1));
+	System.out.println("");
+
+	//Compare chi2 to what we determined in MATLAB (even more arbitrary case)
+	System.out.println("chi2 values for X = [.75; .2] (should be 0.6033):");
+	System.out.print("True MVG:   ");
+	System.out.println(trueMultiGaussian.chi2(sample1));
+	System.out.print("Sample MVG: ");
+	System.out.println(testMultiGaussian.chi2(sample1));
+
 
     }
 
     public static void main(String args[])
     {
         // Insert your test code here.
-	
+        testMultiGaussian();
+
         // Initialization
-        JFrame jf = new JFrame("VisDemo");
+        JFrame jf = new JFrame("MultiGaussian Test");
         jf.setSize(640,480);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

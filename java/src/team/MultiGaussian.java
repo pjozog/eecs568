@@ -239,7 +239,9 @@ public class MultiGaussian
         VisLayer vl = new VisLayer(vw);
         VisCanvas vc = new VisCanvas(vl);
 
-        ParameterGUI pg = new ParameterGUI();
+
+
+	ParameterGUI pg = new ParameterGUI();
         pg.addDoubleSlider("sig1", "Sigma 1-1", 0.0001, 10, 2.0);
         pg.addDoubleSlider("sig2", "Sigma 2-2", 0.0001, 10, 2.0);
         pg.addDoubleSlider("sig12","Sigma 1-2",    -10, 10, 2.0);
@@ -279,6 +281,7 @@ public class MultiGaussian
                         
 			
 			Random rand = new Random();
+			
                         		
 			double [] means = new double[]{pg.gd("meanx"), pg.gd("meany")};
 			double [][] cov = new double[2][2];
@@ -328,8 +331,12 @@ public class MultiGaussian
 
 			}
 
+			VisFont vfont = new VisFont(new Font("Sans Serif", Font.PLAIN, 25));
                         VisWorld.Buffer vb = vw.getBuffer("cloud");
                         vb.addBack(new VisPoints(vd, vcd, 4));
+			vb.addBack(new VisChain(LinAlg.translate(-5, 5, 1),
+						LinAlg.scale(0.1, 0.1, 0.1),
+						vfont.makeText("Text test", Color.cyan)));
                         // vb.addBack(new VisLines(vd,vcd, 4, VisLines.TYPE.LINES));
                         vb.swap();
                     }

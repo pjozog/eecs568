@@ -26,7 +26,7 @@ public class Radar
 	ParameterGUI pg = new ParameterGUI();
         pg.addDoubleSlider("sigRange", "Range Sigma", 0.0001, 100, 50.0);
         pg.addDoubleSlider("sigTheta", "Theta Sigma", 0.0001, 0.5, 0.15);
-        pg.addDoubleSlider("sigCross","Range/Theta Covariance",    -10, 10, 0.0);
+        pg.addDoubleSlider("correl",   "Range/Theta Correlation",    -.999, .999, 0.0);
 	pg.addDoubleSlider("meanRange", "Range Mean (m)",   0, 1000, 500);
 	pg.addDoubleSlider("meanTheta", "Theta Mean (radians)",   -Math.PI, Math.PI, 0);
       
@@ -44,7 +44,7 @@ public class Radar
 		   
 		if (name.equals("sigRange") || 
 		    name.equals("sigTheta") ||
-		    name.equals("sigCross") ||  
+		    name.equals("correl") ||  
 		    name.equals("meanRange") ||
 		    name.equals("meanTheta")) {
 
@@ -56,8 +56,8 @@ public class Radar
 		    double cov[][]   = new double[2][2];
 
 		    cov[0][0] = Math.pow(pg.gd("sigRange"), 2);
-		    cov[0][1] = Math.pow(pg.gd("sigCross"), 2);
-		    cov[1][0] = Math.pow(pg.gd("sigCross"), 2);
+		    cov[0][1] = pg.gd("correl") * pg.gd("sigRange") * pg.gd("sigTheta");
+		    cov[1][0] = pg.gd("correl") * pg.gd("sigRange") * pg.gd("sigTheta");
 		    cov[1][1] = Math.pow(pg.gd("sigTheta"), 2);
 
 		    MultiGaussian gauss = new MultiGaussian(cov, mean);

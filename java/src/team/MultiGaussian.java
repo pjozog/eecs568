@@ -328,31 +328,27 @@ public class MultiGaussian
 			if(contourPoints == null){
 			    return;   
 			}
-			points.addAll(contourPoints);
-		       
 
+                        VisVertexData vd  = new VisVertexData(points);
+                        VisVertexData vd2 = new VisVertexData(contourPoints);
 
-
-                        VisVertexData vd = new VisVertexData(points);
-
-                        VisColorData vcd = new VisColorData();
+                        VisColorData vcd  = new VisColorData();
+                        VisColorData vcd2 = new VisColorData();
 
 			
 			for(int i = 0; i < points.size() ; i++){
-			    int col = 0;
-			    if(i < 1000){
-				col = 0xff0000ff;
-			    }
-			    else{
-				col = 0xffff0000;
-			    }
+			    int col = 0xff0000ff;
 			    vcd.add(col);
+			}
 
+			for(int i = 0; i < contourPoints.size() ; i++){
+			    int col = 0xffff0000;
+			    vcd2.add(col);
 			}
 
                         VisWorld.Buffer vb = vw.getBuffer("cloud");
                         vb.addBack(new VisPoints(vd, vcd, 4));
-                        // vb.addBack(new VisLines(vd,vcd, 4, VisLines.TYPE.LINES));
+                        vb.addBack(new VisLines(vd2, vcd2, 4, VisLines.TYPE.LINE_LOOP));
                         vb.swap();
                     }
                 }

@@ -61,10 +61,11 @@ public class Radar
 		    cov[1][1] = Math.pow(pg.gd("sigTheta"), 2);
 
 		    MultiGaussian gauss = new MultiGaussian(cov, mean);
-
 		    int numObservations = 500;
 
-		    ArrayList<double[]> points = new ArrayList<double[]>();
+		    ArrayList<double[]> points   = new ArrayList<double[]>();
+		    ArrayList<double[]> contPts  = new ArrayList<double[]>();
+		    ArrayList<double[]> contProj = new ArrayList<double[]>();
 
 		    Random rand = new Random();
 		    for(int i = 0; i < numObservations; i++){
@@ -90,8 +91,7 @@ public class Radar
 		    int chi2                    = sigma * sigma;
 		    MultiGaussian gaussXY       = new MultiGaussian(points);
 		    ArrayList<double[]> contour = gaussXY.getContour(chi2);
-
-		    points.addAll(contour);
+		    contPts.addAll(contour);
 
 		    double [][]jac = new double[2][2];
 	
@@ -108,27 +108,34 @@ public class Radar
 		    MultiGaussian projGauss = new MultiGaussian(projCovXY, projMeanXY);
 
 		    ArrayList<double[]> projContour = projGauss.getContour(chi2);
+		    contProj.addAll(projContour);
 
-		    points.addAll(projContour);
-		
-		    VisVertexData vd = new VisVertexData(points);
-		    VisColorData vcd = new VisColorData();
+		    //Draw the Monte Carlo points, contour, and
+		    //projected contour
+		    VisVertexData vd     = new VisVertexData(points);
+		    VisColorData vcd     = new VisColorData();
+		    VisVertexData vdCont = new VisVertexData(contPts);
+		    VisColorData vcdCont = new VisColorData();
+		    VisVertexData vdProj = new VisVertexData(projContour);
+		    VisColorData vcdProj = new VisColorData();
 
-		    for(int i = 0 ; i < numObservations; i++){
+		    for(int i = 0 ; i < points.size(); i++){
 			int col = 0xff0000ff;
 			vcd.add(col);
 		    }
 		    for(int i = 0; i < contour.size(); i++){
 			int col = 0xffff0000;
-			vcd.add(col);
+			vcdCont.add(col);
 		    }
 		    for(int i = 0; i < projContour.size(); i++){
 			int col = 0xff00ffff;
-			vcd.add(col);
+			vcdProj.add(col);
 		    }
 
 		    VisWorld.Buffer vb = vw.getBuffer("cloud");
 		    vb.addBack(new VisPoints(vd, vcd, 4));
+		    vb.addBack(new VisLines(vdCont, vcdCont, 4, VisLines.TYPE.LINE_LOOP));
+		    vb.addBack(new VisLines(vdProj, vcdProj, 4, VisLines.TYPE.LINE_LOOP));
 		    vb.swap();
 
 		}

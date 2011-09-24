@@ -26,7 +26,7 @@ public class Radar
 	ParameterGUI pg = new ParameterGUI();
         pg.addDoubleSlider("sigRange", "Range Sigma", 0.0001, 100, 50.0);
         pg.addDoubleSlider("sigTheta", "Theta Sigma", 0.0001, 0.5, 0.15);
-        pg.addDoubleSlider("correl",   "Range/Theta Correlation",    -.999, .999, 0.0);
+        pg.addDoubleSlider("correl",   "Range/Theta Correlation",    -.9999, .9999, 0.0);
 	pg.addDoubleSlider("meanRange", "Range Mean (m)",   0, 1000, 500);
 	pg.addDoubleSlider("meanTheta", "Theta Mean (radians)",   -Math.PI, Math.PI, 0);
       

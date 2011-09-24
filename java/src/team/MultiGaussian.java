@@ -208,6 +208,7 @@ public class MultiGaussian
 	
 	double[] sample0 = new double[]{0, 0};
 	double[] sample1 = new double[]{.5, .5};
+	double[] sample2 = new double[]{.75, .2};
 
 	//Compare chi2 to what we determined in MATLAB (trivial case)
 	System.out.println("chi2 values for X = [0; 0] (should be 0)");
@@ -228,9 +229,9 @@ public class MultiGaussian
 	//Compare chi2 to what we determined in MATLAB (even more arbitrary case)
 	System.out.println("chi2 values for X = [.75; .2] (should be 0.6033):");
 	System.out.print("True MVG:   ");
-	System.out.println(trueMultiGaussian.chi2(sample1));
+	System.out.println(trueMultiGaussian.chi2(sample2));
 	System.out.print("Sample MVG: ");
-	System.out.println(testMultiGaussian.chi2(sample1));
+	System.out.println(testMultiGaussian.chi2(sample2));
 
 
     }
@@ -254,7 +255,7 @@ public class MultiGaussian
 	ParameterGUI pg = new ParameterGUI();
         pg.addDoubleSlider("sig1", "Sigma 1-1", 0.0001, 10, 3.0);
         pg.addDoubleSlider("sig2", "Sigma 2-2", 0.0001, 10, 2.0);
-        pg.addDoubleSlider("sig12","Sigma 1-2",    -10, 10, 1.0);
+        pg.addDoubleSlider("correl","Correlation Coefficient",    -.9999, .9999, 0.0);
 
 	pg.addDoubleSlider("meanx", "Mean X",   -10, 10, 0);
 	pg.addDoubleSlider("meany", "Mean Y",   -10, 10, 0);
@@ -287,7 +288,7 @@ public class MultiGaussian
                 { 
 		   
                     if (name.equals("sig1") || name.equals("sig2") 
-			|| name.equals("sig12") ||  name.equals("meanx") 
+			|| name.equals("correl") ||  name.equals("meanx") 
 			|| name.equals("meany") || name.equals("stddev")) {
 		
 			ArrayList<double[]> points  = new ArrayList<double[]>();
@@ -300,8 +301,8 @@ public class MultiGaussian
 			double [][] cov = new double[2][2];
 					
 			cov[0][0] = Math.pow(pg.gd("sig1"), 2);
-			cov[0][1] = Math.pow(pg.gd("sig12"), 2);
-			cov[1][0] = Math.pow(pg.gd("sig12"), 2);
+			cov[0][1] = pg.gd("correl") * pg.gd("sig1") * pg.gd("sig2");
+			cov[1][0] = pg.gd("correl") * pg.gd("sig1") * pg.gd("sig2");
 			cov[1][1] = Math.pow(pg.gd("sig2"), 2);
 		
 			MultiGaussian gauss = new MultiGaussian(cov, means);

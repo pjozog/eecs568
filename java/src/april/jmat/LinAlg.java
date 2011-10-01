@@ -2196,8 +2196,8 @@ public final class LinAlg
         }
 
         // use general version.
-        assert(false);
-        return 0;
+        Matrix MM = new Matrix(M);
+        return MM.det();
     }
 
     /** Find the best plane fit to a set of points using SVD. **/

@@ -4,10 +4,5 @@ PS1 Readme:
 
 2. Make sure april.jar in in CLASSPATH
 
-3. Run task 2 as follows:
-   - java team.MultiGaussian
-
-4. Run task 3 as follows:
-   - java team.Radar
-   - make sure to zoom out, since the default mean range value is
-     500m.
+3. Run simulator as follows:
+   - cd eecs568/java; ./runsim

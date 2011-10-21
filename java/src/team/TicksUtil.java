@@ -23,7 +23,7 @@ public class TicksUtil {
             
         } else {
             
-            double dPhi = (ticksR - ticksL)/baseline;
+            double dPhi = MathUtil.mod2pi((ticksR - ticksL)/baseline);
 
             double rc = (ticksL + ticksR)/(2*dPhi);
 

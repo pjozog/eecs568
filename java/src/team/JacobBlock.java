@@ -1,6 +1,7 @@
 package team;
 
 import april.jmat.*;
+import java.util.*;
 
 public class JacobBlock{
 
@@ -11,10 +12,19 @@ public class JacobBlock{
     private int block1Col;
     private int block2Col;
 
-    public static Matrix assemble(ArrayList<JacobBlock> blocks){
+    /** rows is the size of the observation vector, columns is the size of the state vector**/
+    public static Matrix assemble(int rows, int cols, ArrayList<JacobBlock> blocks){
+	
+	Matrix toReturn = new Matrix(rows, cols, Matrix.SPARSE);
+	
+	for(JacobBlock block : blocks){
+	    
+	    toReturn.set(block.getRow(), block.getFirstColumn(),  block.getFirstBlock());
+	    toReturn.set(block.getRow(), block.getSecondColumn(), block.getSecondBlock());
+	
+	}
 
-
-	return null;
+	return toReturn;
     }
 
     public int getRow(){
@@ -25,7 +35,7 @@ public class JacobBlock{
 	return block1Col;
     }
 
-    public int getSecondColum(){
+    public int getSecondColumn(){
 	return block2Col;
     }
 

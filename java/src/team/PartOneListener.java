@@ -26,7 +26,8 @@ public class PartOneListener implements Simulator.Listener
 
     private static int numUpdates = 0;
 
-    HashMap<Integer, Node> landmarksSeen = new HashMap<Integer, Node>();
+    /*maps from the landmark id to the index in the state vector array*/
+    HashMap<Integer, Integer> landmarksSeen = new HashMap<Integer, Integer>();
     double baseline;
     OdNode lastOdNode =null;
 
@@ -35,7 +36,7 @@ public class PartOneListener implements Simulator.Listener
     {
         config  = _config;
         vw = _vw;
-
+	Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
 	lastOdNode = new OdNode(0, 0, 0, 0);
 	stateVector.add(lastOdNode);
@@ -73,7 +74,7 @@ public class PartOneListener implements Simulator.Listener
 	    if(landmarksSeen.containsKey(det.id)){
 		
 		/*Same index as the one we already found*/
-		index = landmarksSeen.get(det.id).getStateVectorIndex();
+		index = landmarksSeen.get(det.id);
 
 		/*add the observation, but not to the state vector*/
 		Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id);
@@ -88,7 +89,7 @@ public class PartOneListener implements Simulator.Listener
 	    Node landNode = new LandNode(index, pos[0], pos[1], det.id);   
             stateVector.add(landNode);
            
-	    landmarksSeen.put(new Integer(det.id), landNode);
+	    landmarksSeen.put(new Integer(det.id), new Integer(index));
 	    
         }
 

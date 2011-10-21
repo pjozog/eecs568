@@ -1,5 +1,7 @@
 package team;
 
+import java.util.*;
+
 public class LandEdge extends Edge{
 
 
@@ -15,7 +17,7 @@ public class LandEdge extends Edge{
         
     }
 
-    public JacobBlock getJacob(double[] theStateVector){
+    public JacobBlock getJacob(List<Node> theStateVector){
 	
         // Create a new JacobBlock class
         JacobBlock myJacobBlock = new JacobBlock(jacobianStartRow, block1Column, block2Column);
@@ -25,21 +27,23 @@ public class LandEdge extends Edge{
         double l_x; 
         double l_y; 
 					
-
+	double [] status2 = theStateVector.get(this.node2.getStateVectorIndex()).getState();
+	double [] status1 = theStateVector.get(this.node1.getStateVectorIndex()).getState();
         if (this.node1.isLand()) {
-           
-            x0  = theStateVector[this.node2.getStateVectorIndex()];
-			y0	= theStateVector[this.node2.getStateVectorIndex()+1]; 
-			l_x = theStateVector[this.node1.getStateVectorIndex()];
-			l_y = theStateVector[this.node1.getStateVectorIndex()+1];
+
+
+            x0  = status2[0];
+	    y0	= status2[1];
+	    l_x = status1[0];
+	    l_y = status1[1];
 
         } else {
 
-            x0	= theStateVector[this.node1.getStateVectorIndex()];
-			y0	= theStateVector[this.node1.getStateVectorIndex()+1]; 
-			l_x = theStateVector[this.node2.getStateVectorIndex()];
-			l_y = theStateVector[this.node2.getStateVectorIndex()+1];
-
+            x0	= status1[0];
+	    y0	= status1[1];
+	    l_x = status2[0];
+	    l_y = status2[1];
+	    
         }
 
         // Jacobian with respect to a position

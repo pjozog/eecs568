@@ -1,5 +1,7 @@
 package team;
 
+import java.util.*;
+
 public class OdEdge extends Edge{
 
     private int jacobianStartRow;
@@ -16,16 +18,20 @@ public class OdEdge extends Edge{
     }
 
 
-    public JacobBlock getJacob(double[] theStateVector){
+    public JacobBlock getJacob(List<Node> theStateVector){
 	
         // Create a new JacobBlock class
         JacobBlock myJacobBlock = new JacobBlock(jacobianStartRow, block1Column, block2Column);
 
-        double x0  = theStateVector[this.node1.getStateVectorIndex()];
-        double y0  = theStateVector[this.node1.getStateVectorIndex()+1]; 
-        double phi0 = theStateVector[this.node1.getStateVectorIndex()+2];
-        double x1 = theStateVector[this.node2.getStateVectorIndex()];                             
-        double y1 = theStateVector[this.node2.getStateVectorIndex()+1];
+	double [] status1 = theStateVector.get(this.node1.getStateVectorIndex()).getState();
+	double [] status2 = theStateVector.get(this.node2.getStateVectorIndex()).getState();
+
+
+        double x0  = status1[0];
+        double y0  = status1[1];
+        double phi0 = status1[2];
+        double x1 = status2[0];
+        double y1 = status2[1];
                                      
         // Jacobian with respect to a position
         // Create block one ... should be 3x3

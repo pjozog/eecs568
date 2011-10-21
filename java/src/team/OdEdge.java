@@ -63,6 +63,26 @@ public class OdEdge extends Edge{
 
     }
 
+    public CovBlock getCovBlock() {
 
+
+ //    (b*sin((t_l - t_r)/b))/(2*(t_l - t_r)) + (cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2),
+
+ //    (b*sin((t_l - t_r)/b))/(2*(t_l - t_r)) - (cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2)]
+
+
+ //    (b*(t_l + t_r))/(2*(t_l - t_r)^2) - b/(2*(t_l - t_r)) - (sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*cos((t_l - t_r)/b))/(2*(t_l - t_r)) - (b*cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2),
+
+ // (sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*(t_l + t_r))/(2*(t_l - t_r)^2) - b/(2*(t_l - t_r)) + (b*cos((t_l - t_r)/b))/(2*(t_l - t_r)) + (b*cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2)
+
+
+ //  -1/b,
+
+ //  1/b]
+ 
+
+
+
+    }
 
 }

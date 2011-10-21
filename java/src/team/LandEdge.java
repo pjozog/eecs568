@@ -19,20 +19,26 @@ public class LandEdge extends Edge{
 	
         // Create a new JacobBlock class
         JacobBlock myJacobBlock = new JacobBlock(jacobStartRow, block1Column, block2Column);
-        
+
+        double x0;  
+        double y0;  
+        double l_x; 
+        double l_y; 
+					
+
         if (this.node1.isLand()) {
            
-            double x0  = theStateVector[this.node2.getStateVectorIndex()];
-            double y0  = theStateVector[this.node2.getStateVectorIndex()+1]; 
-            double l_x = theStateVector[this.node1.getStateVectorIndex()];
-            double l_y = theStateVector[this.node1.getStateVectorIndex()+1];
+            x0  = theStateVector[this.node2.getStateVectorIndex()];
+			y0	= theStateVector[this.node2.getStateVectorIndex()+1]; 
+			l_x = theStateVector[this.node1.getStateVectorIndex()];
+			l_y = theStateVector[this.node1.getStateVectorIndex()+1];
 
         } else {
 
-            double x0  = theStateVector[this.node1.getStateVectorIndex()];
-            double y0  = theStateVector[this.node1.getStateVectorIndex()+1]; 
-            double l_x = theStateVector[this.node2.getStateVectorIndex()];
-            double l_y = theStateVector[this.node2.getStateVectorIndex()+1];
+            x0	= theStateVector[this.node1.getStateVectorIndex()];
+			y0	= theStateVector[this.node1.getStateVectorIndex()+1]; 
+			l_x = theStateVector[this.node2.getStateVectorIndex()];
+			l_y = theStateVector[this.node2.getStateVectorIndex()+1];
 
         }
 

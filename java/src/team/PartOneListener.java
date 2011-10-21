@@ -47,8 +47,7 @@ public class PartOneListener implements Simulator.Listener
 
         numUpdates++;
 	DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
-        //[x y t] = getXYZ(odom);
-        /*TODO fill this in*/
+
         double x = ticksXYT.get(0);
         double y = ticksXYT.get(1);
         double t = ticksXYT.get(2);;
@@ -56,23 +55,37 @@ public class PartOneListener implements Simulator.Listener
 
 	
 	double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
-	OdNode odNode = new OdNode(index, newPos[0], newPos[1], newPos[2]);
-        stateVector.add(odNode);
-	allObservations.add(odNode);
+
+	/*adds global coords*/
+	OdNode odNode = new OdNode(index, newPos[0], newPos[1], newPos[2]);      
+	stateVector.add(odNode);
+	
+	/*adds relative readings*/
+	allObservations.add(new OdNode(index, x, y, t));
+
+	/*save last node to get next global position*/
 	lastOdNode = odNode;
 
+
         for(Simulator.landmark_t det: dets){
-             
+	    
+	    /*If this is a duplicate*/             
 	    if(landmarksSeen.containsKey(det.id)){
+		
+		/*Same index as the one we already found*/
 		index = landmarksSeen.get(det.id).getStateVectorIndex();
+
+		/*add the observation, but not to the state vector*/
 		Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id);
 		allObservations.add(landNode);
+
 		continue;
             }
 
+	    /*add the landmark to the state vector and note we saw it, use global coords*/
 	    index = stateVector.size();
-
-	    Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id);   
+	    double []pos = LandUtil.rThetaToXY(det.obs[0], det.ops[1], newPos[0], newPos[1], newPos[2]);
+	    Node landNode = new LandNode(index, pos[0], pos[1], det.id);   
             stateVector.add(landNode);
            
 	    landmarksSeen.put(new Integer(det.id), landNode);

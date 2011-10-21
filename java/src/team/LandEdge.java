@@ -5,11 +5,14 @@ import java.util.*;
 public class LandEdge extends Edge{
 
 
-    public LandEdge(int jacobStartRow, int firstBlockColumnStart, int secondBlockColumnStart) {
+    public LandEdge(int jacobStartRow, int firstBlockColumnStart, int secondBlockColumnStart, Node nodeOne, Node nodeTwo) {
         
         this.jacobianStartRow = jacobStartRow;
         this.block1Column = firstBlockColumnStart;
         this.block2Column = secondBlockColumnStart;
+        
+        this.node1 = nodeOne;
+        this.node2 = nodeTwo;
         
     }
 

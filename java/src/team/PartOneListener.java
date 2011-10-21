@@ -84,7 +84,7 @@ public class PartOneListener implements Simulator.Listener
 
 	    /*add the landmark to the state vector and note we saw it, use global coords*/
 	    index = stateVector.size();
-	    double []pos = LandUtil.rThetaToXY(det.obs[0], det.ops[1], newPos[0], newPos[1], newPos[2]);
+	    double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
 	    Node landNode = new LandNode(index, pos[0], pos[1], det.id);   
             stateVector.add(landNode);
            

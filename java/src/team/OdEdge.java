@@ -19,7 +19,7 @@ public class OdEdge extends Edge{
     public JacobBlock getJacob(double[] theStateVector){
 	
         // Create a new JacobBlock class
-        JacobBlock myJacobBlock = new JacobBlock(jacobStartRow, block1Column, block2Column);
+        JacobBlock myJacobBlock = new JacobBlock(jacobianStartRow, block1Column, block2Column);
 
         double x0  = theStateVector[this.node1.getStateVectorIndex()];
         double y0  = theStateVector[this.node1.getStateVectorIndex()+1]; 
@@ -38,7 +38,7 @@ public class OdEdge extends Edge{
 		firstBlock[1][2] = Math.cos(phi0)*(x0 - x1) + Math.sin(phi0)*(y0 - y1);
 		firstBlock[2][0] = 0.0;
 		firstBlock[2][1] = 0.0;
-		firstBlock[2][2] = -1.0
+		firstBlock[2][2] = -1.0;
 
         myJacobBlock.setFirstBlock(firstBlock);
 
@@ -57,11 +57,16 @@ public class OdEdge extends Edge{
         secondBlock[2][2] = 1.0;
 
 
-        myJacobBlock.setSecondBlock(setSecondBlock);
+        myJacobBlock.setSecondBlock(secondBlock);
 
         return myJacobBlock;
 
     }
+
+    public double [] getResiduals() {
+        return null;
+    }
+
 
     public CovBlock getCovBlock() {
 
@@ -81,8 +86,11 @@ public class OdEdge extends Edge{
  //  1/b]
  
 
-
+        return null;
 
     }
+
+
+
 
 }

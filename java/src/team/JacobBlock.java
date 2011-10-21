@@ -45,7 +45,7 @@ public class JacobBlock{
         return block1Col;
     }
 
-    public int getSecondColum(){
+    public int getSecondColumn(){
         return block2Col;
     }
 

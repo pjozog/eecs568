@@ -18,7 +18,7 @@ public class LandEdge extends Edge{
     public JacobBlock getJacob(double[] theStateVector){
 	
         // Create a new JacobBlock class
-        JacobBlock myJacobBlock = new JacobBlock(jacobStartRow, block1Column, block2Column);
+        JacobBlock myJacobBlock = new JacobBlock(jacobianStartRow, block1Column, block2Column);
 
         double x0;  
         double y0;  
@@ -63,10 +63,19 @@ public class LandEdge extends Edge{
         secondBlock[1][0] =   -(l_y - y0)/(Math.pow(l_x - x0,2)*(Math.pow(l_y - y0,2)/Math.pow(l_x - x0,2) + 1));
         secondBlock[1][1] =   1/((l_x - x0)*(Math.pow(l_y - y0,2)/Math.pow(l_x - x0,2) + 1));
 
-        myJacobBlock.setSecondBlock(setSecondBlock);
+        myJacobBlock.setSecondBlock(secondBlock);
 
         return myJacobBlock;
 
     }
+
+    public double [] getResiduals() {
+        return null;
+    }
+
+    public CovBlock getCovBlock() {
+        return null;
+    }
+
 
 }

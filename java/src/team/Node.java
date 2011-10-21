@@ -2,7 +2,7 @@ package team;
 
 public abstract class Node{
 
-    private int posInStateVector;
+    protected int posInStateVector;
 
     protected double[] state;
 

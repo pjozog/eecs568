@@ -5,10 +5,6 @@ import java.util.*;
 public class LandEdge extends Edge{
 
 
-    private int jacobianStartRow;
-    private int block1Column;
-    private int block2Column;
-
     public LandEdge(int jacobStartRow, int firstBlockColumnStart, int secondBlockColumnStart) {
         
         this.jacobianStartRow = jacobStartRow;

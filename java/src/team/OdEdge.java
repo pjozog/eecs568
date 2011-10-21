@@ -2,10 +2,6 @@ package team;
 
 public class OdEdge extends Edge{
 
-    private int jacobianStartRow;
-    private int block1Column;
-    private int block2Column;
-
 
     public OdEdge(int jacobStartRow, int firstBlockColumnStart, int secondBlockColumnStart) {
         
@@ -68,25 +64,45 @@ public class OdEdge extends Edge{
     }
 
 
-    public CovBlock getCovBlock() {
+    public CovBlock getCovBlock(int t_l, int t_r) {
 
 
- //    (b*sin((t_l - t_r)/b))/(2*(t_l - t_r)) + (cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2),
-
- //    (b*sin((t_l - t_r)/b))/(2*(t_l - t_r)) - (cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2)]
-
-
- //    (b*(t_l + t_r))/(2*(t_l - t_r)^2) - b/(2*(t_l - t_r)) - (sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*cos((t_l - t_r)/b))/(2*(t_l - t_r)) - (b*cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2),
-
- // (sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*(t_l + t_r))/(2*(t_l - t_r)^2) - b/(2*(t_l - t_r)) + (b*cos((t_l - t_r)/b))/(2*(t_l - t_r)) + (b*cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)^2)
+        double b = config.requireDouble("robot.baseline_m");
+        double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
+        double sigmaL = odomD[0];
+        double sigmaR = odomD[1];
 
 
- //  -1/b,
+        double[][] tltrCovariance = new double[2][2];
+        tltrCovariance[0][0] = Math.pow(t_l*sigmaL, 2);; 
+        tltrCovariance[0][1] = 0.0; 
+        tltrCovariance[1][0] = 0.0; 
+        tltrCovariance[1][1] = Math.pow(t_r*sigmaR, 2);
 
- //  1/b]
  
+        double[][] tltrToXYTJacob = new double[3][2];
 
-        return null;
+        tltrToXYTJacob[0][0] =  (b*Math.sin((t_l - t_r)/b))/(2*(t_l - t_r)) + (Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) 
+            - (b*Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)); 
+        tltrToXYTJacob[0][1] =  (b*Math.sin((t_l - t_r)/b))/(2*(t_l - t_r)) - (Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) 
+            + (b*Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)); 
+
+        tltrToXYTJacob[1][0] = (b*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)) - b/(2*(t_l - t_r))  
+            - (Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*Math.cos((t_l - t_r)/b))/(2*(t_l - t_r)) 
+            - (b*Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)); 
+  
+        tltrToXYTJacob[1][1] = (Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)) 
+            - b/(2*(t_l - t_r)) + (b*Math.cos((t_l - t_r)/b))/(2*(t_l - t_r)) 
+            + (b*Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)); 
+
+        tltrToXYTJacob[2][0] = -1/b; 
+        tltrToXYTJacob[2][1] = 1/b; 
+
+
+        double[][] result = new double[3][3];
+        result = LinAlg.matrixABCt(J, tltrCovariance, J);
+
+        return ;
 
     }
 

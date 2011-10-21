@@ -18,7 +18,7 @@ public class PartOneListener implements Simulator.Listener
     double xyt[] = new double[3]; // dead reconning
 
     ArrayList<double[]> trajectory = new ArrayList<double[]>();
-
+    ArrayList<Node> stateVector = new ArrayList<Node>();
 
     double baseline;
     public void init(Config _config, VisWorld _vw)

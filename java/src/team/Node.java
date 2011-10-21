@@ -4,7 +4,11 @@ public abstract class Node{
 
     private int posInStateVector;
 
-    public abstract double[] getState();
+    protected double[] state;
+
+    public  double[] getState(){
+	return state;
+    }
 
     public int getStateVectorIndex(){
 	return posInStateVector;

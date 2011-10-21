@@ -46,6 +46,7 @@ public class Simulator implements Runnable
 
     boolean knownDataAssoc;
     boolean loopSim;
+    int waittime;
 
     public VisWorld vw = new VisWorld();
     public VisLayer vl = new VisLayer(vw);
@@ -75,6 +76,7 @@ public class Simulator implements Runnable
     // Where my random bits at?
     Random r = new Random(2);
 
+
     public Simulator(Config _config)
     {
         config = _config;
@@ -84,6 +86,8 @@ public class Simulator implements Runnable
         tickLength = config.requireDouble("simulator.tickLength_s");
         knownDataAssoc = config.requireBoolean("simulator.knownDataAssoc");
         loopSim = config.requireBoolean("simulator.loop");
+        waittime = config.requireInt("simulator.waittime");
+        System.out.println("Waittime " +waittime);
 
         truth_xyt = config.requireDoubles("robot.start_xyt");
         local_xyt = new double[3];
@@ -140,6 +144,11 @@ public class Simulator implements Runnable
         listeners.add(l);
     }
 
+    public double sq(double a)
+    {
+        return a*a;
+    }
+
     public void run()
     {
         int utime = 0;
@@ -172,12 +181,13 @@ public class Simulator implements Runnable
             double clean_odom[] = getDiffDrive(waypoints.get(waypointIdx), local_xyt); // in meters
 
             double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
-            double odomP[][] = {{odomD[0] * clean_odom[0], 0},
-                                {0, odomD[1] *clean_odom[1]}};
-            MultiGaussian odomMG = new MultiGaussian(odomP, new double[2]);
+            double odomP[][] = {{sq(odomD[0]) * sq(clean_odom[0]), 0},
+                                {0, sq(odomD[1]) *sq(clean_odom[1])}};
+            // MultiGaussian odomMG = new MultiGaussian(odomP, new double[2]);
+            MultiGaussian odomMG = new MultiGaussian(odomP, clean_odom);
 
 
-            double noisy_odom[] = LinAlg.add(clean_odom, odomMG.sample(r));
+            double noisy_odom[] = odomMG.sample(r);//LinAlg.add(clean_odom, odomMG.sample(r));
 
             double clean_odom_xyt[] = diffDriveToXyt(clean_odom);
             double noisy_odom_xyt[] = diffDriveToXyt(noisy_odom);
@@ -391,7 +401,7 @@ public class Simulator implements Runnable
                     step();
                 synchronized(this) {
                     try {
-                        wait(100);
+                        wait(waittime + 1);
                     } catch(InterruptedException e){}
                 }
             }

@@ -35,7 +35,7 @@ public class PartOneListener implements Simulator.Listener
 
         xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
                                                    Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
-
+	
         trajectory.add(LinAlg.resize(xyt,2));
 
         drawDummy(dets);

@@ -40,11 +40,11 @@ public class PartOneListener implements Simulator.Listener
     {
         config  = _config;
         vw = _vw;
-	Edge.config = _config;
+        Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
-	lastOdNode = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
-	nextAbsStateRowIndex += lastOdNode.stateLength();
-	stateVector.add(new OdNode(0, 0, 0, 0, 0));
+        lastOdNode = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
+        nextAbsStateRowIndex += lastOdNode.stateLength();
+        stateVector.add(new OdNode(0, 0, 0, 0, 0));
     }
 
     /*Every time we see a node, update the row of the jacob,
@@ -54,7 +54,7 @@ public class PartOneListener implements Simulator.Listener
     {
 
         numUpdates++;
-	DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
+        DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
         double x = ticksXYT.get(0);
         double y = ticksXYT.get(1);
@@ -62,79 +62,79 @@ public class PartOneListener implements Simulator.Listener
         int nodeIndex = stateVector.size();
 
 	
-	double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
+        double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
 
-	OdEdge odEdge = new OdEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex);
-	allEdges.add(odEdge);
+        OdEdge odEdge = new OdEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex);
+        allEdges.add(odEdge);
 
-	nextJacobRowIndex += lastOdNode.stateLength();
+        nextJacobRowIndex += lastOdNode.stateLength();
 
 	
-	/*adds global coords*/
-	OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);      
-	stateVector.add(odNode);
+        /*adds global coords*/
+        OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);      
+        stateVector.add(odNode);
 
 
 
 
-	/*adds relative readings*/
-	allObservations.add(new OdNode(nodeIndex, nextAbsStateRowIndex, x, y, t));
+        /*adds relative readings*/
+        allObservations.add(new OdNode(nodeIndex, nextAbsStateRowIndex, x, y, t));
 
 
-	nextAbsStateRowIndex += odNode.stateLength();
-	/*save last node to get next global position*/
-	lastOdNode = odNode;
+        nextAbsStateRowIndex += odNode.stateLength();
+        /*save last node to get next global position*/
+        lastOdNode = odNode;
 
 
         for(Simulator.landmark_t det: dets){
 	    
-	    /*If this is a duplicate*/             
-	    if(landmarksSeen.containsKey(det.id)){
+            /*If this is a duplicate*/             
+            if(landmarksSeen.containsKey(det.id)){
 		
-		/*Same index as the one we already found*/
-		nodeIndex = landmarksSeen.get(det.id);
+                /*Same index as the one we already found*/
+                nodeIndex = landmarksSeen.get(det.id);
 
-		/*add the observation, but not to the state vector*/
-		/*NOTE i dont think the abs number matters for observations*/
-		Node landNode = new LandNode(nodeIndex, -1, det.obs[0], det.obs[1], det.id);
-		allObservations.add(landNode);
-		Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex());
-		allEdges.add(landEdge);
-		nextJacobRowIndex += landNode.stateLength();
+                /*add the observation, but not to the state vector*/
+                /*NOTE i dont think the abs number matters for observations*/
+                Node landNode = new LandNode(nodeIndex, -1, det.obs[0], det.obs[1], det.id);
+                allObservations.add(landNode);
+                Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex());
+                allEdges.add(landEdge);
+                nextJacobRowIndex += landNode.stateLength();
 		
 		
-		continue;
+                continue;
             }
 
-	    /*add the landmark to the state vector and note we saw it, use global coords*/
-	    nodeIndex = stateVector.size();
-	    double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
-	    Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex);
+            /*add the landmark to the state vector and note we saw it, use global coords*/
+            nodeIndex = stateVector.size();
+            double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
+            Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex);
 
 
 
-	    Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);   
-	    nextJacobRowIndex += landNode.stateLength();
+            Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);   
+            nextJacobRowIndex += landNode.stateLength();
 
-	    allObservations.add(new LandNode(nodeIndex, nextAbsStateRowIndex, det.obs[0], det.obs[1], det.id));
-	    nextAbsStateRowIndex += landNode.stateLength();
+            allObservations.add(new LandNode(nodeIndex, nextAbsStateRowIndex, det.obs[0], det.obs[1], det.id));
+            nextAbsStateRowIndex += landNode.stateLength();
             stateVector.add(landNode);
            
-	    landmarksSeen.put(new Integer(det.id), new Integer(nodeIndex));
+            landmarksSeen.put(new Integer(det.id), new Integer(nodeIndex));
 	    
 	   
 
         }//end landmarks.
 
-	/*
-	jacobList = new ArrayList<JacobBlock>();
-	for(Edge edge: allEdges){
-	    jacobList.add(edge.getJacob(stateVector));
-	}
+        /*
+          jacobList = new ArrayList<JacobBlock>();
+          for(Edge edge: allEdges){
+          jacobList.add(edge.getJacob(stateVector));
+          }
 
 
-	Matrix J = JacobBlock.assemble(nextRowIndex, lastNode.absPosIndex() + lastNode.stateLength(), jacobList);
-	*/
+          Matrix J = JacobBlock.assemble(nextRowIndex, lastNode.absPosIndex() + lastNode.stateLength(), jacobList);
+        */
 
         System.out.println("********State vector*********");
         for(Node n : stateVector){

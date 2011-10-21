@@ -19,8 +19,8 @@ public class OdEdge extends Edge{
         // Create a new JacobBlock class
         JacobBlock myJacobBlock = new JacobBlock(jacobianStartRow, block1Column, block2Column);
 
-	double [] status1 = theStateVector.get(this.node1.getStateVectorIndex()).getState();
-	double [] status2 = theStateVector.get(this.node2.getStateVectorIndex()).getState();
+        double [] status1 = theStateVector.get(this.node1.getStateVectorIndex()).getState();
+        double [] status2 = theStateVector.get(this.node2.getStateVectorIndex()).getState();
 
 
         double x0  = status1[0];

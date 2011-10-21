@@ -1,5 +1,7 @@
 package team;
 
+import java.util.*;
+
 
 public abstract class Edge{
 
@@ -12,7 +14,7 @@ public abstract class Edge{
     protected int block1Column;
     protected int block2Column;
 
-    public abstract JacobBlock getJacob(double[] theStateVector);
+    public abstract JacobBlock getJacob(List<Node> theStateVector);
 
     public abstract double [] getResiduals();
 

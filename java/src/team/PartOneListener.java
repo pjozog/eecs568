@@ -25,6 +25,8 @@ public class PartOneListener implements Simulator.Listener
 
     HashMap<Integer, Node> landmarksSeen = new HashMap<Integer, Node>();
     double baseline;
+
+
     public void init(Config _config, VisWorld _vw)
     {
         config  = _config;
@@ -68,6 +70,17 @@ public class PartOneListener implements Simulator.Listener
                                                    Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
 	
         trajectory.add(LinAlg.resize(xyt,2));
+
+
+        DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
+
+        System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
+                           + "\n\tand " + dets.size() + " landmark observations"
+                           + "\n\tand xyt: ");
+        LinAlg.printTranspose(ticksXYT.getDoubles());
+        System.out.println();
+
+
 
         drawDummy(dets);
     }

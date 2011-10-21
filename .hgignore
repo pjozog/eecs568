@@ -7,3 +7,4 @@ gltest
 *.class
 *.o
 *.so
+*.jnilib

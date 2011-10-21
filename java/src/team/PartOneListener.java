@@ -23,6 +23,8 @@ public class PartOneListener implements Simulator.Listener
     ArrayList<Node> stateVector = new ArrayList<Node>();
     ArrayList<JacobBlock> J = new ArrayList<JacobBlock>();
 
+    private static int numUpdates = 0;
+
     HashMap<Integer, Node> landmarksSeen = new HashMap<Integer, Node>();
     double baseline;
 
@@ -39,31 +41,33 @@ public class PartOneListener implements Simulator.Listener
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
 
-	//[x y t] = getXYZ(odom);
-	/*TODO fill this in*/
-	int x = 0;
-	int y = 0;
-	int t = 0;
-	int index = stateVector.size();
-	Node odNode = new OdNode(index, x, y, t);
+        numUpdates++;
 
-	stateVector.add(odNode);
+        //[x y t] = getXYZ(odom);
+        /*TODO fill this in*/
+        int x = 0;
+        int y = 0;
+        int t = 0;
+        int index = stateVector.size();
+        Node odNode = new OdNode(index, x, y, t);
 
-	for(Simulator.landmark_t det: dets){
-	    if(landmarksSeen.containsKey(det.id)){
-		continue;
-	    }
-	    index = stateVector.size();
+        stateVector.add(odNode);
+
+        for(Simulator.landmark_t det: dets){
+            if(landmarksSeen.containsKey(det.id)){
+                continue;
+            }
+            index = stateVector.size();
 	    
-	    Node landNode = new LandNode(index, x, y, det.id); 
-	    stateVector.add(landNode);
-	    landmarksSeen.put(new Integer(det.id), landNode);
-	}
-	System.out.println("********State vector*********");
-	for(Node n : stateVector){
-	    System.out.println(n);
+            Node landNode = new LandNode(index, x, y, det.id); 
+            stateVector.add(landNode);
+            landmarksSeen.put(new Integer(det.id), landNode);
+        }
+        System.out.println("********State vector*********");
+        for(Node n : stateVector){
+            System.out.println(n);
 	    
-	}
+        }
 	
 
         xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,

@@ -19,7 +19,7 @@ public class PartOneListener implements Simulator.Listener
 
     ArrayList<double[]> trajectory = new ArrayList<double[]>();
 
-
+    ArrayList<Node> allObservations = new ArrayList<Node>();
     ArrayList<Node> stateVector = new ArrayList<Node>();
     ArrayList<JacobBlock> J = new ArrayList<JacobBlock>();
 
@@ -57,17 +57,25 @@ public class PartOneListener implements Simulator.Listener
 	double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
 	OdNode odNode = new OdNode(index, newPos[0], newPos[1], newPos[2]);
         stateVector.add(odNode);
+	allObservations.add(odNode);
 	lastOdNode = odNode;
 
         for(Simulator.landmark_t det: dets){
-            if(landmarksSeen.containsKey(det.id)){
-                continue;
+             
+	    if(landmarksSeen.containsKey(det.id)){
+		index = landmarksSeen.get(det.id).getStateVectorIndex();
+		Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id);
+		allObservations.add(landNode);
+		continue;
             }
-            index = stateVector.size();
-	    
-            Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id); 
+
+	    index = stateVector.size();
+
+	    Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id);   
             stateVector.add(landNode);
-            landmarksSeen.put(new Integer(det.id), landNode);
+           
+	    landmarksSeen.put(new Integer(det.id), landNode);
+	    
         }
         System.out.println("********State vector*********");
         for(Node n : stateVector){

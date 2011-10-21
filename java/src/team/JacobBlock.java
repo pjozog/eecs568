@@ -11,11 +11,21 @@ public class JacobBlock{
     private int block1Col;
     private int block2Col;
 
+
+    public JacobBlock(int rowStart, int blockOneCol, int blockTwoCol) {
+
+        this.row = rowStart;
+        this.block1Col = blockOneCol;
+        this.block2Col = blockTwoCol;
+
+    }
+
     public static Matrix assemble(ArrayList<JacobBlock> blocks){
 
 
 	return null;
     }
+
 
     public int getRow(){
 	return row;

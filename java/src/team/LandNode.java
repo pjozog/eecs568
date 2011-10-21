@@ -4,6 +4,7 @@ public class LandNode extends Node{
 
     private int id;
     public LandNode(int pos, double x, double y, int id){
+	posInStateVector = pos;
 	state = new double[2];
 	state[0] = x;
 	state[1] = y;

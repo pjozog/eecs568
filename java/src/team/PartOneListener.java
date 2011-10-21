@@ -18,8 +18,12 @@ public class PartOneListener implements Simulator.Listener
     double xyt[] = new double[3]; // dead reconning
 
     ArrayList<double[]> trajectory = new ArrayList<double[]>();
-    ArrayList<Node> stateVector = new ArrayList<Node>();
 
+
+    ArrayList<Node> stateVector = new ArrayList<Node>();
+    ArrayList<JacobBlock> J = new ArrayList<JacobBlock>();
+
+    HashMap<Integer, Node> landmarksSeen = new HashMap<Integer, Node>();
     double baseline;
     public void init(Config _config, VisWorld _vw)
     {
@@ -32,6 +36,33 @@ public class PartOneListener implements Simulator.Listener
 
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
+
+	//[x y t] = getXYZ(odom);
+	/*TODO fill this in*/
+	int x = 0;
+	int y = 0;
+	int t = 0;
+	int index = stateVector.size();
+	Node odNode = new OdNode(index, x, y, t);
+
+	stateVector.add(odNode);
+
+	for(Simulator.landmark_t det: dets){
+	    if(landmarksSeen.containsKey(det.id)){
+		continue;
+	    }
+	    index = stateVector.size();
+	    
+	    Node landNode = new LandNode(index, x, y, det.id); 
+	    stateVector.add(landNode);
+	    landmarksSeen.put(new Integer(det.id), landNode);
+	}
+	System.out.println("********State vector*********");
+	for(Node n : stateVector){
+	    System.out.println(n);
+	    
+	}
+	
 
         xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
                                                    Math.atan((odom.obs[1] - odom.obs[0])/baseline)});

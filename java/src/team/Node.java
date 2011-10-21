@@ -14,6 +14,7 @@ public abstract class Node{
 	return posInStateVector;
     }
 
+    public abstract String toString();
 
 
 }

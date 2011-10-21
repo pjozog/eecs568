@@ -20,7 +20,10 @@ public class PartOneListener implements Simulator.Listener
     ArrayList<double[]> trajectory = new ArrayList<double[]>();
     ArrayList<Node> stateVector = new ArrayList<Node>();
 
+    private static int numUpdates = 0;
     double baseline;
+
+
     public void init(Config _config, VisWorld _vw)
     {
         config  = _config;
@@ -32,11 +35,22 @@ public class PartOneListener implements Simulator.Listener
 
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
-
+        numUpdates++;
         xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
                                                    Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
 	
         trajectory.add(LinAlg.resize(xyt,2));
+
+
+        DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
+
+        System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
+                           + "\n\tand " + dets.size() + " landmark observations"
+                           + "\n\tand xyt: ");
+        LinAlg.printTranspose(ticksXYT.getDoubles());
+        System.out.println();
+
+
 
         drawDummy(dets);
     }

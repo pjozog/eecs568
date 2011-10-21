@@ -21,7 +21,8 @@ public class PartOneListener implements Simulator.Listener
 
     ArrayList<Node> allObservations = new ArrayList<Node>();
     ArrayList<Node> stateVector = new ArrayList<Node>();
-    ArrayList<JacobBlock> J = new ArrayList<JacobBlock>();
+
+    ArrayList<JacobBlock> jacobList = new ArrayList<JacobBlock>();
 
     private static int numUpdates = 0;
 
@@ -77,6 +78,9 @@ public class PartOneListener implements Simulator.Listener
 	    landmarksSeen.put(new Integer(det.id), landNode);
 	    
         }
+
+	Matrix J = JacobBlock.assemble(allObservations.size(), stateVector.size(), jacobList);
+
         System.out.println("********State vector*********");
         for(Node n : stateVector){
             System.out.println(n);

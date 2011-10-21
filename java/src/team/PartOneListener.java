@@ -27,6 +27,7 @@ public class PartOneListener implements Simulator.Listener
 
     HashMap<Integer, Node> landmarksSeen = new HashMap<Integer, Node>();
     double baseline;
+    OdNode lastOdNode =null;
 
 
     public void init(Config _config, VisWorld _vw)
@@ -35,6 +36,8 @@ public class PartOneListener implements Simulator.Listener
         vw = _vw;
 
         baseline = config.requireDouble("robot.baseline_m");
+	lastOdNode = new OdNode(0, 0, 0, 0);
+	stateVector.add(lastOdNode);
     }
 
 
@@ -42,16 +45,19 @@ public class PartOneListener implements Simulator.Listener
     {
 
         numUpdates++;
-
+	DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
         //[x y t] = getXYZ(odom);
         /*TODO fill this in*/
-        int x = 0;
-        int y = 0;
-        int t = 0;
+        double x = ticksXYT.get(0);
+        double y = ticksXYT.get(1);
+        double t = ticksXYT.get(2);;
         int index = stateVector.size();
-        Node odNode = new OdNode(index, x, y, t);
 
+	
+	double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
+	OdNode odNode = new OdNode(index, newPos[0], newPos[1], newPos[2]);
         stateVector.add(odNode);
+	lastOdNode = odNode;
 
         for(Simulator.landmark_t det: dets){
             if(landmarksSeen.containsKey(det.id)){
@@ -59,7 +65,7 @@ public class PartOneListener implements Simulator.Listener
             }
             index = stateVector.size();
 	    
-            Node landNode = new LandNode(index, x, y, det.id); 
+            Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id); 
             stateVector.add(landNode);
             landmarksSeen.put(new Integer(det.id), landNode);
         }
@@ -70,13 +76,12 @@ public class PartOneListener implements Simulator.Listener
         }
 	
 
-        xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
-                                                   Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
+        xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
 	
         trajectory.add(LinAlg.resize(xyt,2));
 
 
-        DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
+
 
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
                            + "\n\tand " + dets.size() + " landmark observations"

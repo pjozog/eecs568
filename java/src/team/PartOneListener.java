@@ -14,6 +14,9 @@ public class PartOneListener implements Simulator.Listener
 
     VisWorld vw;
     Config config;
+    private int nextJacobRowIndex = 0;
+
+    private int nextAbsStateRowIndex = 0;
 
     double xyt[] = new double[3]; // dead reconning
 
@@ -21,6 +24,7 @@ public class PartOneListener implements Simulator.Listener
 
     ArrayList<Node> allObservations = new ArrayList<Node>();
     ArrayList<Node> stateVector = new ArrayList<Node>();
+    ArrayList<Edge> allEdges = new ArrayList<Edge>();
 
     ArrayList<JacobBlock> jacobList = new ArrayList<JacobBlock>();
 
@@ -38,11 +42,14 @@ public class PartOneListener implements Simulator.Listener
         vw = _vw;
 	Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
-	lastOdNode = new OdNode(0, 0, 0, 0);
-	stateVector.add(lastOdNode);
+	lastOdNode = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
+	nextAbsStateRowIndex += lastOdNode.stateLength();
+	stateVector.add(new OdNode(0, 0, 0, 0, 0));
     }
 
-
+    /*Every time we see a node, update the row of the jacob,
+      Every edge we make connects two nodes, the first column number is the index of the first node,
+      second is second*/
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
 
@@ -52,18 +59,29 @@ public class PartOneListener implements Simulator.Listener
         double x = ticksXYT.get(0);
         double y = ticksXYT.get(1);
         double t = ticksXYT.get(2);;
-        int index = stateVector.size();
+        int nodeIndex = stateVector.size();
 
 	
 	double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
 
-	/*adds global coords*/
-	OdNode odNode = new OdNode(index, newPos[0], newPos[1], newPos[2]);      
-	stateVector.add(odNode);
-	
-	/*adds relative readings*/
-	allObservations.add(new OdNode(index, x, y, t));
+	OdEdge odEdge = new OdEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex);
+	allEdges.add(odEdge);
 
+	nextJacobRowIndex += lastOdNode.stateLength();
+
+	
+	/*adds global coords*/
+	OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);      
+	stateVector.add(odNode);
+
+
+
+
+	/*adds relative readings*/
+	allObservations.add(new OdNode(nodeIndex, nextAbsStateRowIndex, x, y, t));
+
+
+	nextAbsStateRowIndex += odNode.stateLength();
 	/*save last node to get next global position*/
 	lastOdNode = odNode;
 
@@ -74,26 +92,49 @@ public class PartOneListener implements Simulator.Listener
 	    if(landmarksSeen.containsKey(det.id)){
 		
 		/*Same index as the one we already found*/
-		index = landmarksSeen.get(det.id);
+		nodeIndex = landmarksSeen.get(det.id);
 
 		/*add the observation, but not to the state vector*/
-		Node landNode = new LandNode(index, det.obs[0], det.obs[1], det.id);
+		/*NOTE i dont think the abs number matters for observations*/
+		Node landNode = new LandNode(nodeIndex, -1, det.obs[0], det.obs[1], det.id);
 		allObservations.add(landNode);
-
+		Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex());
+		allEdges.add(landEdge);
+		nextJacobRowIndex += landNode.stateLength();
+		
+		
 		continue;
             }
 
 	    /*add the landmark to the state vector and note we saw it, use global coords*/
-	    index = stateVector.size();
+	    nodeIndex = stateVector.size();
 	    double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
-	    Node landNode = new LandNode(index, pos[0], pos[1], det.id);   
+	    Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex);
+
+
+
+	    Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);   
+	    nextJacobRowIndex += landNode.stateLength();
+
+	    allObservations.add(new LandNode(nodeIndex, nextAbsStateRowIndex, det.obs[0], det.obs[1], det.id));
+	    nextAbsStateRowIndex += landNode.stateLength();
             stateVector.add(landNode);
            
-	    landmarksSeen.put(new Integer(det.id), new Integer(index));
+	    landmarksSeen.put(new Integer(det.id), new Integer(nodeIndex));
 	    
-        }
+	   
 
-	Matrix J = JacobBlock.assemble(allObservations.size(), stateVector.size(), jacobList);
+        }//end landmarks.
+
+	/*
+	jacobList = new ArrayList<JacobBlock>();
+	for(Edge edge: allEdges){
+	    jacobList.add(edge.getJacob(stateVector));
+	}
+
+
+	Matrix J = JacobBlock.assemble(nextRowIndex, lastNode.absPosIndex() + lastNode.stateLength(), jacobList);
+	*/
 
         System.out.println("********State vector*********");
         for(Node n : stateVector){

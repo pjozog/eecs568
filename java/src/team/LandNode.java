@@ -3,8 +3,9 @@ package team;
 public class LandNode extends Node{
 
     private int id;
-    public LandNode(int pos, double x, double y, int id){
+    public LandNode(int pos, int absPos, double x, double y, int id){
 	posInStateVector = pos;
+	absIndexInStateVector = absPos;
 	state = new double[2];
 	state[0] = x;
 	state[1] = y;

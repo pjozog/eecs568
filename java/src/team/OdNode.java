@@ -2,8 +2,10 @@ package team;
 
 public class OdNode extends Node{
 
-    public OdNode(int pos, double x, double y, double t){
+    /*pos = node number, abs is overall index of the first index in the state*/
+    public OdNode(int pos, int absPos, double x, double y, double t){
 	posInStateVector = pos;
+	absIndexInStateVector = absPos;
 	state = new double[3];
 	state[0] = x;
 	state[1] = y;

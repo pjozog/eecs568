@@ -1,7 +1,7 @@
 package team;
 
 import java.util.*;
-
+import april.config.*;
 
 public abstract class Edge{
 
@@ -18,7 +18,7 @@ public abstract class Edge{
 
     public abstract double [] getResiduals();
 
-    public abstract CovBlock getCovBlock();
+    public abstract CovBlock getCovBlock(int t_l, int t_r);
 
 
 }

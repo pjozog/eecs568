@@ -1,6 +1,7 @@
 package team;
 
 import java.util.*;
+import april.jmat.*;
 
 public class OdEdge extends Edge{
 
@@ -106,9 +107,9 @@ public class OdEdge extends Edge{
 
 
         double[][] result = new double[3][3];
-        result = LinAlg.matrixABCt(J, tltrCovariance, J);
-
-        return ;
+        result = LinAlg.matrixABCt(tltrToXYTJacob, tltrCovariance, tltrToXYTJacob);
+        //TODO: ASDFASDF
+        return null;
 
     }
 

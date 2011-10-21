@@ -73,7 +73,7 @@ public class LandEdge extends Edge{
         return null;
     }
 
-    public CovBlock getCovBlock() {
+    public CovBlock getCovBlock(int t_l, int t_r) {
         return null;
     }
 

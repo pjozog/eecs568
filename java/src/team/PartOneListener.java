@@ -207,6 +207,9 @@ public class PartOneListener implements Simulator.Listener
             Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList, numPinnedRows, pinningJacob);
             Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList, numPinnedRows, pinningCov);
 
+
+
+            System.out.println("BEFORE RESIDUAL----------------");
             ArrayList<Node> predicted = getPredictedObs();
             // int pTot = 0;
             // int oTot = 0;
@@ -233,7 +236,7 @@ public class PartOneListener implements Simulator.Listener
                 // oTot += alObservations.get(j).stateLength();
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
-
+            System.out.println("AFTER RESIDUAL----------------");
 
             /*includes 3 zeros at top for pinning*/
             int numZeros = 3;
@@ -265,29 +268,60 @@ public class PartOneListener implements Simulator.Listener
             // }
             // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
             // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
+
+            System.out.println("BEFORE LINALG MATH----------------");
+            System.out.flush();
             double [][] Jarray = J.copyArray();
             double [][] sigArray = sigmaInv.copyArray();
+
+            System.out.println("BEFORE LINALG MATH ATBC----------------");
+            System.out.flush();
             double [][] A = LinAlg.matrixAtBC(Jarray, sigArray, Jarray);
+            System.out.println("AFTER LINALG MATH ATBC----------------");
+            System.out.flush();
+
+            System.out.println("BEFORE LINALG MATH ATB----------------");
+            System.out.flush();
             double [][] jtSig = LinAlg.matrixAtB(Jarray, sigArray);
+            System.out.println("AFTER LINALG MATH ATB----------------");
+            System.out.flush();
 
-            System.out.println("Size of jtSig: "+ jtSig.length + " " + jtSig[0].length + "\nSize of realR: " + realR.length);
+            // System.out.println("Size of jtSig: "+ jtSig.length + " " + jtSig[0].length + "\nSize of realR: " + realR.length);
+
+            System.out.println("BEFORE LINALG MATH AB----------------");
+            System.out.flush();
             double [] b = LinAlg.matrixAB(jtSig, realR);
+            System.out.println("AFTER LINALG MATH AB----------------");
+            System.out.flush();
 
-            Matrix identityPerturbation = Matrix.identity(A.length, A[0].length).times(100.0);
+
+            // Matrix identityPerturbation = Matrix.identity(A.length, A[0].length).times(100.0);
 
             // double [][] AInv = LinAlg.inverse(LinAlg.add(A, identityPerturbation.copyArray()));
-            double [][] regularizedA = LinAlg.add(A, identityPerturbation.copyArray());
+            // double [][] regularizedA = LinAlg.add(A, identityPerturbation.copyArray());
 
-            CholeskyDecomposition myDecomp = new CholeskyDecomposition(new Matrix(regularizedA));
+            Matrix regularizedAMatrix = new Matrix(A);
+            regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
+
+            System.out.println("AFTER LINALG MATH----------------");
+            System.out.flush();
+
+
+
+            if (!regularizedAMatrix.isSparse()) {
+                System.out.println("HOLY SHIT IT'S NOT SPARSE!");
+            }
+
+            System.out.println("BEFORE DECOMP----------------");
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(regularizedAMatrix);
+            System.out.println("AFTER DECOMP----------------");
+
+
+            System.out.println("BEFORE----------------");
             Matrix answer = myDecomp.solve(Matrix.columnMatrix(b));
+            System.out.println("AFTER----------------");
 
-            // if (AInv == null) {
-            //     System.out.println("WE SUCK AT REGULARIZAION!");
-            //     LinAlg.print(LinAlg.add(A, identityPerturbation.copyArray()));
-            //     System.out.println("WE SUCK AT REGULARIZAION!");
-            // }
 
-            // double [] deltaX = LinAlg.matrixAB(AInv,b);
 
             double [] deltaX = answer.copyAsVector();
             if(debug != 0){

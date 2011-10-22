@@ -125,7 +125,7 @@ public class PartOneListener implements Simulator.Listener
 
         /*new = old * obs*/
         double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
-        //newPos[2] = MathUtil.mod2pi(newPos[2]);
+        newPos[2] = MathUtil.mod2pi(newPos[2]);
 
         /*adds global coords*/
         OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);
@@ -175,7 +175,7 @@ public class PartOneListener implements Simulator.Listener
 
             Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);
             odNode.sawLandmark(nodeIndex);
-            Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
+	    Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
             landEdge.setOdom(odom);
             allEdges.add(landEdge);
 
@@ -216,7 +216,10 @@ public class PartOneListener implements Simulator.Listener
             for(int j = 0; j < predicted.size(); j++){
                 double[] p = predicted.get(j).getState();
                 double[] o = allObservations.get(j).getState();
-
+		if(!predicted.get(j).isLand()){
+		    p[2] = MathUtil.mod2pi(p[2]);
+		    o[2] = MathUtil.mod2pi(o[2]);
+		}
 
 
                 for (int k = 0; k < p.length; k++) {
@@ -250,12 +253,13 @@ public class PartOneListener implements Simulator.Listener
 		    System.out.println(node);
 		}
 		System.out.println();
-	    }
-	    System.out.println("RESIDUALS");
-	    for(int k = 0; k < realR.length; k++){
-		System.out.println(realR[k]);
+		System.out.println("RESIDUALS");
+		for(int k = 0; k < realR.length; k++){
+		    System.out.println(realR[k]);
 
+		}
 	    }
+	   
             // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
             // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
             double [][] Jarray = J.copyArray();
@@ -303,7 +307,7 @@ public class PartOneListener implements Simulator.Listener
 		for(Node node: stateVector){
 		    System.out.println(node);
 		}
-    }
+	    }
         }
 
 
@@ -331,7 +335,7 @@ public class PartOneListener implements Simulator.Listener
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
                            + "\n\tand " + dets.size() + " landmark observations"
                            + "\n\tand xyt: ");
-	// LinAlg.printTranspose(ticksXYT.getDoubles());
+
         System.out.println();
 
         drawDummy(dets);

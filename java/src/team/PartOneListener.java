@@ -80,7 +80,7 @@ public class PartOneListener implements Simulator.Listener
             }
             /*obs = old -^1 * new*/
             double []x = LinAlg.xytInvMul31(lastOdNode.getState(), node.getState());
-            predicted.add(new OdNode(0, 0, x[0], x[1], x[2]));
+            predicted.add(new OdNode(0, 0, x[0], x[1], MathUtil.mod2pi(x[2])));
 
             /*TODO NOTE, ignoring index and id for nodes*/
             ArrayList<Integer> landmarkIndex = node.getLandmarksSeen();
@@ -90,7 +90,7 @@ public class PartOneListener implements Simulator.Listener
                 double pos[] = node.getState();
                 double xa = pos[0];
                 double ya = pos[1];
-                double p = pos[2];
+                double p = MathUtil.mod2pi(pos[2]);
 
                 double posL[] = landNode.getState();
                 double xl = posL[0];
@@ -98,7 +98,7 @@ public class PartOneListener implements Simulator.Listener
 
                 double r     = Math.sqrt(Math.pow(xl - xa, 2) + Math.pow(yl - ya, 2));
                 double theta = Math.atan2(yl - ya, xl - xa) - p;
-                predicted.add(new LandNode(0, 0, r, theta, 0));
+                predicted.add(new LandNode(0, 0, r, MathUtil.mod2pi(theta), 0));
             }
             lastOdNode = node;
 
@@ -214,8 +214,6 @@ public class PartOneListener implements Simulator.Listener
 
             System.out.println("BEFORE RESIDUAL----------------");
             ArrayList<Node> predicted = getPredictedObs();
-            // int pTot = 0;
-            // int oTot = 0;
 
             ArrayList<Double> r = new ArrayList<Double>();
 
@@ -320,7 +318,7 @@ public class PartOneListener implements Simulator.Listener
             // regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
 
 
-            A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
+	    // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
 
             System.out.println("AFTER LINALG MATH----------------");
             System.out.flush();
@@ -367,16 +365,6 @@ public class PartOneListener implements Simulator.Listener
         } // End all iterations of Ax = b
 
 
-
-        // for(int i = stateVector.size() -1; i >= 0; i--){
-        //     if(stateVector.get(i).isLand()){
-        //         continue;
-        //     }
-        //     xyt = stateVector.get(i).getState();
-        //     break;
-        // }
-
-
         // Grab our best guesses of the robot path and landmark positions from our state vector
         trajectory.clear();
         estimatedLandmarkPositions.clear();
@@ -397,7 +385,7 @@ public class PartOneListener implements Simulator.Listener
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
                            + "\n\tand " + dets.size() + " landmark observations"
                            + "\n\tand xyt: ");
-        // LinAlg.printTranspose(ticksXYT.getDoubles());
+
         System.out.println();
 
         drawDummy(dets);

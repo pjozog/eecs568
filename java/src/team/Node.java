@@ -1,5 +1,7 @@
 package team;
 
+import java.util.*;
+
 public abstract class Node{
 
     /*this is the index of the node in List<Node>*/
@@ -8,6 +10,8 @@ public abstract class Node{
     /*this is the index of the first element in the absolute state vector*/
     protected int absIndexInStateVector;
     protected double[] state;
+    /*index of node in state vector*/
+    protected ArrayList<Integer>landmarks = new ArrayList<Integer>();
 
     public  double[] getState(){
 	return state;
@@ -28,6 +32,14 @@ public abstract class Node{
 
     public int getAbsIndex(){
 	return absIndexInStateVector;
+    }
+
+    /**index of node in state vector**/
+    public ArrayList<Integer> getLandmarksSeen(){
+	return landmarks;
+    }
+    public void sawLandmark(Integer i){
+	landmarks.add(i);
     }
 
     public abstract String toString();

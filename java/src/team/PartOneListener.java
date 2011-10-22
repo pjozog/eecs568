@@ -48,6 +48,50 @@ public class PartOneListener implements Simulator.Listener
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(new OdNode(0, 0, 0, 0, 0));
     }
+    private ArrayList<Node> getPredictedObs(){
+	
+	ArrayList<Node> predicted = new ArrayList<Node>();
+
+	/*ignore landmarks.
+	  for all od measurements, subtract (matrix version) from previous od measurement
+	  then calculate distance to all landmarks*/
+	Node lastOdNode = stateVector.get(0);
+	for (Node node : stateVector.subList(1, stateVector.size())){
+	    if(node.isLand()){
+		continue;
+	    }
+	    /*obs = old -^1 * new*/
+	    double []x = LinAlg.xytInvMul31(lastOdNode.getState(), node.getState());
+	    predicted.add(new OdNode(0, 0, x[0], x[1], x[2]));
+	    
+	    /*TODO NOTE, ignoring index and id for nodes*/
+	    ArrayList<Integer> landmarkIndex = node.getLandmarksSeen();
+	    for(int i : landmarkIndex){
+		Node landNode = stateVector.get(i);
+		//TODO take out for "production"
+		if(true){
+		    assert(landNode.isLand());
+		}
+		double pos[] = node.getState();
+		double xa = pos[0];
+		double ya = pos[1];
+		double p = pos[2];
+		
+		double posL[] = landNode.getState();
+		double xl = posL[0];
+		double yl = posL[1];
+		
+		double r     = Math.sqrt(Math.pow(xl - xa, 2) + Math.pow(yl - ya, 2));
+		double theta = Math.atan2(yl - ya, xl - xa) - p;
+		predicted.add(new LandNode(0, 0, r, theta, 0));
+	    }
+
+	}
+	return predicted;
+
+
+    }
+
 
     /*Every time we see a node, update the row of the jacob,
       Every edge we make connects two nodes, the first column number is the index of the first node,
@@ -64,7 +108,7 @@ public class PartOneListener implements Simulator.Listener
         double t = ticksXYT.get(2);;
         int nodeIndex = stateVector.size();
 
-	
+	/*new = old * obs*/
         double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
 	newPos[2] = MathUtil.mod2pi(newPos[2]);
 
@@ -103,7 +147,7 @@ public class PartOneListener implements Simulator.Listener
                 Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex(), lastOdNode, landNode);
                 allEdges.add(landEdge);
                 nextJacobRowIndex += landNode.stateLength();
-			
+		odNode.sawLandmark(nodeIndex);
                 continue;
             }
 
@@ -112,7 +156,7 @@ public class PartOneListener implements Simulator.Listener
             double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
 
             Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);   
-
+	    odNode.sawLandmark(nodeIndex);
             Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
             allEdges.add(landEdge);
 
@@ -130,14 +174,26 @@ public class PartOneListener implements Simulator.Listener
 	jacobList = new ArrayList<JacobBlock>();
 
 	for(int i = 0; i < numConverge; i++){
-
-
-	
+	    jacobList.clear();
+	    
+	    
 	    for (Edge edge : allEdges){
 		jacobList.add(edge.getJacob(stateVector));
 	    }
 	    
 	    Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
+	    ArrayList<Node> predicted = getPredictedObs();
+	    int pTot = 0;
+	    int oTot = 0;
+	    /*Error checking*/
+	    for(int j = 0; j < predicted.size(); j++){
+		pTot += predicted.get(j).stateLength();
+		oTot += allObservations.get(j).stateLength();
+		assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
+	    }
+	    System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
+	    System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
+	
 	}
 
         System.out.println("********State vector*********");

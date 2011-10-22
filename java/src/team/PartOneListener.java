@@ -46,26 +46,14 @@ public class PartOneListener implements Simulator.Listener
         baseline = config.requireDouble("robot.baseline_m");
         numConverge = config.requireInt("simulator.numConverge");
 
-	OdNode initial = new OdNode(0, 0, 0, 0, 0);
-	lastOdNode = initial;
+        OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
+        lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(initial);
 
-
-        // This is bullshit
-        allObservations.add(new OdNode(0, 0, 0.0, 0.0, 0.0));
-	/*NOTE this might only have one jacob block*/
-        OdEdge odEdge = new OdEdge(nextJacobRowIndex, 0, 0, lastOdNode, lastOdNode);
-	Simulator.odometry_t odom = new Simulator.odometry_t();
-	odom.obs = new double[2];
-	odom.obs[0] = 0;
-	odom.obs[1] = 1;
-        odEdge.setOdom(odom);
-	allEdges.add(odEdge);
-	
-	nextJacobRowIndex = 3;
-
     }
+
+
     private ArrayList<Node> getPredictedObs(){
 
         ArrayList<Node> predicted = new ArrayList<Node>();
@@ -73,11 +61,11 @@ public class PartOneListener implements Simulator.Listener
         /*ignore landmarks.
           for all od measurements, subtract (matrix version) from previous od measurement
           then calculate distance to all landmarks*/
-	//  Node lastOdNode = stateVector.get(0);
-        //for (Node node : stateVector.subList(1, stateVector.size())){
-	Node lastOdNode = new OdNode(0, 0, 0, 0, 0);
-	for(Node node : stateVector){
-	    if(node.isLand()){
+        Node lastOdNode = stateVector.get(0);
+        for (Node node : stateVector.subList(1, stateVector.size())){
+            // Node lastOdNode = new OdNode(0, 0, 0, 0, 0);
+            // for(Node node : stateVector){
+            if(node.isLand()){
                 continue;
             }
             /*obs = old -^1 * new*/
@@ -229,7 +217,7 @@ public class PartOneListener implements Simulator.Listener
                 }
 
                 // pTot += predicted.get(j).stateLength();
-                // oTot += allObservations.get(j).stateLength();
+                // oTot += alObservations.get(j).stateLength();
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
 

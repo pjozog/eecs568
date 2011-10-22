@@ -30,6 +30,8 @@ public class PartOneListener implements Simulator.Listener
     ArrayList<JacobBlock> jacobList = new ArrayList<JacobBlock>();
     ArrayList<CovBlock> covList = new ArrayList<CovBlock>();
 
+    Matrix cumulativeSigmaInverse;
+    private int numEdgesToAddToSigma = 0;
 
     JacobBlock pinningJacob = new JacobBlock(0, 0, 3);
     CovBlock pinningCov = new CovBlock(0, 0);
@@ -61,6 +63,9 @@ public class PartOneListener implements Simulator.Listener
         pinningJacob.setSecondBlock(new double[][]{ {0, 0, 0}, {0, 0, 0}, {0, 0, 0} });
 
         pinningCov.setTheBlock(new double [][]{ {100, 0, 0}, {0, 100, 0}, {0, 0, 100}});
+
+        cumulativeSigmaInverse = new Matrix(3, 3, Matrix.SPARSE);
+        cumulativeSigmaInverse.set(0, 0, new double [][]{ {100, 0, 0}, {0, 100, 0}, {0, 0, 100}});
 
     }
 
@@ -136,6 +141,7 @@ public class PartOneListener implements Simulator.Listener
         OdEdge odEdge = new OdEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, odNode);
         odEdge.setOdom(odom);
         allEdges.add(odEdge);
+        numEdgesToAddToSigma++;
 
         nextJacobRowIndex += lastOdNode.stateLength();
 
@@ -165,6 +171,7 @@ public class PartOneListener implements Simulator.Listener
                 // Hopefully the odom from a land edge is never used!
                 landEdge.setOdom(odom);
                 allEdges.add(landEdge);
+                numEdgesToAddToSigma++;
                 nextJacobRowIndex += landNode.stateLength();
                 odNode.sawLandmark(nodeIndex);
                 continue;
@@ -179,6 +186,7 @@ public class PartOneListener implements Simulator.Listener
             Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
             landEdge.setOdom(odom);
             allEdges.add(landEdge);
+            numEdgesToAddToSigma++;
 
             nextJacobRowIndex += landNode.stateLength();
 
@@ -191,28 +199,50 @@ public class PartOneListener implements Simulator.Listener
 
 
 
-        jacobList = new ArrayList<JacobBlock>();
+        // -----------------------------
+        // Add the new edges to our cumulativeSigmaInverse
+        // -----------------------------
+
+        // Assemble an array list of the new edges and call getCovBlock once for each edge
         covList = new ArrayList<CovBlock>();
+        for (int j = numEdgesToAddToSigma; j > 0; j --) {
+            Edge anEdge = allEdges.get(allEdges.size()-j);
+            Simulator.odometry_t myEdgeOdom = anEdge.getOdom();
+            covList.add(anEdge.getCovBlock(myEdgeOdom.obs[0], myEdgeOdom.obs[1]));
+        }
+
+        numEdgesToAddToSigma = 0;
+
+        // Create a huge new matrix where the assembleInverse function will only insert block diagonal elements for the new edges
+        Matrix newSigmaInverse = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList, 3, null);
+
+        // Set the first part of this matrix to be our original covariance
+        // This is now the combined guy!
+        newSigmaInverse.set(0, 0, cumulativeSigmaInverse.copyArray());
+
+        cumulativeSigmaInverse = newSigmaInverse.copy();
+
+        // This list will passed into assemble() and it will return a sparse matrix
+        jacobList = new ArrayList<JacobBlock>();
+
         for(int i = 0; i < numConverge; i++){
             jacobList.clear();
             covList.clear();
 
-
+            // Assemble all of the Jacobian Blocks. This re-evaluates the jacobian based on our current state vector.
             for (Edge edge : allEdges){
                 jacobList.add(edge.getJacob(stateVector));
-                Simulator.odometry_t myEdgeOdom = edge.getOdom();
-                covList.add(edge.getCovBlock(myEdgeOdom.obs[0], myEdgeOdom.obs[1]));
             }
 
             Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList, numPinnedRows, pinningJacob);
-            Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList, numPinnedRows, pinningCov);
+            // Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList, numPinnedRows, pinningCov);
 
-            if (!J.isSparse() || !sigmaInv.isSparse()) {
+            if (!J.isSparse() || !cumulativeSigmaInverse.isSparse()) {
                 System.out.println("234HOLY SHIT IT'S NOT SPARSE!");
             }
 
 
-          
+
             ArrayList<Node> predicted = getPredictedObs();
 
             ArrayList<Double> r = new ArrayList<Double>();
@@ -237,7 +267,7 @@ public class PartOneListener implements Simulator.Listener
                 // oTot += alObservations.get(j).stateLength();
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
-            
+
 
             /*includes 3 zeros at top for pinning*/
             int numZeros = 3;
@@ -262,8 +292,8 @@ public class PartOneListener implements Simulator.Listener
                 }
                 System.out.println();
             }
-           
-            Matrix jtSig = J.transpose().times(sigmaInv);
+
+            Matrix jtSig = J.transpose().times(cumulativeSigmaInverse);
 
 
 
@@ -271,7 +301,7 @@ public class PartOneListener implements Simulator.Listener
                 System.out.println("jtSig HOLY SHIT IT'S NOT SPARSE!");
             }
 
-           
+
             Matrix A = jtSig.times(J);
 
             if (!A.isSparse()) {
@@ -284,7 +314,7 @@ public class PartOneListener implements Simulator.Listener
 
             // double [] b = LinAlg.matrixAB(jtSig, realR);
             Matrix b = jtSig.times(Matrix.columnMatrix(realR));;
- 
+
 
 
 
@@ -295,7 +325,7 @@ public class PartOneListener implements Simulator.Listener
             // regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
 
 
-	    // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
+            // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
 
 
 
@@ -305,10 +335,10 @@ public class PartOneListener implements Simulator.Listener
 
 
 
-	    CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
-                 
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
+
             Matrix answer = myDecomp.solve(b);
-          
+
 
             double [] deltaX = answer.copyAsVector();
             if(debug != 0){

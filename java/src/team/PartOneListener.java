@@ -1,3 +1,11 @@
+/** EECS 568 Homework 2, SLAM
+Steve Chaves
+Schuyler Cohen
+Patrick O'Keefe
+Paul Ozog
+**/
+
+
 package team;
 
 import java.awt.*;
@@ -14,6 +22,7 @@ public class PartOneListener implements Simulator.Listener
 
     VisWorld vw;
     Config config;
+
     private int nextJacobRowIndex = 0;
 
     private int nextAbsStateRowIndex = 0;
@@ -53,10 +62,14 @@ public class PartOneListener implements Simulator.Listener
         baseline = config.requireDouble("robot.baseline_m");
         numConverge = config.requireInt("simulator.numConverge");
         debug = config.requireInt("simulator.debug");
+
+	/*Add an initial odom*/
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(initial);
+
+	/*Pin the first one to 0 0 0*/
         pinningJacob.setFirstBlock( new double[][]{ {1, 0, 0}, {0, 1, 0}, {0, 0, 1} });
         pinningJacob.setSecondBlock(new double[][]{ {0, 0, 0}, {0, 0, 0}, {0, 0, 0} });
 
@@ -162,7 +175,8 @@ public class PartOneListener implements Simulator.Listener
                 Node landNode = new LandNode(nodeIndex, -1, det.obs[0], det.obs[1], det.id);
                 allObservations.add(landNode);
                 Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex(), lastOdNode, landNode);
-                // Hopefully the odom from a land edge is never used!
+             
+		// Hopefully the odom from a land edge is never used,  but we suck at programming and don't know how to set up classes properly!
                 landEdge.setOdom(odom);
                 allEdges.add(landEdge);
                 nextJacobRowIndex += landNode.stateLength();
@@ -176,6 +190,7 @@ public class PartOneListener implements Simulator.Listener
 
             Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);
             odNode.sawLandmark(nodeIndex);
+
             Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
             landEdge.setOdom(odom);
             allEdges.add(landEdge);
@@ -210,15 +225,12 @@ public class PartOneListener implements Simulator.Listener
             if (!J.isSparse() || !sigmaInv.isSparse()) {
                 System.out.println("234HOLY SHIT IT'S NOT SPARSE!");
             }
-
-
           
             ArrayList<Node> predicted = getPredictedObs();
 
             ArrayList<Double> r = new ArrayList<Double>();
 
-
-            /*Error checking*/
+	    /*get the values of all the residuals*/
             for(int j = 0; j < predicted.size(); j++){
                 double[] p = predicted.get(j).getState();
                 double[] o = allObservations.get(j).getState();
@@ -227,15 +239,9 @@ public class PartOneListener implements Simulator.Listener
                     o[2] = MathUtil.mod2pi(o[2]);
                 }
 
-
-
                 for (int k = 0; k < p.length; k++) {
                     r.add(new Double(o[k]-p[k]));
                 }
-
-                // pTot += predicted.get(j).stateLength();
-                // oTot += alObservations.get(j).stateLength();
-                // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
             
 
@@ -250,7 +256,6 @@ public class PartOneListener implements Simulator.Listener
             }
             if(debug != 0){
 
-
                 System.out.println("Observations");
                 for(Node node: allObservations){
                     System.out.println(node);
@@ -263,14 +268,13 @@ public class PartOneListener implements Simulator.Listener
                 System.out.println();
             }
            
-            Matrix jtSig = J.transpose().times(sigmaInv);
 
+            Matrix jtSig = J.transpose().times(sigmaInv);
 
 
             if (!jtSig.isSparse()) {
                 System.out.println("jtSig HOLY SHIT IT'S NOT SPARSE!");
             }
-
            
             Matrix A = jtSig.times(J);
 
@@ -298,11 +302,9 @@ public class PartOneListener implements Simulator.Listener
 	    // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
 
 
-
             if (!A.isSparse()) {
                 System.out.println("HOLY SHIT IT'S NOT SPARSE!");
             }
-
 
 
 	    CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
@@ -321,6 +323,8 @@ public class PartOneListener implements Simulator.Listener
                 LinAlg.print(deltaX);
                 System.out.println("");
             }
+
+	    /*Increment state vector*/
             int index = 0;
             for (Node node : stateVector){
                 index+=node.addToState(deltaX, index);
@@ -346,18 +350,9 @@ public class PartOneListener implements Simulator.Listener
                 double[] state = node.getState();
                 trajectory.add(new double[] {state[0], state[1]});
                 xyt = state;
-                //System.out.println(node);
-            }
+	    }
         }
-
-
-
-        // System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
-        //                    + "\n\tand " + dets.size() + " landmark observations"
-        //                    + "\n\tand xyt: ");
-
-        // System.out.println();
-
+	
         drawDummy(dets);
     }
 

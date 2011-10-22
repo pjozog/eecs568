@@ -1,3 +1,10 @@
+/** EECS 568 Homework 2, SLAM
+Steve Chaves
+Schuyler Cohen
+Patrick O'Keefe
+Paul Ozog
+**/
+
 package team;
 
 import april.jmat.*;

@@ -44,6 +44,7 @@ public class PartOneListener implements Simulator.Listener
     OdNode lastOdNode =null;
     ArrayList<Simulator.odometry_t> allTicks = new ArrayList<Simulator.odometry_t>();
     private int numConverge;
+    private double lambda;
 
     public void init(Config _config, VisWorld _vw)
     {
@@ -52,6 +53,7 @@ public class PartOneListener implements Simulator.Listener
         Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
         numConverge = config.requireInt("simulator.numConverge");
+	lambda = config.requireDouble("simulator.lambda");
         debug = config.requireInt("simulator.debug");
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
@@ -295,7 +297,7 @@ public class PartOneListener implements Simulator.Listener
             // regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
 
 
-	    // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
+	    A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
 
 
 

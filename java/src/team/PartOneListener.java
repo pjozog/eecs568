@@ -235,6 +235,10 @@ public class PartOneListener implements Simulator.Listener
         // This list will passed into assemble() and it will return a sparse matrix
         jacobList = new ArrayList<JacobBlock>();
 
+		if (debug == 1) {
+			System.out.println("BEGINNING LEAST SQUARES");
+		}
+
         for(int i = 0; i < numConverge; i++){
             jacobList.clear();
             covList.clear();
@@ -306,8 +310,13 @@ public class PartOneListener implements Simulator.Listener
 
             Matrix answer = myDecomp.solve(b);
 
+			double [] deltaX = answer.copyAsVector();
 
-            double [] deltaX = answer.copyAsVector();
+			//Show Chi2 error
+			if (debug == 1) {
+				double chi2Error     = getChi2Error(J, answer, realR);
+				System.out.println(chi2Error);
+			}
 
             int index = 0;
             for (Node node : stateVector){
@@ -316,6 +325,10 @@ public class PartOneListener implements Simulator.Listener
 
         } // End all iterations of Ax = b
 
+		if (debug == 1) {
+			System.out.println("END NONLIN LEAST SQUARES");
+			System.out.println();
+		}
 
         // Grab our best guesses of the robot path and landmark positions from our state vector
         trajectory.clear();
@@ -334,6 +347,17 @@ public class PartOneListener implements Simulator.Listener
         drawDummy(dets);
     }
 
+	public double getChi2Error(Matrix J, Matrix deltaX, double[] resid) {
+
+		double chi2Error     = 0;
+		double DOF           = J.getRowDimension() - deltaX.getRowDimension();
+		Matrix jDeltaX       = J.times(deltaX);
+		Matrix jDeltaXMinusR = jDeltaX.minus(Matrix.columnMatrix(resid));
+		chi2Error            = jDeltaXMinusR.transpose().times(cumulativeSigmaInverse).times(jDeltaXMinusR).get(0,0);
+		chi2Error            = chi2Error / DOF;
+		return chi2Error;
+
+	}
 
     public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
     {

@@ -207,6 +207,9 @@ public class PartOneListener implements Simulator.Listener
             Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList, numPinnedRows, pinningJacob);
             Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList, numPinnedRows, pinningCov);
 
+            if (!J.isSparse() || !sigmaInv.isSparse()) {
+                System.out.println("234HOLY SHIT IT'S NOT SPARSE!");
+            }
 
 
             System.out.println("BEFORE RESIDUAL----------------");
@@ -271,18 +274,31 @@ public class PartOneListener implements Simulator.Listener
 
             System.out.println("BEFORE LINALG MATH----------------");
             System.out.flush();
-            double [][] Jarray = J.copyArray();
-            double [][] sigArray = sigmaInv.copyArray();
+            // double [][] Jarray = J.copyArray();
+            // double [][] sigArray = sigmaInv.copyArray();
 
             System.out.println("BEFORE LINALG MATH ATBC----------------");
             System.out.flush();
-            double [][] A = LinAlg.matrixAtBC(Jarray, sigArray, Jarray);
+            // double [][] A = LinAlg.matrixAtBC(Jarray, sigArray, Jarray);            
+            // Matrix A = sigmaInv.times(J);
+            Matrix jtSig = J.transpose().times(sigmaInv);
             System.out.println("AFTER LINALG MATH ATBC----------------");
             System.out.flush();
 
+
+            if (!jtSig.isSparse()) {
+                System.out.println("jtSig HOLY SHIT IT'S NOT SPARSE!");
+            }
+
             System.out.println("BEFORE LINALG MATH ATB----------------");
             System.out.flush();
-            double [][] jtSig = LinAlg.matrixAtB(Jarray, sigArray);
+            Matrix A = jtSig.times(J);
+
+            if (!A.isSparse()) {
+                System.out.println("HOLY SHIT IT'S NOT SPARSE!");
+            }
+
+            // double [][] jtSig = LinAlg.matrixAtB(Jarray, sigArray);
             System.out.println("AFTER LINALG MATH ATB----------------");
             System.out.flush();
 
@@ -290,35 +306,38 @@ public class PartOneListener implements Simulator.Listener
 
             System.out.println("BEFORE LINALG MATH AB----------------");
             System.out.flush();
-            double [] b = LinAlg.matrixAB(jtSig, realR);
+            // double [] b = LinAlg.matrixAB(jtSig, realR);
+            Matrix b = jtSig.times(Matrix.columnMatrix(realR));;
             System.out.println("AFTER LINALG MATH AB----------------");
             System.out.flush();
 
 
-            // Matrix identityPerturbation = Matrix.identity(A.length, A[0].length).times(100.0);
 
-            // double [][] AInv = LinAlg.inverse(LinAlg.add(A, identityPerturbation.copyArray()));
+            // Matrix identityPerturbation = Matrix.identity(A.length, A[0].length).times(100.0);
             // double [][] regularizedA = LinAlg.add(A, identityPerturbation.copyArray());
 
-            Matrix regularizedAMatrix = new Matrix(A);
-            regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
+            // Matrix regularizedAMatrix = new Matrix(A);
+            // regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
+
+
+            A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
 
             System.out.println("AFTER LINALG MATH----------------");
             System.out.flush();
 
-
-
-            if (!regularizedAMatrix.isSparse()) {
+            if (!A.isSparse()) {
                 System.out.println("HOLY SHIT IT'S NOT SPARSE!");
             }
 
+
+
             System.out.println("BEFORE DECOMP----------------");
-            CholeskyDecomposition myDecomp = new CholeskyDecomposition(regularizedAMatrix);
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
             System.out.println("AFTER DECOMP----------------");
 
 
             System.out.println("BEFORE----------------");
-            Matrix answer = myDecomp.solve(Matrix.columnMatrix(b));
+            Matrix answer = myDecomp.solve(b);
             System.out.println("AFTER----------------");
 
 

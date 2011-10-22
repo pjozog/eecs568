@@ -22,37 +22,28 @@ public class CovBlock{
         Matrix toReturn = new Matrix(rows, cols, Matrix.SPARSE);
 
         for (CovBlock block : blocks) {
+            
             // assert(LinAlg.inverse(block.getBlock())!=null);
             // System.out.println("ASDF********");
-            // LinAlg.print(LinAlg.inverse(block.getBlock()));
+            // LinAlg.print(block.getBlock());
+            // System.out.println("ASDF********");
             // System.out.println(LinAlg.inverse(block.getBlock()));
 
-            if (LinAlg.inverse(block.getBlock()) == null) {
-                double [][] ident = new double[3][3];
+            // Perform inversion on our diagonal block
+            double [][] blockInv = LinAlg.inverse(block.getBlock());
 
-                for (int i=0; i < 3; i++) {
-                    for (int j =0; j < 3; j++) {
-                        if (i == j) {
-                            ident[i][j] = 1;
-                        } else {
-                            ident[i][j] = 0;
-                        }
-                    }
-                }
+            // Make sure it's not null! It shouldn't be if we do our projections right for odometry
+            assert (blockInv != null);
 
-
-                toReturn.set(block.getRow(), block.getColumn(), ident);
-
-            } else {
-                toReturn.set(block.getRow(), block.getColumn(), LinAlg.inverse(block.getBlock()));
-            }
+            // Add this block in the proper place in the grand covariance matrix
+            toReturn.set(block.getRow(), block.getColumn(), blockInv);
 
 
         }
 
-        // System.out.println("********");
-        // LinAlg.printPattern(toReturn.copyArray());
-        // System.out.println("********************");
+        System.out.println("********");
+        LinAlg.printPattern(toReturn.copyArray());
+        System.out.println("********************");
 
         return toReturn;
 

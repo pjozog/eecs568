@@ -94,62 +94,73 @@ public class OdEdge extends Edge{
         //        if (t_l == t_r) {
         /*if (true) {
 
-            tltrToXYTJacob[0][0] = 1.0;
-            tltrToXYTJacob[0][1] = 1.0;
-            //TODO: I changed this
-            tltrToXYTJacob[1][0] = 1.1;
-            tltrToXYTJacob[1][1] = 1.0;
-            tltrToXYTJacob[2][0] = -1/b;
-            tltrToXYTJacob[2][1] = 1/b;
+          tltrToXYTJacob[0][0] = 1.0;
+          tltrToXYTJacob[0][1] = 1.0;
+          //TODO: I changed this
+          tltrToXYTJacob[1][0] = 1.1;
+          tltrToXYTJacob[1][1] = 1.0;
+          tltrToXYTJacob[2][0] = -1/b;
+          tltrToXYTJacob[2][1] = 1/b;
 
 
-        } else {
+          } else {
 
 
-            tltrToXYTJacob[0][0] =  (b*Math.sin((t_l - t_r)/b))/(2*(t_l - t_r)) + (Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r))
-                - (b*Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
+          tltrToXYTJacob[0][0] =  (b*Math.sin((t_l - t_r)/b))/(2*(t_l - t_r)) + (Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r))
+          - (b*Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
 
-            tltrToXYTJacob[0][1] =  (b*Math.sin((t_l - t_r)/b))/(2*(t_l - t_r)) - (Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r))
-                + (b*Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
+          tltrToXYTJacob[0][1] =  (b*Math.sin((t_l - t_r)/b))/(2*(t_l - t_r)) - (Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r))
+          + (b*Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
 
-            tltrToXYTJacob[1][0] = (b*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)) - b/(2*(t_l - t_r))
-                - (Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*Math.cos((t_l - t_r)/b))/(2*(t_l - t_r))
-                - (b*Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
+          tltrToXYTJacob[1][0] = (b*(t_l + t_r))/(2*Math.pow(t_l - t_r,2)) - b/(2*(t_l - t_r))
+          - (Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) + (b*Math.cos((t_l - t_r)/b))/(2*(t_l - t_r))
+          - (b*Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
 
-            tltrToXYTJacob[1][1] = (Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*(t_l + t_r))/(2*Math.pow(t_l - t_r,2))
-                - b/(2*(t_l - t_r)) + (b*Math.cos((t_l - t_r)/b))/(2*(t_l - t_r))
-                + (b*Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
+          tltrToXYTJacob[1][1] = (Math.sin((t_l - t_r)/b)*(t_l + t_r))/(2*(t_l - t_r)) - (b*(t_l + t_r))/(2*Math.pow(t_l - t_r,2))
+          - b/(2*(t_l - t_r)) + (b*Math.cos((t_l - t_r)/b))/(2*(t_l - t_r))
+          + (b*Math.cos((t_l - t_r)/b)*(t_l + t_r))/(2*Math.pow(t_l - t_r,2));
 
-            tltrToXYTJacob[2][0] = -1/b;
-            tltrToXYTJacob[2][1] = 1/b;
+          tltrToXYTJacob[2][0] = -1/b;
+          tltrToXYTJacob[2][1] = 1/b;
 
-        }*/
+          }*/
 
-	//Trying different Jacobian...
-	double dPhi = MathUtil.mod2pi((t_r - t_l)/b);
-        double s = (t_l + t_r)/(2.0);
+        //Trying different Jacobian...
+        double dPhi = MathUtil.mod2pi(Math.atan2(t_r - t_l, b));
+        // double s  = (t_l + t_r)/(2.0);
+        double x = (t_l + t_r)/(2.0);
 
-	tltrToXYTJacob[0][0] = (Math.cos(dPhi)/2.0) + ((s*Math.sin(dPhi))/2.0);
-        tltrToXYTJacob[0][1] = (Math.cos(dPhi)/2.0) - ((s*Math.sin(dPhi))/2.0);
-        tltrToXYTJacob[1][0] = (Math.sin(dPhi)/2.0) - ((s*Math.cos(dPhi))/2.0);
-        tltrToXYTJacob[1][1] = (Math.sin(dPhi)/2.0) + ((s*Math.cos(dPhi))/2.0);
-        tltrToXYTJacob[2][0] = -1/b;
-        tltrToXYTJacob[2][1] = 1/b;
+        // tltrToXYTJacob[0][0] = (Math.cos(dPhi)/2.0) + ((s*Math.sin(dPhi))/2.0);
+        // tltrToXYTJacob[0][1] = (Math.cos(dPhi)/2.0) - ((s*Math.sin(dPhi))/2.0);
+        // tltrToXYTJacob[1][0] = (Math.sin(dPhi)/2.0) - ((s*Math.cos(dPhi))/2.0);
+        // tltrToXYTJacob[1][1] = (Math.sin(dPhi)/2.0) + ((s*Math.cos(dPhi))/2.0);
+        // tltrToXYTJacob[2][0] = -1/b;
+        // tltrToXYTJacob[2][1] = 1/b;
+
+        tltrToXYTJacob[0][0] = .5;
+        tltrToXYTJacob[0][1] = .5;
+        tltrToXYTJacob[1][0] = 0.0;
+        tltrToXYTJacob[1][1] = 0.0;
+        tltrToXYTJacob[2][0] = -1.0/(b*(Math.pow(t_l - t_r, 2)/Math.pow(b,2) + 1));
+        tltrToXYTJacob[2][1] =  1.0/(b*(Math.pow(t_l - t_r, 2)/Math.pow(b,2) + 1));
 
 
 
         double[][] result = new double[3][3];
         result = LinAlg.matrixABCt(tltrToXYTJacob, tltrCovariance, tltrToXYTJacob);
+        result[1][1] = result[0][0];
 
-        result[0][0] = Math.pow(t_l*sigmaL, 2);; 
-        result[0][1] = 0.0; 
-        result[0][2] = 0.0; 
-        result[1][0] = 0.0; 
-        result[1][1] = Math.pow(t_l*sigmaL, 2); 
-        result[1][2] = 0.0; 
-        result[2][0] = 0.0; 
-        result[2][1] = 0.0; 
-        result[2][2] = Math.pow(t_l*sigmaL, 2); 
+
+        // Hack in case we're always getting singular stuff during inversion
+        // result[0][0] = Math.pow(t_l*sigmaL, 2);;
+        // result[0][1] = 0.0;
+        // result[0][2] = 0.0;
+        // result[1][0] = 0.0;
+        // result[1][1] = Math.pow(t_l*sigmaL, 2);
+        // result[1][2] = 0.0;
+        // result[2][0] = 0.0;
+        // result[2][1] = 0.0;
+        // result[2][2] = Math.pow(t_l*sigmaL, 2);
 
 
 

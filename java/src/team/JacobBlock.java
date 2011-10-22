@@ -24,7 +24,7 @@ public class JacobBlock{
     /** rows is the size of the observation vector, columns is the size of the state vector**/
     public static Matrix assemble(int rows, int cols, ArrayList<JacobBlock> blocks, int numPinningRows, JacobBlock pinned){
 
-        System.out.println("****Trying to make j size: " + (rows + numPinningRows) + " " + cols);
+        
         Matrix toReturn = new Matrix(rows + numPinningRows, cols, Matrix.SPARSE);
         toReturn.set(pinned.getRow(), pinned.getFirstColumn(),  pinned.getFirstBlock());
         toReturn.set(pinned.getRow(), pinned.getSecondColumn(), pinned.getSecondBlock());
@@ -34,9 +34,6 @@ public class JacobBlock{
             toReturn.set(block.getRow() + numPinningRows, block.getSecondColumn(), block.getSecondBlock());
 
         }
-        // System.out.println("********");
-        //LinAlg.printPattern(toReturn.copyArray());
-        System.out.println("********************DONE MAKING SIZE JACOBIAN");
         return toReturn;
     }
 

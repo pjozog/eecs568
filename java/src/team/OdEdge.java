@@ -148,7 +148,7 @@ public class OdEdge extends Edge{
 
         double[][] result = new double[3][3];
         result = LinAlg.matrixABCt(tltrToXYTJacob, tltrCovariance, tltrToXYTJacob);
-        result[1][1] = result[0][0];
+        result[1][1] = result[0][0]/100.0;
 
 
         // Hack in case we're always getting singular stuff during inversion

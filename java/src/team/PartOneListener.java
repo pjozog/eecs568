@@ -212,7 +212,7 @@ public class PartOneListener implements Simulator.Listener
             }
 
 
-            System.out.println("BEFORE RESIDUAL----------------");
+          
             ArrayList<Node> predicted = getPredictedObs();
 
             ArrayList<Double> r = new ArrayList<Double>();
@@ -237,7 +237,7 @@ public class PartOneListener implements Simulator.Listener
                 // oTot += alObservations.get(j).stateLength();
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
-            System.out.println("AFTER RESIDUAL----------------");
+            
 
             /*includes 3 zeros at top for pinning*/
             int numZeros = 3;
@@ -262,34 +262,16 @@ public class PartOneListener implements Simulator.Listener
                 }
                 System.out.println();
             }
-            // System.out.println("RESIDUALS");
-            // for(int k = 0; k < realR.length; k++){
-            //     System.out.println(realR[k]);
-
-            // }
-            // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
-            // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
-
-            System.out.println("BEFORE LINALG MATH----------------");
-            System.out.flush();
-            // double [][] Jarray = J.copyArray();
-            // double [][] sigArray = sigmaInv.copyArray();
-
-            System.out.println("BEFORE LINALG MATH ATBC----------------");
-            System.out.flush();
-            // double [][] A = LinAlg.matrixAtBC(Jarray, sigArray, Jarray);            
-            // Matrix A = sigmaInv.times(J);
+           
             Matrix jtSig = J.transpose().times(sigmaInv);
-            System.out.println("AFTER LINALG MATH ATBC----------------");
-            System.out.flush();
+
 
 
             if (!jtSig.isSparse()) {
                 System.out.println("jtSig HOLY SHIT IT'S NOT SPARSE!");
             }
 
-            System.out.println("BEFORE LINALG MATH ATB----------------");
-            System.out.flush();
+           
             Matrix A = jtSig.times(J);
 
             if (!A.isSparse()) {
@@ -297,17 +279,12 @@ public class PartOneListener implements Simulator.Listener
             }
 
             // double [][] jtSig = LinAlg.matrixAtB(Jarray, sigArray);
-            System.out.println("AFTER LINALG MATH ATB----------------");
-            System.out.flush();
-
             // System.out.println("Size of jtSig: "+ jtSig.length + " " + jtSig[0].length + "\nSize of realR: " + realR.length);
 
-            System.out.println("BEFORE LINALG MATH AB----------------");
-            System.out.flush();
+
             // double [] b = LinAlg.matrixAB(jtSig, realR);
             Matrix b = jtSig.times(Matrix.columnMatrix(realR));;
-            System.out.println("AFTER LINALG MATH AB----------------");
-            System.out.flush();
+ 
 
 
 
@@ -320,8 +297,7 @@ public class PartOneListener implements Simulator.Listener
 
 	    // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(100.0));
 
-            System.out.println("AFTER LINALG MATH----------------");
-            System.out.flush();
+
 
             if (!A.isSparse()) {
                 System.out.println("HOLY SHIT IT'S NOT SPARSE!");
@@ -329,16 +305,10 @@ public class PartOneListener implements Simulator.Listener
 
 
 
-            System.out.println("BEFORE DECOMP----------------");
-            CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
-            System.out.println("AFTER DECOMP----------------");
-
-
-            System.out.println("BEFORE----------------");
+	    CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
+                 
             Matrix answer = myDecomp.solve(b);
-            System.out.println("AFTER----------------");
-
-
+          
 
             double [] deltaX = answer.copyAsVector();
             if(debug != 0){
@@ -376,17 +346,17 @@ public class PartOneListener implements Simulator.Listener
                 double[] state = node.getState();
                 trajectory.add(new double[] {state[0], state[1]});
                 xyt = state;
-                System.out.println(node);
+                //System.out.println(node);
             }
         }
 
 
 
-        System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
-                           + "\n\tand " + dets.size() + " landmark observations"
-                           + "\n\tand xyt: ");
+        // System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
+        //                    + "\n\tand " + dets.size() + " landmark observations"
+        //                    + "\n\tand xyt: ");
 
-        System.out.println();
+        // System.out.println();
 
         drawDummy(dets);
     }

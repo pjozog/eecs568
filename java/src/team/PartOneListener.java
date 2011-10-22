@@ -251,14 +251,12 @@ public class PartOneListener implements Simulator.Listener
                 System.out.println("234HOLY SHIT IT'S NOT SPARSE!");
             }
 
-
-
             ArrayList<Node> predicted = getPredictedObs();
 
             ArrayList<Double> r = new ArrayList<Double>();
 
 
-            /*Error checking*/
+            //*Get residuals*/
             for(int j = 0; j < predicted.size(); j++){
                 double[] p = predicted.get(j).getState();
                 double[] o = allObservations.get(j).getState();
@@ -268,14 +266,9 @@ public class PartOneListener implements Simulator.Listener
                 }
 
 
-
                 for (int k = 0; k < p.length; k++) {
                     r.add(new Double(o[k]-p[k]));
                 }
-
-                // pTot += predicted.get(j).stateLength();
-                // oTot += alObservations.get(j).stateLength();
-                // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
 
 
@@ -288,29 +281,12 @@ public class PartOneListener implements Simulator.Listener
             for (int k = 0; k < r.size(); k++) {
                 realR[k + numZeros] = r.get(k);
             }
-            if(debug != 0){
-
-
-                System.out.println("Observations");
-                for(Node node: allObservations){
-                    System.out.println(node);
-                }
-
-                System.out.println("Predicted");
-                for(Node node : predicted){
-                    System.out.println(node);
-                }
-                System.out.println();
-            }
 
             Matrix jtSig = J.transpose().times(cumulativeSigmaInverse);
-
-
 
             if (!jtSig.isSparse()) {
                 System.out.println("jtSig HOLY SHIT IT'S NOT SPARSE!");
             }
-
 
             Matrix A = jtSig.times(J);
 
@@ -318,32 +294,13 @@ public class PartOneListener implements Simulator.Listener
                 System.out.println("HOLY SHIT IT'S NOT SPARSE!");
             }
 
-            // double [][] jtSig = LinAlg.matrixAtB(Jarray, sigArray);
-            // System.out.println("Size of jtSig: "+ jtSig.length + " " + jtSig[0].length + "\nSize of realR: " + realR.length);
-
-
-            // double [] b = LinAlg.matrixAB(jtSig, realR);
             Matrix b = jtSig.times(Matrix.columnMatrix(realR));;
 
-
-
-
-            // Matrix identityPerturbation = Matrix.identity(A.length, A[0].length).times(100.0);
-            // double [][] regularizedA = LinAlg.add(A, identityPerturbation.copyArray());
-
-            // Matrix regularizedAMatrix = new Matrix(A);
-            // regularizedAMatrix = regularizedAMatrix.coerceOption(Matrix.SPARSE);
-
-
 	    A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
-
-
 
             if (!A.isSparse()) {
                 System.out.println("HOLY SHIT IT'S NOT SPARSE!");
             }
-
-
 
             CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
 
@@ -351,27 +308,12 @@ public class PartOneListener implements Simulator.Listener
 
 
             double [] deltaX = answer.copyAsVector();
-            if(debug != 0){
-                System.out.println("DELTAX LENGTH " +deltaX.length);
 
-                System.out.println("Initial state vector");
-                for(Node node : stateVector){
-                    System.out.println(node);
-                }
-                LinAlg.print(deltaX);
-                System.out.println("");
-            }
             int index = 0;
             for (Node node : stateVector){
                 index+=node.addToState(deltaX, index);
             }
 
-            if(debug != 0){
-                System.out.println("\nAfter applying delta x\n");
-                for(Node node: stateVector){
-                    System.out.println(node);
-                }
-            }
         } // End all iterations of Ax = b
 
 
@@ -386,17 +328,8 @@ public class PartOneListener implements Simulator.Listener
                 double[] state = node.getState();
                 trajectory.add(new double[] {state[0], state[1]});
                 xyt = state;
-                //System.out.println(node);
             }
         }
-
-
-
-        // System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
-        //                    + "\n\tand " + dets.size() + " landmark observations"
-        //                    + "\n\tand xyt: ");
-
-        // System.out.println();
 
         drawDummy(dets);
     }

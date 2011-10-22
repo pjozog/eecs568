@@ -23,19 +23,19 @@ public class JacobBlock{
 
     /** rows is the size of the observation vector, columns is the size of the state vector**/
     public static Matrix assemble(int rows, int cols, ArrayList<JacobBlock> blocks){
-	System.out.println("****Trying to make j size: " + rows + " " + cols);
+        System.out.println("****Trying to make j size: " + rows + " " + cols);
         Matrix toReturn = new Matrix(rows, cols, Matrix.SPARSE);
-	
+
         for(JacobBlock block : blocks){
-	    
+
             toReturn.set(block.getRow(), block.getFirstColumn(),  block.getFirstBlock());
             toReturn.set(block.getRow(), block.getSecondColumn(), block.getSecondBlock());
-	
+
         }
-	System.out.println("********");
-	LinAlg.printPattern(toReturn.copyArray());
-        System.out.println("********************");
-	return toReturn;
+        // System.out.println("********");
+        // LinAlg.printPattern(toReturn.copyArray());
+        // System.out.println("********************");
+        return toReturn;
     }
 
 
@@ -67,5 +67,5 @@ public class JacobBlock{
         this.block2 = theBlock;
     }
 
-    
+
 }

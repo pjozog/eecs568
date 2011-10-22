@@ -21,6 +21,7 @@ public class PartOneListener implements Simulator.Listener
     double xyt[] = new double[3]; // dead reconning
 
     ArrayList<double[]> trajectory = new ArrayList<double[]>();
+    ArrayList<double[]> estimatedLandmarkPositions = new ArrayList<double[]>();
 
     ArrayList<Node> allObservations = new ArrayList<Node>();
     ArrayList<Node> stateVector = new ArrayList<Node>();
@@ -51,15 +52,15 @@ public class PartOneListener implements Simulator.Listener
         Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
         numConverge = config.requireInt("simulator.numConverge");
-	debug = config.requireInt("simulator.debug");
+        debug = config.requireInt("simulator.debug");
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(initial);
-	pinningJacob.setFirstBlock( new double[][]{ {1, 0, 0}, {0, 1, 0}, {0, 0, 1} });
-	pinningJacob.setSecondBlock(new double[][]{ {0, 0, 0}, {0, 0, 0}, {0, 0, 0} });
+        pinningJacob.setFirstBlock( new double[][]{ {1, 0, 0}, {0, 1, 0}, {0, 0, 1} });
+        pinningJacob.setSecondBlock(new double[][]{ {0, 0, 0}, {0, 0, 0}, {0, 0, 0} });
 
-	pinningCov.setTheBlock(new double [][]{ {100, 0, 0}, {0, 100, 0}, {0, 0, 100}});
+        pinningCov.setTheBlock(new double [][]{ {100, 0, 0}, {0, 100, 0}, {0, 0, 100}});
 
     }
 
@@ -71,7 +72,7 @@ public class PartOneListener implements Simulator.Listener
         /*ignore landmarks.
           for all od measurements, subtract (matrix version) from previous od measurement
           then calculate distance to all landmarks*/
-	Node lastOdNode = stateVector.get(0);
+        Node lastOdNode = stateVector.get(0);
         for (Node node : stateVector.subList(1, stateVector.size())){
 
             if(node.isLand()){
@@ -85,7 +86,7 @@ public class PartOneListener implements Simulator.Listener
             ArrayList<Integer> landmarkIndex = node.getLandmarksSeen();
             for(int i : landmarkIndex){
                 Node landNode = stateVector.get(i);
-              
+
                 double pos[] = node.getState();
                 double xa = pos[0];
                 double ya = pos[1];
@@ -99,7 +100,7 @@ public class PartOneListener implements Simulator.Listener
                 double theta = Math.atan2(yl - ya, xl - xa) - p;
                 predicted.add(new LandNode(0, 0, r, theta, 0));
             }
-	    lastOdNode = node;
+            lastOdNode = node;
 
         }
         return predicted;
@@ -228,34 +229,34 @@ public class PartOneListener implements Simulator.Listener
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
 
-	    /*includes 3 zeros at top for pinning*/
-	    int numZeros = 3;
+            /*includes 3 zeros at top for pinning*/
+            int numZeros = 3;
             double [] realR = new double[r.size() + numZeros];
-	    for (int k = 0; k < numZeros; k++){
-		realR[k] = 0;
-	    }
+            for (int k = 0; k < numZeros; k++){
+                realR[k] = 0;
+            }
             for (int k = 0; k < r.size(); k++) {
                 realR[k + numZeros] = r.get(k);
             }
-	    if(debug != 0){
+            if(debug != 0){
 
 
-		System.out.println("Observations");
-		for(Node node: allObservations){
-		    System.out.println(node);
-		}
+                System.out.println("Observations");
+                for(Node node: allObservations){
+                    System.out.println(node);
+                }
 
-		System.out.println("Predicted");
-		for(Node node : predicted){
-		    System.out.println(node);
-		}
-		System.out.println();
-	    }
-	    System.out.println("RESIDUALS");
-	    for(int k = 0; k < realR.length; k++){
-		System.out.println(realR[k]);
+                System.out.println("Predicted");
+                for(Node node : predicted){
+                    System.out.println(node);
+                }
+                System.out.println();
+            }
+            System.out.println("RESIDUALS");
+            for(int k = 0; k < realR.length; k++){
+                System.out.println(realR[k]);
 
-	    }
+            }
             // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
             // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
             double [][] Jarray = J.copyArray();
@@ -283,55 +284,61 @@ public class PartOneListener implements Simulator.Listener
             // double [] deltaX = LinAlg.matrixAB(AInv,b);
 
             double [] deltaX = answer.copyAsVector();
-	    if(debug != 0){
-		System.out.println("DELTAX LENGTH " +deltaX.length);
+            if(debug != 0){
+                System.out.println("DELTAX LENGTH " +deltaX.length);
 
-		System.out.println("Initial state vector");
-		for(Node node : stateVector){
-		    System.out.println(node);
-		}
-		LinAlg.print(deltaX);
-		System.out.println("");
-	    }
+                System.out.println("Initial state vector");
+                for(Node node : stateVector){
+                    System.out.println(node);
+                }
+                LinAlg.print(deltaX);
+                System.out.println("");
+            }
             int index = 0;
             for (Node node : stateVector){
                 index+=node.addToState(deltaX, index);
             }
 
-	    if(debug != 0){
-		System.out.println("\nAfter applying delta x\n");
-		for(Node node: stateVector){
-		    System.out.println(node);
-		}
-    }
-        }
+            if(debug != 0){
+                System.out.println("\nAfter applying delta x\n");
+                for(Node node: stateVector){
+                    System.out.println(node);
+                }
+            }
+        } // End all iterations of Ax = b
 
 
-      
-	for(int i = stateVector.size() -1; i > 0; i--){
-	    if(stateVector.get(i).isLand()){
-		continue;
-	    }
-	    xyt = stateVector.get(i).getState();
-	    break;
-	}
 
-      
+        // for(int i = stateVector.size() -1; i >= 0; i--){
+        //     if(stateVector.get(i).isLand()){
+        //         continue;
+        //     }
+        //     xyt = stateVector.get(i).getState();
+        //     break;
+        // }
+
+
+        // Grab our best guesses of the robot path and landmark positions from our state vector
         trajectory.clear();
+        estimatedLandmarkPositions.clear();
         for (Node node : stateVector) {
-            if (!node.isLand()) {
+            if (node.isLand()) {
                 double[] state = node.getState();
-                trajectory.add(new double[] {state[0], state[1], state[2]});
-		System.out.println(node);
+                estimatedLandmarkPositions.add(new double[] {state[0], state[1]});
+            } else {
+                double[] state = node.getState();
+                trajectory.add(new double[] {state[0], state[1]});
+                xyt = state;
+                System.out.println(node);
             }
         }
 
-        
+
 
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
                            + "\n\tand " + dets.size() + " landmark observations"
                            + "\n\tand xyt: ");
-	// LinAlg.printTranspose(ticksXYT.getDoubles());
+        // LinAlg.printTranspose(ticksXYT.getDoubles());
         System.out.println();
 
         drawDummy(dets);
@@ -340,7 +347,7 @@ public class PartOneListener implements Simulator.Listener
 
     public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
     {
-        // Draw local Trajectory
+        // Draw local Trajectory -- the red robot path -- our least squares "best guess"
         {
             VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
             vb.addBack(new VisLines(new VisVertexData(trajectory),
@@ -349,12 +356,24 @@ public class PartOneListener implements Simulator.Listener
             vb.swap();
         }
 
+
+        // Draw our least squares best guess of the landmark positions
+        {
+            VisWorld.Buffer vb = vw.getBuffer("landmark-position-local");
+            vb.addBack(new VisPoints(new VisVertexData(estimatedLandmarkPositions),
+                                     new VisConstantColor(new Color(255,0,0)),
+                                     10.0));
+            vb.swap();
+
+        }
+
+
         ArrayList<double[]> rpoints = new ArrayList<double[]>();
         rpoints.add(new double[]{-.3, .3});
         rpoints.add(new double[]{-.3, -.3});
         rpoints.add(new double[]{.45,0});
 
-        // Probably should be replaced with student-code
+        // Draws the robot triangle at xyt
         {
             VisWorld.Buffer vb = vw.getBuffer("robot-local");
             VisObject robot = new VisLines(new VisVertexData(rpoints),
@@ -369,7 +388,7 @@ public class PartOneListener implements Simulator.Listener
             vb.swap();
         }
 
-        // Draw the landmark observations
+        // Draw the landmark observations -- the blue lines shooting out of the red bot
         {
             VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
             for (Simulator.landmark_t lmark : landmarks) {
@@ -383,6 +402,8 @@ public class PartOneListener implements Simulator.Listener
             }
             vb.swap();
         }
+
+
 
 
     }

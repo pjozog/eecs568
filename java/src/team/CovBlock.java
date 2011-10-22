@@ -21,9 +21,9 @@ public class CovBlock{
 
         Matrix toReturn = new Matrix(rows +numPinningRows, cols + numPinningRows, Matrix.SPARSE);
 
-	toReturn.set(pinnedBlock.getRow(), pinnedBlock.getColumn(), LinAlg.inverse(pinnedBlock.getBlock()));
+        toReturn.set(pinnedBlock.getRow(), pinnedBlock.getColumn(), LinAlg.inverse(pinnedBlock.getBlock()));
         for (CovBlock block : blocks) {
-            
+
 
             // Perform inversion on our diagonal block
             double [][] blockInv = LinAlg.inverse(block.getBlock());

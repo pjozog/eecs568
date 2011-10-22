@@ -27,6 +27,7 @@ public class PartOneListener implements Simulator.Listener
     ArrayList<Edge> allEdges = new ArrayList<Edge>();
 
     ArrayList<JacobBlock> jacobList = new ArrayList<JacobBlock>();
+    ArrayList<CovBlock> covList = new ArrayList<CovBlock>();
 
     private static int numUpdates = 0;
 
@@ -43,51 +44,51 @@ public class PartOneListener implements Simulator.Listener
         vw = _vw;
         Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
-	numConverge = config.requireInt("simulator.numConverge");
+        numConverge = config.requireInt("simulator.numConverge");
         lastOdNode = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(new OdNode(0, 0, 0, 0, 0));
     }
     private ArrayList<Node> getPredictedObs(){
-	
-	ArrayList<Node> predicted = new ArrayList<Node>();
 
-	/*ignore landmarks.
-	  for all od measurements, subtract (matrix version) from previous od measurement
-	  then calculate distance to all landmarks*/
-	Node lastOdNode = stateVector.get(0);
-	for (Node node : stateVector.subList(1, stateVector.size())){
-	    if(node.isLand()){
-		continue;
-	    }
-	    /*obs = old -^1 * new*/
-	    double []x = LinAlg.xytInvMul31(lastOdNode.getState(), node.getState());
-	    predicted.add(new OdNode(0, 0, x[0], x[1], x[2]));
-	    
-	    /*TODO NOTE, ignoring index and id for nodes*/
-	    ArrayList<Integer> landmarkIndex = node.getLandmarksSeen();
-	    for(int i : landmarkIndex){
-		Node landNode = stateVector.get(i);
-		//TODO take out for "production"
-		if(true){
-		    assert(landNode.isLand());
-		}
-		double pos[] = node.getState();
-		double xa = pos[0];
-		double ya = pos[1];
-		double p = pos[2];
-		
-		double posL[] = landNode.getState();
-		double xl = posL[0];
-		double yl = posL[1];
-		
-		double r     = Math.sqrt(Math.pow(xl - xa, 2) + Math.pow(yl - ya, 2));
-		double theta = Math.atan2(yl - ya, xl - xa) - p;
-		predicted.add(new LandNode(0, 0, r, theta, 0));
-	    }
+        ArrayList<Node> predicted = new ArrayList<Node>();
 
-	}
-	return predicted;
+        /*ignore landmarks.
+          for all od measurements, subtract (matrix version) from previous od measurement
+          then calculate distance to all landmarks*/
+        Node lastOdNode = stateVector.get(0);
+        for (Node node : stateVector.subList(1, stateVector.size())){
+            if(node.isLand()){
+                continue;
+            }
+            /*obs = old -^1 * new*/
+            double []x = LinAlg.xytInvMul31(lastOdNode.getState(), node.getState());
+            predicted.add(new OdNode(0, 0, x[0], x[1], x[2]));
+
+            /*TODO NOTE, ignoring index and id for nodes*/
+            ArrayList<Integer> landmarkIndex = node.getLandmarksSeen();
+            for(int i : landmarkIndex){
+                Node landNode = stateVector.get(i);
+                //TODO take out for "production"
+                if(true){
+                    assert(landNode.isLand());
+                }
+                double pos[] = node.getState();
+                double xa = pos[0];
+                double ya = pos[1];
+                double p = pos[2];
+
+                double posL[] = landNode.getState();
+                double xl = posL[0];
+                double yl = posL[1];
+
+                double r     = Math.sqrt(Math.pow(xl - xa, 2) + Math.pow(yl - ya, 2));
+                double theta = Math.atan2(yl - ya, xl - xa) - p;
+                predicted.add(new LandNode(0, 0, r, theta, 0));
+            }
+
+        }
+        return predicted;
 
 
     }
@@ -98,8 +99,8 @@ public class PartOneListener implements Simulator.Listener
       second is second*/
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
-      
-	allTicks.add(odom);
+
+        allTicks.add(odom);
         numUpdates++;
         DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
@@ -108,16 +109,17 @@ public class PartOneListener implements Simulator.Listener
         double t = ticksXYT.get(2);;
         int nodeIndex = stateVector.size();
 
-	/*new = old * obs*/
+        /*new = old * obs*/
         double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
-	newPos[2] = MathUtil.mod2pi(newPos[2]);
+        newPos[2] = MathUtil.mod2pi(newPos[2]);
 
         /*adds global coords*/
-        OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);      
+        OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);
         stateVector.add(odNode);
 
 
         OdEdge odEdge = new OdEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, odNode);
+        odEdge.setOdom(odom);
         allEdges.add(odEdge);
 
         nextJacobRowIndex += lastOdNode.stateLength();
@@ -133,10 +135,10 @@ public class PartOneListener implements Simulator.Listener
         lastOdNode = odNode;
 
         for(Simulator.landmark_t det: dets){
-	    
-            /*If this is a duplicate*/             
+
+            /*If this is a duplicate*/
             if(landmarksSeen.containsKey(det.id)){
-		
+
                 /*Same index as the one we already found*/
                 nodeIndex = landmarksSeen.get(det.id);
 
@@ -145,9 +147,11 @@ public class PartOneListener implements Simulator.Listener
                 Node landNode = new LandNode(nodeIndex, -1, det.obs[0], det.obs[1], det.id);
                 allObservations.add(landNode);
                 Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex(), lastOdNode, landNode);
+                // Hopefully the odom from a land edge is never used!
+                landEdge.setOdom(odom);
                 allEdges.add(landEdge);
                 nextJacobRowIndex += landNode.stateLength();
-		odNode.sawLandmark(nodeIndex);
+                odNode.sawLandmark(nodeIndex);
                 continue;
             }
 
@@ -155,9 +159,10 @@ public class PartOneListener implements Simulator.Listener
             nodeIndex = stateVector.size();
             double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
 
-            Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);   
-	    odNode.sawLandmark(nodeIndex);
+            Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], det.id);
+            odNode.sawLandmark(nodeIndex);
             Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
+            landEdge.setOdom(odom);
             allEdges.add(landEdge);
 
             nextJacobRowIndex += landNode.stateLength();
@@ -165,46 +170,61 @@ public class PartOneListener implements Simulator.Listener
             allObservations.add(new LandNode(nodeIndex, nextAbsStateRowIndex, det.obs[0], det.obs[1], det.id));
             nextAbsStateRowIndex += landNode.stateLength();
             stateVector.add(landNode);
-           
+
             landmarksSeen.put(new Integer(det.id), new Integer(nodeIndex));
-	}//end landmarks.
+        }//end landmarks.
 
 
 
-	jacobList = new ArrayList<JacobBlock>();
+        jacobList = new ArrayList<JacobBlock>();
+        covList = new ArrayList<CovBlock>();
+        for(int i = 0; i < numConverge; i++){
+            jacobList.clear();
+            covList.clear();
 
-	for(int i = 0; i < numConverge; i++){
-	    jacobList.clear();
-	    
-	    
-	    for (Edge edge : allEdges){
-		jacobList.add(edge.getJacob(stateVector));
-	    }
-	    
-	    Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
-	    ArrayList<Node> predicted = getPredictedObs();
-	    int pTot = 0;
-	    int oTot = 0;
-	    /*Error checking*/
-	    for(int j = 0; j < predicted.size(); j++){
-		pTot += predicted.get(j).stateLength();
-		oTot += allObservations.get(j).stateLength();
-		assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
-	    }
-	    System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
-	    System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
-	
-	}
+
+            for (Edge edge : allEdges){
+                jacobList.add(edge.getJacob(stateVector));
+                Simulator.odometry_t myEdgeOdom = edge.getOdom();
+                covList.add(edge.getCovBlock(myEdgeOdom.obs[0], myEdgeOdom.obs[1]));
+            }
+
+            Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
+            Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList);
+
+            ArrayList<Node> predicted = getPredictedObs();
+            // int pTot = 0;
+            // int oTot = 0;
+
+            /*Error checking*/
+            for(int j = 0; j < predicted.size(); j++){
+                double[] p = predicted.get(j).getState();
+                double[] o = allObservations.get(j).getState();
+
+                double[] r = new double[p.length];
+
+                for (int k = 0; k < p.length; k++) {
+                    r[k] = o[k]-p[k];
+                }
+
+                // pTot += predicted.get(j).stateLength();
+                // oTot += allObservations.get(j).stateLength();
+                // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
+            }
+            // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
+            // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
+
+        }
 
         System.out.println("********State vector*********");
         for(Node n : stateVector){
             System.out.println(n);
-	    
+
         }
 
 
-	xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
-	
+        xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
+
         trajectory.add(LinAlg.resize(xyt,2));
 
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]

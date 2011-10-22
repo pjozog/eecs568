@@ -76,7 +76,12 @@ public class LandEdge extends Edge{
         return null;
     }
 
-    public CovBlock getCovBlock(int t_l, int t_r) {
+    /**
+     * getCovBlock
+     *
+     * Note: these parameters are unused
+     */
+    public CovBlock getCovBlock(double t_l, double t_r) {
 
         double landmarkSig[] = config.requireDoubles("noisemodels.landmarkDiag");
 

@@ -2,6 +2,7 @@ package team;
 
 import java.util.*;
 import april.config.*;
+import april.sim.*;
 
 public abstract class Edge{
 
@@ -14,12 +15,21 @@ public abstract class Edge{
     protected int block1Column;
     protected int block2Column;
 
+    private Simulator.odometry_t myOdom;
+
     public abstract JacobBlock getJacob(List<Node> theStateVector);
 
     public abstract double [] getResiduals();
 
-    public abstract CovBlock getCovBlock(int t_l, int t_r);
+    public abstract CovBlock getCovBlock(double t_l, double t_r);
 
+    public void setOdom(Simulator.odometry_t odo) {
+        myOdom = odo;
+    }
+
+    public Simulator.odometry_t getOdom() {
+        return myOdom;
+    }
 
 }
 

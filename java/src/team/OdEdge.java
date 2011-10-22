@@ -92,7 +92,7 @@ public class OdEdge extends Edge{
         double[][] tltrToXYTJacob = new double[3][2];
 
         //        if (t_l == t_r) {
-        if (true) {
+        /*if (true) {
 
             tltrToXYTJacob[0][0] = 1.0;
             tltrToXYTJacob[0][1] = 1.0;
@@ -123,7 +123,18 @@ public class OdEdge extends Edge{
             tltrToXYTJacob[2][0] = -1/b;
             tltrToXYTJacob[2][1] = 1/b;
 
-        }
+        }*/
+
+	//Trying different Jacobian...
+	double dPhi = MathUtil.mod2pi((t_r - t_l)/b);
+        double s = (t_l + t_r)/(2.0);
+
+	tltrToXYTJacob[0][0] = (Math.cos(dPhi)/2.0) + ((s*Math.sin(dPhi))/2.0);
+        tltrToXYTJacob[0][1] = (Math.cos(dPhi)/2.0) - ((s*Math.sin(dPhi))/2.0);
+        tltrToXYTJacob[1][0] = (Math.sin(dPhi)/2.0) - ((s*Math.cos(dPhi))/2.0);
+        tltrToXYTJacob[1][1] = (Math.sin(dPhi)/2.0) + ((s*Math.cos(dPhi))/2.0);
+        tltrToXYTJacob[2][0] = -1/b;
+        tltrToXYTJacob[2][1] = 1/b;
 
 
 

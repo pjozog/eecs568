@@ -15,23 +15,27 @@ public class TicksUtil {
         
         DenseVec result = new DenseVec(3);
 
-        if (ticksR == ticksL) {
+        /*if (ticksR == ticksL) {
             
             result.set(0,ticksL);
             result.set(1,0.0);
             result.set(2,0.0);
             
-        } else {
+        } else {*/
             
             double dPhi = MathUtil.mod2pi((ticksR - ticksL)/baseline);
 
-            double rc = (ticksL + ticksR)/(2*dPhi);
+            double s = (ticksL + ticksR)/(2.0);
 
-            result.set(0,rc*Math.sin(dPhi));
-            result.set(1,-rc*Math.cos(dPhi) + rc); 
+            //result.set(0,rc*Math.sin(dPhi));
+            //result.set(1,-rc*Math.cos(dPhi) + rc); 
+            //result.set(2, dPhi);
+	    
+	    result.set(0,s*Math.cos(dPhi));
+            result.set(1,s*Math.sin(dPhi)); 
             result.set(2, dPhi);
 
-        }
+        //}
         
 
 

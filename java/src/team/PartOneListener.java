@@ -63,7 +63,7 @@ public class PartOneListener implements Simulator.Listener
 
 	
         double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
-
+	newPos[2] = MathUtil.mod2pi(newPos[2]);
 
         /*adds global coords*/
         OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);      
@@ -136,7 +136,7 @@ public class PartOneListener implements Simulator.Listener
         }
 
 
-        // Matrix J = JacobBlock.assemble(nextRowIndex, lastNode.absPosIndex() + lastNode.stateLength(), jacobList);
+        Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
         
 
         System.out.println("********State vector*********");

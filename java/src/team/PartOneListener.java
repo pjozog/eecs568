@@ -48,6 +48,17 @@ public class PartOneListener implements Simulator.Listener
         lastOdNode = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(new OdNode(0, 0, 0, 0, 0));
+
+
+        // This is bullshit
+        allObservations.add(new OdNode(0, 0, 0.0, 0.0, 0.0));
+        stateVector.add(new OdNode(0, 0, 0, 0, 0));
+
+
+        OdEdge odEdge = new OdEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, lastOdNode);
+        // allEdges.add(odEdge);
+        nextJacobRowIndex += lastOdNode.stateLength();
+
     }
     private ArrayList<Node> getPredictedObs(){
 
@@ -196,31 +207,76 @@ public class PartOneListener implements Simulator.Listener
             // int pTot = 0;
             // int oTot = 0;
 
+            ArrayList<Double> r = new ArrayList<Double>();
+
             /*Error checking*/
             for(int j = 0; j < predicted.size(); j++){
                 double[] p = predicted.get(j).getState();
                 double[] o = allObservations.get(j).getState();
 
-                double[] r = new double[p.length];
+
 
                 for (int k = 0; k < p.length; k++) {
-                    r[k] = o[k]-p[k];
+                    r.add(new Double(o[k]-p[k]));
                 }
 
                 // pTot += predicted.get(j).stateLength();
                 // oTot += allObservations.get(j).stateLength();
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
+
+            double [] realR = new double[r.size()];
+            for (int asdf = 0; asdf < r.size(); asdf++) {
+                realR[asdf] = r.get(asdf);
+            }
+
+
             // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
             // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
+            double [][] Jarray = J.copyArray();
+            double [][] sigArray = sigmaInv.copyArray();
+            double [][] A = LinAlg.matrixAtBC(Jarray, sigArray, Jarray);
+            double [][] jtSig = LinAlg.matrixAtB(Jarray, sigArray);
+
+            System.out.println("Size of jtSig: "+ jtSig.length + " " + jtSig[0].length + "\nSize of realR: " + realR.length);
+            double [] b = LinAlg.matrixAB(jtSig, realR);
+
+            Matrix identityPerturbation = Matrix.identity(A.length, A[0].length).times(100.0);
+
+            // double [][] AInv = LinAlg.inverse(LinAlg.add(A, identityPerturbation.copyArray()));
+            double [][] regularizedA = LinAlg.add(A, identityPerturbation.copyArray());
+
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(new Matrix(regularizedA));
+            Matrix answer = myDecomp.solve(Matrix.columnMatrix(b));
+
+            // if (AInv == null) {
+            //     System.out.println("WE SUCK AT REGULARIZAION!");
+            //     LinAlg.print(LinAlg.add(A, identityPerturbation.copyArray()));
+            //     System.out.println("WE SUCK AT REGULARIZAION!");
+            // }
+
+            // double [] deltaX = LinAlg.matrixAB(AInv,b);
+
+            double [] deltaX = answer.copyAsVector();
+
+            System.out.println("DELTAX LENGTH " +deltaX.length);
+
+            LinAlg.print(deltaX);
+            System.out.println("");
+            // int index = 0;
+            // for (Node node : stateVector){
+            //     index+=node.addToState(deltaX, index);
+
+            // }
+
 
         }
 
-        System.out.println("********State vector*********");
-        for(Node n : stateVector){
-            System.out.println(n);
+        // System.out.println("********State vector*********");
+        // for(Node n : stateVector){
+        //     System.out.println(n);
 
-        }
+        // }
 
 
         xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});

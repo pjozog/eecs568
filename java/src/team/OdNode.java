@@ -15,4 +15,5 @@ public class OdNode extends Node{
 	return "Od Node @ " + state[0] + " " + state[1] + " " + state[2];
     }
 
+
 }

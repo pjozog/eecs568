@@ -49,4 +49,14 @@ public abstract class Node{
     public abstract String toString();
 
 
+    public int addToState(double [] deltaX, int index) {
+
+        for (int i = 0 ; i < stateLength() ; i++) {
+            state[i] += deltaX[index+i];
+        }
+
+        return stateLength();
+
+    }
+
 }

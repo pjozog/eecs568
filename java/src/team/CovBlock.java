@@ -50,9 +50,9 @@ public class CovBlock{
 
         }
 
-        System.out.println("********");
-        LinAlg.printPattern(toReturn.copyArray());
-        System.out.println("********************");
+        // System.out.println("********");
+        // LinAlg.printPattern(toReturn.copyArray());
+        // System.out.println("********************");
 
         return toReturn;
 

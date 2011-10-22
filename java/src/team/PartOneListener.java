@@ -61,10 +61,10 @@ public class PartOneListener implements Simulator.Listener
         /*ignore landmarks.
           for all od measurements, subtract (matrix version) from previous od measurement
           then calculate distance to all landmarks*/
-        Node lastOdNode = stateVector.get(0);
+         Node lastOdNode = stateVector.get(0);
         for (Node node : stateVector.subList(1, stateVector.size())){
-            // Node lastOdNode = new OdNode(0, 0, 0, 0, 0);
-            // for(Node node : stateVector){
+        // Node lastOdNode = new OdNode(0, 0, 0, 0, 0);
+        // for(Node node : stateVector){
             if(node.isLand()){
                 continue;
             }
@@ -273,7 +273,14 @@ public class PartOneListener implements Simulator.Listener
         // }
 
 
-        xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
+        // xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
+        trajectory.clear();
+        for (Node node : stateVector) {
+            if (!node.isLand()) {
+                double[] state = node.getState();
+                trajectory.add(new double[] {state[0], state[1], state[2]});
+            }
+        }
 
         trajectory.add(LinAlg.resize(xyt,2));
 

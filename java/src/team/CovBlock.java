@@ -21,7 +21,7 @@ public class CovBlock{
 
         Matrix toReturn = new Matrix(rows +numPinningRows, cols + numPinningRows, Matrix.SPARSE);
 
-        toReturn.set(pinnedBlock.getRow(), pinnedBlock.getColumn(), LinAlg.inverse(pinnedBlock.getBlock()));
+        // toReturn.set(pinnedBlock.getRow(), pinnedBlock.getColumn(), LinAlg.inverse(pinnedBlock.getBlock()));
         for (CovBlock block : blocks) {
 
 

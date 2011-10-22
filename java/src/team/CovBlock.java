@@ -17,17 +17,13 @@ public class CovBlock{
 
 
 
-    public static Matrix assembleInverse(int rows, int cols, ArrayList<CovBlock> blocks) {
+    public static Matrix assembleInverse(int rows, int cols, ArrayList<CovBlock> blocks, int numPinningRows, CovBlock pinnedBlock) {
 
-        Matrix toReturn = new Matrix(rows, cols, Matrix.SPARSE);
+        Matrix toReturn = new Matrix(rows +numPinningRows, cols + numPinningRows, Matrix.SPARSE);
 
+	toReturn.set(pinnedBlock.getRow(), pinnedBlock.getColumn(), LinAlg.inverse(pinnedBlock.getBlock()));
         for (CovBlock block : blocks) {
             
-            // assert(LinAlg.inverse(block.getBlock())!=null);
-            // System.out.println("ASDF********");
-            // LinAlg.print(block.getBlock());
-            // System.out.println("ASDF********");
-            // System.out.println(LinAlg.inverse(block.getBlock()));
 
             // Perform inversion on our diagonal block
             double [][] blockInv = LinAlg.inverse(block.getBlock());
@@ -36,14 +32,14 @@ public class CovBlock{
             assert (blockInv != null);
 
             // Add this block in the proper place in the grand covariance matrix
-            toReturn.set(block.getRow(), block.getColumn(), blockInv);
+            toReturn.set(block.getRow() + numPinningRows, block.getColumn() + numPinningRows, blockInv);
 
 
         }
 
-        System.out.println("********");
-        LinAlg.printPattern(toReturn.copyArray());
-        System.out.println("********************");
+        //System.out.println("********");
+        //LinAlg.printPattern(toReturn.copyArray());
+        //System.out.println("********************");
 
         return toReturn;
 

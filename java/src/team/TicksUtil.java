@@ -24,8 +24,8 @@ public class TicksUtil {
           } else {*/
 
         // double dPhi = MathUtil.mod2pi((ticksR - ticksL)/baseline);
-        double dPhi = MathUtil.mod2pi(Math.atan2(ticksR - ticksL,baseline));
-
+	// double dPhi = MathUtil.mod2pi(Math.atan2(ticksR - ticksL,baseline));
+	double dPhi = Math.atan2(ticksR - ticksL, baseline);
         // double s = (ticksL + ticksR)/(2.0);
 
         //result.set(0,rc*Math.sin(dPhi));

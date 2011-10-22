@@ -29,6 +29,12 @@ public class PartOneListener implements Simulator.Listener
     ArrayList<JacobBlock> jacobList = new ArrayList<JacobBlock>();
     ArrayList<CovBlock> covList = new ArrayList<CovBlock>();
 
+
+    JacobBlock pinningJacob = new JacobBlock(0, 0, 3);
+    CovBlock pinningCov = new CovBlock(0, 0);
+
+    int numPinnedRows = 3;
+    int debug = 0;
     private static int numUpdates = 0;
 
     /*maps from the landmark id to the index in the state vector array*/
@@ -45,11 +51,15 @@ public class PartOneListener implements Simulator.Listener
         Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
         numConverge = config.requireInt("simulator.numConverge");
-
+	debug = config.requireInt("simulator.debug");
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(initial);
+	pinningJacob.setFirstBlock( new double[][]{ {1, 0, 0}, {0, 1, 0}, {0, 0, 1} });
+	pinningJacob.setSecondBlock(new double[][]{ {0, 0, 0}, {0, 0, 0}, {0, 0, 0} });
+
+	pinningCov.setTheBlock(new double [][]{ {100, 0, 0}, {0, 100, 0}, {0, 0, 100}});
 
     }
 
@@ -61,10 +71,9 @@ public class PartOneListener implements Simulator.Listener
         /*ignore landmarks.
           for all od measurements, subtract (matrix version) from previous od measurement
           then calculate distance to all landmarks*/
-         Node lastOdNode = stateVector.get(0);
+	Node lastOdNode = stateVector.get(0);
         for (Node node : stateVector.subList(1, stateVector.size())){
-        // Node lastOdNode = new OdNode(0, 0, 0, 0, 0);
-        // for(Node node : stateVector){
+
             if(node.isLand()){
                 continue;
             }
@@ -76,10 +85,7 @@ public class PartOneListener implements Simulator.Listener
             ArrayList<Integer> landmarkIndex = node.getLandmarksSeen();
             for(int i : landmarkIndex){
                 Node landNode = stateVector.get(i);
-                //TODO take out for "production"
-                if(true){
-                    assert(landNode.isLand());
-                }
+              
                 double pos[] = node.getState();
                 double xa = pos[0];
                 double ya = pos[1];
@@ -93,6 +99,7 @@ public class PartOneListener implements Simulator.Listener
                 double theta = Math.atan2(yl - ya, xl - xa) - p;
                 predicted.add(new LandNode(0, 0, r, theta, 0));
             }
+	    lastOdNode = node;
 
         }
         return predicted;
@@ -118,7 +125,7 @@ public class PartOneListener implements Simulator.Listener
 
         /*new = old * obs*/
         double [] newPos = LinAlg.xytMultiply(lastOdNode.getState(), new double[]{x, y, t});
-        newPos[2] = MathUtil.mod2pi(newPos[2]);
+        //newPos[2] = MathUtil.mod2pi(newPos[2]);
 
         /*adds global coords*/
         OdNode odNode = new OdNode(nodeIndex, nextAbsStateRowIndex, newPos[0], newPos[1], newPos[2]);
@@ -196,8 +203,8 @@ public class PartOneListener implements Simulator.Listener
                 covList.add(edge.getCovBlock(myEdgeOdom.obs[0], myEdgeOdom.obs[1]));
             }
 
-            Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
-            Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList);
+            Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList, numPinnedRows, pinningJacob);
+            Matrix sigmaInv = CovBlock.assembleInverse(nextJacobRowIndex, nextJacobRowIndex, covList, numPinnedRows, pinningCov);
 
             ArrayList<Node> predicted = getPredictedObs();
             // int pTot = 0;
@@ -221,12 +228,34 @@ public class PartOneListener implements Simulator.Listener
                 // assert (predicted.get(j).isLand() == allObservations.get(j).isLand());
             }
 
-            double [] realR = new double[r.size()];
-            for (int asdf = 0; asdf < r.size(); asdf++) {
-                realR[asdf] = r.get(asdf);
+	    /*includes 3 zeros at top for pinning*/
+	    int numZeros = 3;
+            double [] realR = new double[r.size() + numZeros];
+	    for (int k = 0; k < numZeros; k++){
+		realR[k] = 0;
+	    }
+            for (int k = 0; k < r.size(); k++) {
+                realR[k + numZeros] = r.get(k);
             }
+	    if(debug != 0){
 
 
+		System.out.println("Observations");
+		for(Node node: allObservations){
+		    System.out.println(node);
+		}
+
+		System.out.println("Predicted");
+		for(Node node : predicted){
+		    System.out.println(node);
+		}
+		System.out.println();
+	    }
+	    System.out.println("RESIDUALS");
+	    for(int k = 0; k < realR.length; k++){
+		System.out.println(realR[k]);
+
+	    }
             // System.out.println("Predicted is " + predicted.size() + " nodes long with " + pTot + " total values" );
             // System.out.println("Observation is " + allObservations.size() + " nodes long with " + oTot + " total values" );
             double [][] Jarray = J.copyArray();
@@ -254,40 +283,55 @@ public class PartOneListener implements Simulator.Listener
             // double [] deltaX = LinAlg.matrixAB(AInv,b);
 
             double [] deltaX = answer.copyAsVector();
+	    if(debug != 0){
+		System.out.println("DELTAX LENGTH " +deltaX.length);
 
-            System.out.println("DELTAX LENGTH " +deltaX.length);
-
-            LinAlg.print(deltaX);
-            System.out.println("");
+		System.out.println("Initial state vector");
+		for(Node node : stateVector){
+		    System.out.println(node);
+		}
+		LinAlg.print(deltaX);
+		System.out.println("");
+	    }
             int index = 0;
             for (Node node : stateVector){
                 index+=node.addToState(deltaX, index);
             }
 
+	    if(debug != 0){
+		System.out.println("\nAfter applying delta x\n");
+		for(Node node: stateVector){
+		    System.out.println(node);
+		}
+    }
         }
 
-        // System.out.println("********State vector*********");
-        // for(Node n : stateVector){
-        //     System.out.println(n);
 
-        // }
+      
+	for(int i = stateVector.size() -1; i > 0; i--){
+	    if(stateVector.get(i).isLand()){
+		continue;
+	    }
+	    xyt = stateVector.get(i).getState();
+	    break;
+	}
 
-
-        // xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
+      
         trajectory.clear();
         for (Node node : stateVector) {
             if (!node.isLand()) {
                 double[] state = node.getState();
                 trajectory.add(new double[] {state[0], state[1], state[2]});
+		System.out.println(node);
             }
         }
 
-        trajectory.add(LinAlg.resize(xyt,2));
+        
 
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
                            + "\n\tand " + dets.size() + " landmark observations"
                            + "\n\tand xyt: ");
-        LinAlg.printTranspose(ticksXYT.getDoubles());
+	// LinAlg.printTranspose(ticksXYT.getDoubles());
         System.out.println();
 
         drawDummy(dets);

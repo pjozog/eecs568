@@ -34,7 +34,8 @@ public class PartOneListener implements Simulator.Listener
     HashMap<Integer, Integer> landmarksSeen = new HashMap<Integer, Integer>();
     double baseline;
     OdNode lastOdNode =null;
-
+    ArrayList<Simulator.odometry_t> allTicks = new ArrayList<Simulator.odometry_t>();
+    private int numConverge;
 
     public void init(Config _config, VisWorld _vw)
     {
@@ -42,6 +43,7 @@ public class PartOneListener implements Simulator.Listener
         vw = _vw;
         Edge.config = _config;
         baseline = config.requireDouble("robot.baseline_m");
+	numConverge = config.requireInt("simulator.numConverge");
         lastOdNode = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         nextAbsStateRowIndex += lastOdNode.stateLength();
         stateVector.add(new OdNode(0, 0, 0, 0, 0));
@@ -52,7 +54,8 @@ public class PartOneListener implements Simulator.Listener
       second is second*/
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
-
+      
+	allTicks.add(odom);
         numUpdates++;
         DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
@@ -85,7 +88,6 @@ public class PartOneListener implements Simulator.Listener
         /*save last node to get next global position*/
         lastOdNode = odNode;
 
-
         for(Simulator.landmark_t det: dets){
 	    
             /*If this is a duplicate*/             
@@ -101,8 +103,7 @@ public class PartOneListener implements Simulator.Listener
                 Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex(), lastOdNode, landNode);
                 allEdges.add(landEdge);
                 nextJacobRowIndex += landNode.stateLength();
-		
-		
+			
                 continue;
             }
 
@@ -115,7 +116,6 @@ public class PartOneListener implements Simulator.Listener
             Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
             allEdges.add(landEdge);
 
-
             nextJacobRowIndex += landNode.stateLength();
 
             allObservations.add(new LandNode(nodeIndex, nextAbsStateRowIndex, det.obs[0], det.obs[1], det.id));
@@ -123,43 +123,39 @@ public class PartOneListener implements Simulator.Listener
             stateVector.add(landNode);
            
             landmarksSeen.put(new Integer(det.id), new Integer(nodeIndex));
+	}//end landmarks.
+
+
+
+	jacobList = new ArrayList<JacobBlock>();
+
+	for(int i = 0; i < numConverge; i++){
+
+
+	
+	    for (Edge edge : allEdges){
+		jacobList.add(edge.getJacob(stateVector));
+	    }
 	    
-	   
-
-        }//end landmarks.
-
-        
-        jacobList = new ArrayList<JacobBlock>();
-
-        for (Edge edge : allEdges){
-            jacobList.add(edge.getJacob(stateVector));
-        }
-
-
-        Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
-        
+	    Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList);
+	}
 
         System.out.println("********State vector*********");
         for(Node n : stateVector){
             System.out.println(n);
 	    
         }
-	
 
-        xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
+
+	xyt = LinAlg.xytMultiply(xyt, new double[]{x, y ,t});
 	
         trajectory.add(LinAlg.resize(xyt,2));
-
-
-
 
         System.out.println("Update #" + numUpdates + " with odom " + odom.obs[0] +","+ odom.obs[1]
                            + "\n\tand " + dets.size() + " landmark observations"
                            + "\n\tand xyt: ");
         LinAlg.printTranspose(ticksXYT.getDoubles());
         System.out.println();
-
-
 
         drawDummy(dets);
     }

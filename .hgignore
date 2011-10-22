@@ -8,3 +8,5 @@ gltest
 *.o
 *.so
 *.jnilib
+BeansAttempt/*
+*.orig

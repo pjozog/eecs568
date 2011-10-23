@@ -6,10 +6,16 @@ LISTENER=team.PartOneListener
 
 JAVA='java -ea -server'
 
+OUTFILE=plotDataNoise
+
+[ -f ${OUTFILE} ] && rm ${OUTFILE}
+
 for config in ${CONFIGDIR}/sweepNoise/sim.config*; do
     echo $config
     configBase=$(basename $config)
     configNum=$(echo $configBase | perl -pe 's/sim\.config\.//')
     ${JAVA} april.sim.Simulator -c ${config} -l ${LISTENER}
+    echo -n $configNum >> ${OUTFILE}
+    cat data.txt >> ${OUTFILE}
 done
 

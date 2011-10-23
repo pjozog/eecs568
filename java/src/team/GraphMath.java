@@ -21,6 +21,111 @@ public class GraphMath{
         return jacob;
     }
 
+    public static Matrix calcFASTDeltaX(ArrayList<Edge> allEdges,
+                                        ArrayList<Node> observed,
+                                        double lambda,
+                                        boolean pin,
+                                        ArrayList<Node> stateVector,
+                                        int nextAbsStateRowIndex,
+                                        JacobBlock pinningJacob,
+                                        CovBlock pinningCov) {
+        
+
+        double[] realR = getResiduals(stateVector, observed, pin);
+        
+        Matrix A = new Matrix(nextAbsStateRowIndex, nextAbsStateRowIndex, Matrix.SPARSE);
+        // Adding 3 for the pinned node
+
+        Matrix b = new Matrix(nextAbsStateRowIndex, 1);
+
+        // Fake the "edge" for the first pinned node
+        double [][] JtSigPinned = LinAlg.matrixAtB(pinningJacob.getFirstBlock(), pinningCov.getBlock());
+
+        A.plusEquals(0, 0, LinAlg.matrixAB(JtSigPinned, pinningJacob.getFirstBlock()));
+
+        double[] pinnedResidual = new double[3];
+        pinnedResidual[0] = realR[0];
+        pinnedResidual[1] = realR[1];
+        pinnedResidual[2] = realR[2];
+
+        b.plusEqualsColumnVector(0, 0, LinAlg.matrixAB(JtSigPinned, pinnedResidual));
+
+        for (Edge edge: allEdges) {
+            JacobBlock thisEdgeJ = edge.getJacob(stateVector);
+                
+            // These two nodes will effect four parts of A
+            int stateIndexOne = edge.node1.getAbsIndex();
+            int stateIndexTwo = edge.node2.getAbsIndex();
+
+            double [] edgeZOfX;
+            if (edge.isLandmarkEdge()) {
+                edgeZOfX =  new double[2];
+                edgeZOfX[0] = realR[edge.getJacobianStartRow()+3];
+                edgeZOfX[1] = realR[edge.getJacobianStartRow()+1+3];
+            } else {
+                edgeZOfX =  new double[3];
+                edgeZOfX[0] = realR[edge.getJacobianStartRow()+3];
+                edgeZOfX[1] = realR[edge.getJacobianStartRow()+1+3];
+                edgeZOfX[2] = realR[edge.getJacobianStartRow()+2+3];
+            }
+
+                
+                
+            Simulator.odometry_t myEdgeOdom = edge.getOdom();
+            CovBlock theCovBlock = edge.getCovBlock(myEdgeOdom.obs[0], myEdgeOdom.obs[1]);
+
+
+            double [][] JtW;
+            JtW = LinAlg.matrixAtB(thisEdgeJ.getFirstBlock(), LinAlg.inverse(theCovBlock.getBlock()));
+
+
+            double [][]JtWJ = LinAlg.matrixAB(JtW, thisEdgeJ.getFirstBlock());
+                
+            // Add contribution of node 1 and node 1
+            A.plusEquals(stateIndexOne, stateIndexOne, JtWJ);
+                
+            JtWJ = LinAlg.matrixAB(JtW, thisEdgeJ.getSecondBlock());
+
+            // Add contribution of node 1 and node 2
+            A.plusEquals(stateIndexOne, stateIndexTwo, JtWJ);
+
+            // Add contribution of node 1 to jtSig
+            // jtSig.plusEquals(stateIndexOne, edge.getJacobianStartRow() +3 , JtW);
+            b.plusEqualsColumnVector(stateIndexOne, 0, LinAlg.matrixAB(JtW, edgeZOfX));
+
+            JtW = LinAlg.matrixAtB(thisEdgeJ.getSecondBlock(), LinAlg.inverse(theCovBlock.getBlock()));
+
+            JtWJ = LinAlg.matrixAB(JtW, thisEdgeJ.getFirstBlock());
+
+            // Add contribution of node 2 and node 1
+            A.plusEquals(stateIndexTwo, stateIndexOne, JtWJ);
+
+         
+            JtWJ = LinAlg.matrixAB(JtW, thisEdgeJ.getSecondBlock());
+
+            // Add contribution of node 2 and node 2
+            A.plusEquals(stateIndexTwo, stateIndexTwo, JtWJ);
+
+            // Add contribution of node 2 to jtSig
+            // jtSig.plusEquals(stateIndexTwo, edge.getJacobianStartRow() +3 , JtW);
+            b.plusEqualsColumnVector(stateIndexTwo, 0, LinAlg.matrixAB(JtW, edgeZOfX));
+
+
+        }
+
+
+        A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
+
+        assert(A.isSparse());
+        
+        CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
+        
+        Matrix deltaX = myDecomp.solve(b);
+
+        return deltaX;
+
+    }
+
     public static Matrix calcDeltaX(Matrix J, Matrix sigmaInv, ArrayList<Node> observed, double lambda, boolean pin, ArrayList<Node> stateVector){
     
         assert(J.isSparse() && sigmaInv.isSparse());
@@ -83,7 +188,7 @@ public class GraphMath{
     }
 
 
-     public static ArrayList<Node> getPredictedObs(ArrayList<Node> stateVector){
+    public static ArrayList<Node> getPredictedObs(ArrayList<Node> stateVector){
 
         ArrayList<Node> predicted = new ArrayList<Node>();
 

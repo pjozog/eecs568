@@ -25,7 +25,7 @@ public class PartOneListener implements Simulator.Listener
 
     /*id to assigin to next unknown landmark*/
     private static int nextLandmarkId = 1;
-    
+
     private int nextJacobRowIndex = 0;
 
     private int nextAbsStateRowIndex = 0;
@@ -58,7 +58,7 @@ public class PartOneListener implements Simulator.Listener
     private int numPinnedRows = 3;
     private int debug = 0;
     private static int numUpdates = 0;
-    private boolean landmarksHaveId; 
+    private boolean landmarksHaveId;
 
     private double baseline;
     private OdNode lastOdNode =null;
@@ -68,6 +68,8 @@ public class PartOneListener implements Simulator.Listener
     private double landmarkDistThresh;
     private boolean pin = true;
 
+    private long startTime;
+
     public void init(Config _config, VisWorld _vw)
     {
         config  = _config;
@@ -76,7 +78,7 @@ public class PartOneListener implements Simulator.Listener
 
         baseline           = config.requireDouble("robot.baseline_m");
         numConverge        = config.requireInt("simulator.numConverge");
-	lambda             = config.requireDouble("simulator.lambda");
+        lambda             = config.requireDouble("simulator.lambda");
         debug              = config.requireInt("simulator.debug");
         landmarksHaveId    = config.requireBoolean("simulator.knownDataAssoc");
         landmarkDistThresh = config.requireDouble("simulator.landmarkThresh");
@@ -94,25 +96,27 @@ public class PartOneListener implements Simulator.Listener
         cumulativeSigmaInverse = new Matrix(3, 3, Matrix.SPARSE);
         cumulativeSigmaInverse.set(0, 0, new double [][]{ {100, 0, 0}, {0, 100, 0}, {0, 0, 100}});
 
+        startTime = System.nanoTime();
+
     }
-    /** tries to assoiciate landmark with seen landmarks, 
+    /** tries to assoiciate landmark with seen landmarks,
         if no landmark is seen, creates a new id
         x, y are guessed global coordinates of observed landmark
-        
+
     **/
     private int getLandmarkId(Node currentPos, Simulator.landmark_t det, Simulator.odometry_t odom, Node lastOdNode){
 
         assert(!currentPos.isLand());
-        
+
         int returnVal = nextLandmarkId;
         double minDist = 999;
         double minChi2Error = 500000;
-     
-        for (Map.Entry<Integer, Integer> entry : landmarksSeen.entrySet()) {    
-      
+
+        for (Map.Entry<Integer, Integer> entry : landmarksSeen.entrySet()) {
+
             Integer ID = entry.getKey();
-            Integer nodeIndex = entry.getValue(); 
- 
+            Integer nodeIndex = entry.getValue();
+
             ArrayList<Edge> trialEdges = new ArrayList<Edge>(allEdges);
             ArrayList<Node> trialObs   = new ArrayList<Node>(allObservations);
 
@@ -120,7 +124,7 @@ public class PartOneListener implements Simulator.Listener
             /*add the observation, but not to the state vector*/
             /*NOTE prettr sure the node index of the land node doesnt matter, only used in trial obs
               TODO is this true?*/
-            Node landNode = new LandNode(nodeIndex, -1, det.obs[0], MathUtil.mod2pi(det.obs[1]), ID);
+            Node landNode = new LandNode(nodeIndex,  stateVector.get(nodeIndex).getAbsIndex(), det.obs[0], MathUtil.mod2pi(det.obs[1]), ID);
             trialObs.add(landNode);
 
             Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex(), lastOdNode, landNode);
@@ -130,54 +134,59 @@ public class PartOneListener implements Simulator.Listener
             trialEdges.add(landEdge);
 
             int trialJacobRowIndex = nextJacobRowIndex + landNode.stateLength();
-           
+
             boolean alreadySawLandmark = currentPos.seenLandmark(nodeIndex);
-            
+
             currentPos.sawLandmark(nodeIndex);
-            
+
             /*TODO is this 1?, maybe jacob rwo index should be increased?*/
 
             Matrix newSigmaInverse = GraphMath.addToSigmaInverse(cumulativeSigmaInverse, numEdgesToAddToSigma + 1, trialEdges, trialJacobRowIndex, pin);//trialSigmaInverse.copy();
-            
+
             assert(newSigmaInverse.isSparse());
-        
+
             ArrayList<JacobBlock> jacobs = GraphMath.getJacobList(trialEdges, stateVector);
 
             Matrix J = JacobBlock.assemble(trialJacobRowIndex, nextAbsStateRowIndex, jacobs, numPinnedRows, pinningJacob, pin);
-            
 
-            Matrix deltaX  = GraphMath.calcDeltaX(J, newSigmaInverse, trialObs, lambda, pin, stateVector);
-            
+
+            // Matrix deltaX  = GraphMath.calcDeltaX(J, newSigmaInverse, trialObs, lambda, pin, stateVector);
+            Matrix deltaX = GraphMath.calcFASTDeltaX(trialEdges, trialObs, lambda, pin, stateVector,nextAbsStateRowIndex, pinningJacob, pinningCov);
+
             double [] trialResiduals = GraphMath.getResiduals(stateVector, trialObs, pin);
 
-           
+
             double chi2Error = getChi2Error(J, deltaX, trialResiduals, newSigmaInverse);
 
-           
-            if(chi2Error < (curChi2Error + chi2Thresh) && chi2Error< minChi2Error){
-                System.out.println("Found landmark to assoicate with");
-                System.out.println("Old chi2 Error : " + curChi2Error + " New chi2 error " + chi2Error);           
 
+            if(chi2Error < (curChi2Error + chi2Thresh) && chi2Error< minChi2Error){
+                if (debug == 1) {
+                    System.out.println("Found landmark to assoicate with");
+                    System.out.println("Old chi2 Error : " + curChi2Error + " New chi2 error " + chi2Error);
+                }
                 returnVal = ID;
                 minChi2Error = chi2Error;
             }
- 
+
             //    currentPos.forgetLandmark(new Integer(nodeIndex));
             currentPos.forgetMostRecentLandmark();
         }
         /*if we havent changed the returnVal, it means we're creating a new landmark id*/
         if(returnVal == nextLandmarkId){
-            System.out.println("Creating new landmark with ID " + returnVal);
-   
+            if (debug == 1) {
+                System.out.println("Creating new landmark with ID " + returnVal);
+            }
             nextLandmarkId++;
         }
         else{
+            if (debug == 1) {
             System.out.println("using old id " + returnVal);
+            }
         }
         return returnVal;
     }
 
-   
+
 
 
 
@@ -187,8 +196,8 @@ public class PartOneListener implements Simulator.Listener
       second is second*/
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
-        
-       
+
+
         allTicks.add(odom);
         numUpdates++;
         DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
@@ -229,7 +238,7 @@ public class PartOneListener implements Simulator.Listener
             else{
                 thisLandmarkId = getLandmarkId(odNode, det, odom, lastOdNode);
             }
-            
+
             /*If this is a duplicate*/
             if(landmarksSeen.containsKey(thisLandmarkId)){
 
@@ -238,7 +247,7 @@ public class PartOneListener implements Simulator.Listener
 
                 /*add the observation, but not to the state vector*/
                 /*NOTE i dont think the abs number matters for observations*/
-                Node landNode = new LandNode(nodeIndex, -1, det.obs[0], det.obs[1], thisLandmarkId);
+                Node landNode = new LandNode(nodeIndex,  stateVector.get(nodeIndex).getAbsIndex(), det.obs[0], det.obs[1], thisLandmarkId);
                 allObservations.add(landNode);
 
                 Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), stateVector.get(nodeIndex).getAbsIndex(), lastOdNode, landNode);
@@ -254,7 +263,7 @@ public class PartOneListener implements Simulator.Listener
             }
             else{
                 /*add the landmark to the state vector and note we saw it, use global coords*/
-               
+
                 nodeIndex = stateVector.size();
                 double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
 
@@ -272,19 +281,19 @@ public class PartOneListener implements Simulator.Listener
                 stateVector.add(landNode);
 
                 landmarksSeen.put(new Integer(thisLandmarkId), new Integer(nodeIndex));
-                
-               
-                
-                
+
+
+
+
             }
-            cumulativeSigmaInverse = GraphMath.addToSigmaInverse(cumulativeSigmaInverse, numEdgesToAddToSigma, allEdges, nextJacobRowIndex, pin); 
+            cumulativeSigmaInverse = GraphMath.addToSigmaInverse(cumulativeSigmaInverse, numEdgesToAddToSigma, allEdges, nextJacobRowIndex, pin);
             numEdgesToAddToSigma = 0;
-            
+
         }//end landmarks.
-        
-        cumulativeSigmaInverse = GraphMath.addToSigmaInverse(cumulativeSigmaInverse, numEdgesToAddToSigma, allEdges, nextJacobRowIndex, pin); 
+
+        cumulativeSigmaInverse = GraphMath.addToSigmaInverse(cumulativeSigmaInverse, numEdgesToAddToSigma, allEdges, nextJacobRowIndex, pin);
         numEdgesToAddToSigma = 0;
-        
+
         if (debug == 1) {
             System.out.println("BEGINNING LEAST SQUARES");
         }
@@ -292,13 +301,16 @@ public class PartOneListener implements Simulator.Listener
         for(int i = 0; i < numConverge; i++){
             covList.clear();
 
- 
+
             jacobList = GraphMath.getJacobList(allEdges, stateVector);
             Matrix J = JacobBlock.assemble(nextJacobRowIndex, nextAbsStateRowIndex, jacobList, numPinnedRows, pinningJacob, pin);
-        
-            Matrix deltaX  = GraphMath.calcDeltaX(J, cumulativeSigmaInverse, allObservations, lambda, pin, stateVector);
-           
-            if(debug == 1 || !landmarksHaveId){ 
+
+            // Matrix deltaX  = GraphMath.calcDeltaX(J, cumulativeSigmaInverse, allObservations, lambda, pin, stateVector);
+
+            Matrix deltaX  = GraphMath.calcFASTDeltaX(allEdges, allObservations, lambda, pin, stateVector, nextAbsStateRowIndex, pinningJacob, pinningCov);
+
+
+            if(debug == 1 || !landmarksHaveId){
                 double [] residuals = GraphMath.getResiduals(stateVector, allObservations, pin);
                 curChi2Error        = getChi2Error(J, deltaX, residuals, cumulativeSigmaInverse);
             }
@@ -313,13 +325,21 @@ public class PartOneListener implements Simulator.Listener
             for (Node node : stateVector){
                 index += node.addToState(deltaX.copyAsVector(), index);
             }
-            
+
+            if (numUpdates == 383 && i == numConverge -1) {
+                long endTime = System.nanoTime();
+                double elapsedTime = (endTime-startTime)/1000000000f;
+                System.out.printf("Simulation time: %.2f\n", elapsedTime);
+            }
+
         } // End all iterations of Ax = b
 
         drawFrame();
 
         drawDummy(dets);
-        System.out.println("We have seen "+ landmarksSeen.size() + " landmarks and the state vector is " + nextAbsStateRowIndex+  " long");
+        if (debug == 1) {
+            System.out.println("We have seen "+ landmarksSeen.size() + " landmarks and the state vector is " + nextAbsStateRowIndex+  " long");
+        }
     }
     private void drawFrame(){
         // Grab our best guesses of the robot path and landmark positions from our state vector

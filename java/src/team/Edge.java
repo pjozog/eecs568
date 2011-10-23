@@ -38,5 +38,13 @@ public abstract class Edge{
         return myOdom;
     }
 
+    public boolean isLandmarkEdge() {
+        return node1.isLand() || node2.isLand();
+    }
+
+    public int getJacobianStartRow() {
+        return jacobianStartRow;
+    }
+
 }
 

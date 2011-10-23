@@ -6,4 +6,6 @@ SCRIPTDIR=$(dirname $0)
 CONFIG_FILE=$SCRIPTDIR/../config/sim.config
 LISTENER=team.PartOneListener
 
-java -ea -server april.sim.Simulator -c ${CONFIG_FILE} -l ${LISTENER}
+JAVA='java -ea -server'
+
+${JAVA} april.sim.Simulator -c ${CONFIG_FILE} -l ${LISTENER}

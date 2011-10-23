@@ -23,6 +23,7 @@ public abstract class Node{
 
     /*index of node in state vector*/
     protected ArrayList<Integer>landmarks = new ArrayList<Integer>();
+ 
 
     public  double[] getState(){
         return state;
@@ -53,6 +54,17 @@ public abstract class Node{
         landmarks.add(i);
     }
 
+    public boolean seenLandmark(Integer i){
+        return landmarks.contains(i);
+    }
+
+    public void forgetMostRecentLandmark(){
+        landmarks.remove(landmarks.size() -1);
+        
+    }
+    public void forgetLandmark(Integer i){
+        landmarks.remove(new Integer(i));
+    }
     public abstract String toString();
 
 
@@ -65,5 +77,11 @@ public abstract class Node{
         return stateLength();
 
     }
-
+    public Node duplicate(){
+        if(isLand()){
+            return new LandNode(posInStateVector, absIndexInStateVector, state[0], state[1], ((LandNode)this).getId());
+        }
+        return new OdNode(posInStateVector, absIndexInStateVector, state[0], state[1], state[2]);
+        
+    }
 }

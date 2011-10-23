@@ -89,22 +89,7 @@ public class PartOneListener implements Simulator.Listener
         landmarksHaveId    = config.requireBoolean("simulator.knownDataAssoc");
         landmarkDistThresh = config.requireDouble("simulator.landmarkThresh");
         chi2Thresh         = config.requireDouble("simulator.chi2Thresh");
-        /*
-        for(int i = 0; ; i++){
-            double li[] = config.getDoubles("landmarks.l" + i, null);
-            if(li == null){
-                break;
-            }
-            givenLandmarks.add(li);
-
-        }
-        for(double [] li : givenLandmarks){
-            for(int i = 0; i < li.length; i++){
-                System.out.println(li[i] + " ");
-            }
-            System.out.println();
-        }
-        */
+       
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
@@ -180,16 +165,17 @@ public class PartOneListener implements Simulator.Listener
             double chi2Error = getChi2Error(J, deltaX, trialResiduals, newSigmaInverse);
             
             double [] newPos = currentPos.getState();
-            double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
-            double x_global = pos[0];
-            double y_global = pos[1];
-            Node node = stateVector.get(entry.getValue());
+            double []pos     = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
+            double x_global  = pos[0];
+            double y_global  = pos[1];
+            Node node        = stateVector.get(entry.getValue());
    
             assert(node.isLand());
    
             
             double state[] = node.getState();
             double dist = Math.sqrt(Math.pow(x_global - state[0], 2) + Math.pow(y_global - state[1], 2));
+            
             if(dist < landmarkDistThresh){
                 forceOldLandmark = true;
             }
@@ -204,7 +190,6 @@ public class PartOneListener implements Simulator.Listener
                 minChi2Error = chi2Error;
             }
 
-            //    currentPos.forgetLandmark(new Integer(nodeIndex));
             currentPos.forgetMostRecentLandmark();
         }
 
@@ -227,10 +212,7 @@ public class PartOneListener implements Simulator.Listener
             if(mapMyIdToRealId.get(returnVal) != det.id){
                 numErrors++;
             }
-
         }
-
-
         return returnVal;
     }
 
@@ -244,8 +226,6 @@ public class PartOneListener implements Simulator.Listener
       second is second*/
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)
     {
-
-
         allTicks.add(odom);
         numUpdates++;
         DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
@@ -280,6 +260,7 @@ public class PartOneListener implements Simulator.Listener
 
         for(Simulator.landmark_t det: dets){
             int thisLandmarkId;
+
             if(landmarksHaveId){
                 thisLandmarkId = det.id;
             }
@@ -295,7 +276,6 @@ public class PartOneListener implements Simulator.Listener
                 nodeIndex = landmarksSeen.get(thisLandmarkId);
 
                 /*add the observation, but not to the state vector*/
-                /*NOTE i dont think the abs number matters for observations*/
                 Node landNode = new LandNode(nodeIndex,  stateVector.get(nodeIndex).getAbsIndex(), det.obs[0], det.obs[1], thisLandmarkId);
                 allObservations.add(landNode);
 
@@ -318,6 +298,7 @@ public class PartOneListener implements Simulator.Listener
 
                 Node landNode = new LandNode(nodeIndex, nextAbsStateRowIndex, pos[0], pos[1], thisLandmarkId);
                 odNode.sawLandmark(nodeIndex);
+
                 Edge landEdge = new LandEdge(nextJacobRowIndex, lastOdNode.getAbsIndex(), nextAbsStateRowIndex, lastOdNode, landNode);
                 landEdge.setOdom(odom);
                 allEdges.add(landEdge);
@@ -330,9 +311,6 @@ public class PartOneListener implements Simulator.Listener
                 stateVector.add(landNode);
 
                 landmarksSeen.put(new Integer(thisLandmarkId), new Integer(nodeIndex));
-
-
-
 
             }
             cumulativeSigmaInverse = GraphMath.addToSigmaInverse(cumulativeSigmaInverse, numEdgesToAddToSigma, allEdges, nextJacobRowIndex, pin);
@@ -380,33 +358,34 @@ public class PartOneListener implements Simulator.Listener
                 double elapsedTime = (endTime-startTime)/1000000000f;
                 System.out.printf("Simulation time: %.2f\n", elapsedTime);
                 try{
-                FileWriter outFile = new FileWriter("data.txt");
-                PrintWriter out = new PrintWriter(outFile);
-                if(landmarksHaveId){
-
-                    out.println(numConverge + " " + curChi2Error);  
-                }
-                else{
-                    out.println("" + numErrors);
-                }
-
-                out.close();
+                    FileWriter outFile = new FileWriter("data.txt");
+                    PrintWriter out = new PrintWriter(outFile);
+                    if(landmarksHaveId){
+                        
+                        out.println(numConverge + " " + curChi2Error);  
+                    }
+                    else{
+                        out.println("" + numErrors);
+                    }
+                    
+                    out.close();
                 }
                 catch (Exception e){
                     System.out.println("Caught exception for writing to file");
                     assert(false);
                 }
             }
-
+            
         } // End all iterations of Ax = b
-
+        
         drawFrame();
-
+        
         drawDummy(dets);
         if (debug == 1) {
             System.out.println("We have seen "+ landmarksSeen.size() + " landmarks and the state vector is " + nextAbsStateRowIndex+  " long");
+            
+            System.out.println("number of errors: " + numErrors);
         }
-        System.out.println("number of errors: " + numErrors);
     }
     private void drawFrame(){
         // Grab our best guesses of the robot path and landmark positions from our state vector
@@ -493,9 +472,6 @@ public class PartOneListener implements Simulator.Listener
             }
             vb.swap();
         }
-
-
-
 
     }
 }

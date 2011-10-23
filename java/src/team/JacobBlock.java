@@ -29,12 +29,18 @@ public class JacobBlock{
     }
 
     /** rows is the size of the observation vector, columns is the size of the state vector**/
-    public static Matrix assemble(int rows, int cols, ArrayList<JacobBlock> blocks, int numPinningRows, JacobBlock pinned){
+    public static Matrix assemble(int rows, int cols, ArrayList<JacobBlock> blocks, int numPinningRows, JacobBlock pinned, boolean pin){
+        Matrix toReturn;
+        if(pin){
+            toReturn = new Matrix(rows + numPinningRows, cols, Matrix.SPARSE);
+            toReturn.set(pinned.getRow(), pinned.getFirstColumn(),  pinned.getFirstBlock());
+            toReturn.set(pinned.getRow(), pinned.getSecondColumn(), pinned.getSecondBlock());
+        }
+        else{
+            toReturn = new Matrix(rows, cols, Matrix.SPARSE);
+            numPinningRows = 0;
+        }
 
-        
-        Matrix toReturn = new Matrix(rows + numPinningRows, cols, Matrix.SPARSE);
-        toReturn.set(pinned.getRow(), pinned.getFirstColumn(),  pinned.getFirstBlock());
-        toReturn.set(pinned.getRow(), pinned.getSecondColumn(), pinned.getSecondBlock());
         for(JacobBlock block : blocks){
 
             toReturn.set(block.getRow() + numPinningRows, block.getFirstColumn(),  block.getFirstBlock());

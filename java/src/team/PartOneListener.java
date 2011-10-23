@@ -10,6 +10,7 @@ package team;
 
 import java.awt.*;
 import java.util.*;
+import java.io.*;
 
 import april.vis.*;
 import april.jmat.*;
@@ -69,6 +70,11 @@ public class PartOneListener implements Simulator.Listener
     private boolean pin = true;
 
     private long startTime;
+    private int numErrors = 0;
+
+
+    // private ArrayList<double[]> givenLandmarks = new ArrayList<double[]>();
+    private HashMap<Integer, Integer> mapMyIdToRealId = new HashMap<Integer, Integer>();
 
     public void init(Config _config, VisWorld _vw)
     {
@@ -83,7 +89,22 @@ public class PartOneListener implements Simulator.Listener
         landmarksHaveId    = config.requireBoolean("simulator.knownDataAssoc");
         landmarkDistThresh = config.requireDouble("simulator.landmarkThresh");
         chi2Thresh         = config.requireDouble("simulator.chi2Thresh");
+        /*
+        for(int i = 0; ; i++){
+            double li[] = config.getDoubles("landmarks.l" + i, null);
+            if(li == null){
+                break;
+            }
+            givenLandmarks.add(li);
 
+        }
+        for(double [] li : givenLandmarks){
+            for(int i = 0; i < li.length; i++){
+                System.out.println(li[i] + " ");
+            }
+            System.out.println();
+        }
+        */
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
@@ -111,15 +132,15 @@ public class PartOneListener implements Simulator.Listener
         int returnVal = nextLandmarkId;
         double minDist = 999;
         double minChi2Error = 500000;
+        boolean forceOldLandmark = false;
 
         for (Map.Entry<Integer, Integer> entry : landmarksSeen.entrySet()) {
-
+           
             Integer ID = entry.getKey();
             Integer nodeIndex = entry.getValue();
 
             ArrayList<Edge> trialEdges = new ArrayList<Edge>(allEdges);
             ArrayList<Node> trialObs   = new ArrayList<Node>(allObservations);
-
 
             /*add the observation, but not to the state vector*/
             /*NOTE prettr sure the node index of the land node doesnt matter, only used in trial obs
@@ -157,9 +178,24 @@ public class PartOneListener implements Simulator.Listener
 
 
             double chi2Error = getChi2Error(J, deltaX, trialResiduals, newSigmaInverse);
+            
+            double [] newPos = currentPos.getState();
+            double []pos = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
+            double x_global = pos[0];
+            double y_global = pos[1];
+            Node node = stateVector.get(entry.getValue());
+   
+            assert(node.isLand());
+   
+            
+            double state[] = node.getState();
+            double dist = Math.sqrt(Math.pow(x_global - state[0], 2) + Math.pow(y_global - state[1], 2));
+            if(dist < landmarkDistThresh){
+                forceOldLandmark = true;
+            }
 
 
-            if(chi2Error < (curChi2Error + chi2Thresh) && chi2Error< minChi2Error){
+            if((chi2Error < (curChi2Error + chi2Thresh) || forceOldLandmark) && chi2Error< minChi2Error){
                 if (debug == 1) {
                     System.out.println("Found landmark to assoicate with");
                     System.out.println("Old chi2 Error : " + curChi2Error + " New chi2 error " + chi2Error);
@@ -171,18 +207,30 @@ public class PartOneListener implements Simulator.Listener
             //    currentPos.forgetLandmark(new Integer(nodeIndex));
             currentPos.forgetMostRecentLandmark();
         }
+
         /*if we havent changed the returnVal, it means we're creating a new landmark id*/
         if(returnVal == nextLandmarkId){
             if (debug == 1) {
-                System.out.println("Creating new landmark with ID " + returnVal);
+                System.out.println("Creating new landmark with ID " + returnVal + " actual id is " + det.id);
             }
+            if(mapMyIdToRealId.containsValue(new Integer(det.id))){
+                numErrors++;
+            }
+            mapMyIdToRealId.put(new Integer(returnVal), new Integer(det.id)); 
+            System.out.println("Adding " + returnVal + " " + det.id);
             nextLandmarkId++;
         }
-        else{
+        else{/*found old landmark*/
             if (debug == 1) {
             System.out.println("using old id " + returnVal);
             }
+            if(mapMyIdToRealId.get(returnVal) != det.id){
+                numErrors++;
+            }
+
         }
+
+
         return returnVal;
     }
 
@@ -237,6 +285,7 @@ public class PartOneListener implements Simulator.Listener
             }
             else{
                 thisLandmarkId = getLandmarkId(odNode, det, odom, lastOdNode);
+               
             }
 
             /*If this is a duplicate*/
@@ -330,6 +379,23 @@ public class PartOneListener implements Simulator.Listener
                 long endTime = System.nanoTime();
                 double elapsedTime = (endTime-startTime)/1000000000f;
                 System.out.printf("Simulation time: %.2f\n", elapsedTime);
+                try{
+                FileWriter outFile = new FileWriter("data.txt");
+                PrintWriter out = new PrintWriter(outFile);
+                if(landmarksHaveId){
+
+                    out.println(numConverge + " " + curChi2Error);  
+                }
+                else{
+                    out.println("" + numErrors);
+                }
+
+                out.close();
+                }
+                catch (Exception e){
+                    System.out.println("Caught exception for writing to file");
+                    assert(false);
+                }
             }
 
         } // End all iterations of Ax = b
@@ -340,6 +406,7 @@ public class PartOneListener implements Simulator.Listener
         if (debug == 1) {
             System.out.println("We have seen "+ landmarksSeen.size() + " landmarks and the state vector is " + nextAbsStateRowIndex+  " long");
         }
+        System.out.println("number of errors: " + numErrors);
     }
     private void drawFrame(){
         // Grab our best guesses of the robot path and landmark positions from our state vector

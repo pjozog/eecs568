@@ -1,0 +1,15 @@
+#!/bin/bash
+
+SCRIPTDIR=$(dirname $0)
+CONFIGDIR=${SCRIPTDIR}/../config
+LISTENER=team.PartOneListener
+
+JAVA='java -ea -server'
+
+for config in ${CONFIGDIR}/sweepIter/sim.config*; do
+    echo $config
+    configBase=$(basename $config)
+    configNum=$(echo $configBase | perl -pe 's/sim\.config\.//')
+    ${JAVA} april.sim.Simulator -c ${config} -l ${LISTENER}
+done
+

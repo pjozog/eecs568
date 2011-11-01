@@ -1,5 +1,7 @@
 package april.vis;
 
+import java.io.*;
+
 public class VisDepthTest extends VisChain
 {
     boolean enabled;
@@ -23,5 +25,21 @@ public class VisDepthTest extends VisChain
         super.render(vc, layer, rinfo, gl);
 
         gl.glPopAttrib();
+    }
+
+    public VisDepthTest(ObjectReader r)
+    {
+    }
+
+    public void writeObject(ObjectWriter outs) throws IOException
+    {
+        super.writeObject(outs);
+        outs.writeBoolean(enabled);
+    }
+
+    public void readObject(ObjectReader ins) throws IOException
+    {
+        super.readObject(ins);
+        enabled = ins.readBoolean();
     }
 }

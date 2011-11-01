@@ -203,4 +203,181 @@ public class MathUtil
                 (0.99499024627366 + 0.00228262896304*x + 0.25288677429562*xx);
         }
     }
+
+    strictfp public static void main(String args[])
+    {
+        Random r = new Random();
+
+        double err = 0;
+        double M = 100;
+
+        System.out.println("Max_double: "+Double.MAX_VALUE);
+
+        System.out.println("Checking atan");
+
+        for (int i=0;i<10000000;i++)
+	    {
+            double x = M*r.nextDouble()-M/2;
+            double y = M*r.nextDouble()-M/2;
+
+            if (r.nextInt(100)==0)
+                x=0;
+            else if (r.nextInt(100)==0)
+                y=0;
+
+            double v1 = Math.atan2(y,x);
+            double v2 = atan2(y,x);
+
+            //		System.out.println(x+" "+y);
+            double thiserr = Math.abs(v1-v2);
+            if (thiserr>.1)
+                System.out.println(x+"\t"+y+"\t"+v1+"\t"+v2);
+            if (thiserr>err)
+                err=thiserr;
+	    }
+        System.out.println("err: "+err);
+        System.out.println("err deg: "+Math.toDegrees(err));
+
+        err = 0;
+        M=500;
+        System.out.println("Checking exp");
+        for (int i=0;i<10000000;i++)
+	    {
+            double x = r.nextDouble()*M-M/2;
+            double v1 = Math.exp(x);
+            double v2 = exp(x);
+
+            double abserr = Math.abs(v1-v2);
+            double relerr = Math.abs((v2-v1)/v1);
+
+            if ((x<.5 && abserr>0.01) || (x>.5 && relerr>0.004))
+                System.out.println(x+"\t"+v1+"\t"+v2);
+	    }
+
+        System.out.println("Benchmarking exp");
+//        benchexp();
+
+        ///////////////////////////////////////////////
+        System.out.println("Benchmarking atan");
+
+        if (true) {
+            double d[] = new double[10000];
+
+            for (int i = 0; i < d.length; i++) {
+                d[i] = r.nextDouble();
+            }
+
+            if (true) {
+                Tic tic = new Tic();
+                for (int i = 0; i < d.length; i++) {
+                    for (int j = 0; j < d.length; j++) {
+                        double v = Math.atan2(d[i],d[j]);
+                    }
+                }
+                System.out.printf("native: %15f\n", tic.toc());
+            }
+
+            if (true) {
+                Tic tic = new Tic();
+                for (int i = 0; i < d.length; i++) {
+                    for (int j = 0; j < d.length; j++) {
+                        double v = atan2(d[i],d[j]);
+                    }
+                }
+                System.out.printf("our version: %15f\n", tic.toc());
+            }
+        }
+
+    }
+
+    public static void benchexp()
+    {
+        Random r = new Random();
+        long startTime, endTime;
+        double elapsedTime;
+        int iter = 100000000;
+        double v;
+
+        startTime = System.currentTimeMillis();
+        v=0;
+        for (int i=0;i<iter;i++)
+            v+=Math.exp(r.nextDouble()*30);
+        endTime = System.currentTimeMillis();
+        elapsedTime = (endTime-startTime)/1000f;
+        System.out.println("Native: "+iter/elapsedTime);
+        double nativeSpeed = iter/elapsedTime;
+
+        startTime = System.currentTimeMillis();
+        v=0;
+        for (int i=0;i<iter;i++)
+            v+=exp(r.nextDouble()*30);
+        endTime = System.currentTimeMillis();
+        elapsedTime = (endTime-startTime)/1000f;
+        System.out.println("Fast: "+iter/elapsedTime);
+        double fastSpeed = iter/elapsedTime;
+
+        System.out.println("ratio: "+fastSpeed/nativeSpeed);
+
+    }
+
+    public static void benchatan()
+    {
+        Random r = new Random();
+        long startTime, endTime;
+        double elapsedTime;
+        int iter = 100000000;
+        double v;
+
+        startTime = System.currentTimeMillis();
+        v=0;
+        for (int i=0;i<iter;i++)
+            v+=Math.atan2(r.nextDouble()*30, r.nextDouble()*30);
+        endTime = System.currentTimeMillis();
+        elapsedTime = (endTime-startTime)/1000f;
+        System.out.println("Native: "+iter/elapsedTime);
+        double nativeSpeed = iter/elapsedTime;
+
+        startTime = System.currentTimeMillis();
+        v=0;
+        for (int i=0;i<iter;i++)
+            v+=atan2(r.nextDouble()*30, r.nextDouble()*30);
+        endTime = System.currentTimeMillis();
+        elapsedTime = (endTime-startTime)/1000f;
+        System.out.println("Fast: "+iter/elapsedTime);
+        double fastSpeed = iter/elapsedTime;
+
+        System.out.println("ratio: "+fastSpeed/nativeSpeed);
+    }
+
+    public static void inverse22(Matrix A)
+    {
+        double a = A.get(0,0), b = A.get(0,1);
+        double c = A.get(1,0), d = A.get(1,1);
+
+        double det = 1/(a*d-b*c);
+        A.set(0,0, det*d);
+        A.set(0,1, -det*b);
+        A.set(1,0, -det*c);
+        A.set(1,1, det*a);
+    }
+
+
+    public static void inverse33(Matrix A)
+    {
+        double a = A.get(0,0), b = A.get(0,1), c = A.get(0,2);
+        double d = A.get(1,0), e = A.get(1,1), f = A.get(1,2);
+        double g = A.get(2,0), h = A.get(2,1), i = A.get(2,2);
+
+        double det = 1/(a*e*i-a*f*h-d*b*i+d*c*h+g*b*f-g*c*e);
+
+        A.set(0,0, det*(e*i-f*h));
+        A.set(0,1, det*(-b*i+c*h));
+        A.set(0,2, det*(b*f-c*e));
+        A.set(1,0, det*(-d*i+f*g));
+        A.set(1,1, det*(a*i-c*g));
+        A.set(1,2, det*(-a*f+c*d));
+        A.set(2,0, det*(d*h-e*g));
+        A.set(2,1, det*(-a*h+b*g));
+        A.set(2,2, det*(a*e-b*d));
+    }
 }

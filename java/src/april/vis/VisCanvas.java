@@ -12,12 +12,11 @@ import javax.imageio.*;
 import april.jmat.*;
 import april.jmat.geom.*;
 
-import java.util.concurrent.atomic.*;
 
 /** A VisCanvas coordinates the rendering and event handling for a
  * collection of VisLayers in a single JComponent.
  **/
-public class VisCanvas extends JComponent
+public class VisCanvas extends JComponent implements VisSerializable
 {
     GLManager glManager = GLManager.getSingleton();
     BufferedImage im = null;
@@ -26,10 +25,11 @@ public class VisCanvas extends JComponent
     int frameCounter;
 
     long canvasId;
-    static AtomicLong nextId = new AtomicLong(1);
 
     // protected by synchronizing on 'layers'
     ArrayList<VisLayer> layers = new ArrayList<VisLayer>();
+    VisWorld privateWorld;
+    VisLayer privateLayer;
 
     EventHandler eh = new EventHandler();
 
@@ -116,14 +116,19 @@ public class VisCanvas extends JComponent
         public HashMap<VisLayer, VisCameraManager.CameraPosition> cameraPositions = new HashMap<VisLayer, VisCameraManager.CameraPosition>();
     }
 
-    // XXX support as many layers as desired
-    public VisCanvas(VisLayer layer)
+    public VisCanvas(VisLayer... layers)
     {
-        canvasId = nextId.getAndIncrement();
+        privateWorld = new VisWorld();
+        privateLayer = new VisLayer(privateWorld);
+        privateLayer.drawOrder = Integer.MAX_VALUE;
+        privateLayer.backgroundColor = new Color(0,0,0,0);
+        privateLayer.clearDepth = false;
+        privateLayer.eventHandlers.clear();
+        addLayer(privateLayer);
+
+        canvasId = VisUtil.allocateID();
 
         addComponentListener(new MyComponentListener());
-
-        addLayer(layer);
 
         addMouseMotionListener(eh);
         addMouseListener(eh);
@@ -132,12 +137,14 @@ public class VisCanvas extends JComponent
 
         setFocusTraversalKeysEnabled(false);
 
+        for (int i = 0; i < layers.length; i++)
+            addLayer(layers[i]);
+
         new RepaintThread().start();
     }
 
     public void addLayer(VisLayer layer)
     {
-        layer.canvas = this;
         layers.add(layer);
     }
 
@@ -163,8 +170,21 @@ public class VisCanvas extends JComponent
 
     class MyComponentListener extends ComponentAdapter
     {
+        VisObject lastResizeObject = null;
+
         public void componentResized(ComponentEvent e)
         {
+            VisWorld.Buffer vb = privateWorld.getBuffer("foo");
+
+            vb.removeTemporary(lastResizeObject);
+
+            lastResizeObject = new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.CENTER_ROUND,
+                                                       new VisDepthTest(false,
+                                                                        new VisText(VisText.ANCHOR.CENTER_ROUND,
+                                                                                    "<<sansserif-12>>"+
+                                                                                    String.format("%d x %d", getWidth(), getHeight()))));
+            vb.addTemporary(lastResizeObject, 750);
+
             draw();
         }
 
@@ -194,7 +214,7 @@ public class VisCanvas extends JComponent
         int fboId;
         int fboWidth, fboHeight;
 
-        long lastDrawTime;
+        long lastDrawTime = System.currentTimeMillis();
 
         public void run()
         {
@@ -253,6 +273,13 @@ public class VisCanvas extends JComponent
             gl.glEnable(GL.GL_BLEND);
             gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
+            // don't do z-buffer updates for fully transparent
+            // pixels. VisFont relies on this, because texture atlas
+            // for individual characters tend to overlap when
+            // rendering.
+            gl.glEnable(GL.GL_ALPHA_TEST);
+            gl.glAlphaFunc(GL.GL_GREATER, 0);
+
             gl.glPolygonMode(GL.GL_FRONT, GL.GL_FILL);
             gl.glPolygonMode(GL.GL_BACK, GL.GL_FILL);
 
@@ -261,14 +288,16 @@ public class VisCanvas extends JComponent
             gl.glShadeModel(GL.GL_SMOOTH);
 
 /*
-            gl.glEnable(GL.GL_POINT_SMOOTH);
-            gl.glHint(GL.GL_POINT_SMOOTH_HINT, GL.GL_NICEST);
+  gl.glEnable(GL.GL_POINT_SMOOTH);
+  gl.glHint(GL.GL_POINT_SMOOTH_HINT, GL.GL_NICEST);
+*/
 
+            // VisGrid benefits tremendously from this
             gl.glEnable(GL.GL_LINE_SMOOTH);
             gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
-
-            gl.glEnable(GL.GL_POLYGON_SMOOTH);
-            gl.glHint(GL.GL_POLYGON_SMOOTH_HINT, GL.GL_NICEST);
+/*
+  gl.glEnable(GL.GL_POLYGON_SMOOTH);
+  gl.glHint(GL.GL_POLYGON_SMOOTH_HINT, GL.GL_NICEST);
 */
 
             gl.glEnable(GL.GL_SCISSOR_TEST);
@@ -282,6 +311,19 @@ public class VisCanvas extends JComponent
                 rinfo.layers.addAll(layers);
             }
 
+            if (true) {
+
+                VisWorld.Buffer vb = privateWorld.getBuffer("FPS Rate");
+                vb.addBack(new VisDepthTest(false,
+                                            new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_LEFT,
+                                                                    new VisText(VisText.ANCHOR.BOTTOM_LEFT_ROUND,
+                                                                                "<<white,monospaced-12>>"+
+                                                                                String.format("%5.1f fps %c",
+                                                                                              getMeasuredFPS(),
+                                                                                              (frameCounter&1) > 0 ? '.' : ' ')))));
+                vb.swap();
+            }
+
             Collections.sort(rinfo.layers);
 
             for (VisLayer layer : rinfo.layers) {
@@ -289,19 +331,29 @@ public class VisCanvas extends JComponent
                 if (!layer.enabled)
                     continue;
 
-                gl.glClearDepth(1.0);
-                gl.glClearColor(layer.backgroundColor.getRed()/255f,
-                                layer.backgroundColor.getGreen()/255f,
-                                layer.backgroundColor.getBlue()/255f,
-                                layer.backgroundColor.getAlpha()/255f);
-
                 int layerPosition[] = layer.layerManager.getLayerPosition(VisCanvas.this, viewport, layer, mtime);
                 rinfo.layerPositions.put(layer, layerPosition);
 
                 gl.glScissor(layerPosition[0], layerPosition[1], layerPosition[2], layerPosition[3]);
                 gl.glViewport(layerPosition[0], layerPosition[1], layerPosition[2], layerPosition[3]);
 
-                gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+                int clearflags = 0;
+
+                if (layer.clearDepth) {
+                    gl.glClearDepth(1.0);
+                    clearflags |= GL.GL_DEPTH_BUFFER_BIT;
+                }
+
+                if (layer.backgroundColor.getAlpha() != 0) {
+                    gl.glClearColor(layer.backgroundColor.getRed()/255f,
+                                    layer.backgroundColor.getGreen()/255f,
+                                    layer.backgroundColor.getBlue()/255f,
+                                    layer.backgroundColor.getAlpha()/255f);
+                    clearflags |= GL.GL_COLOR_BUFFER_BIT;
+                }
+
+                if (clearflags != 0)
+                    gl.glClear(clearflags);
 
                 ///////////////////////////////////////////////////////
                 // set up lighting
@@ -369,16 +421,26 @@ public class VisCanvas extends JComponent
                 long now = System.currentTimeMillis();
                 double dt = (now - lastDrawTime) / 1000.0;
 
-                dt = Math.max(0, Math.min(2, dt));
+                // clamp to [0,1]
+                double dtclamp = Math.max(0, Math.min(1, dt));
 
                 // larger alpha = favor existing estimate
-                double fpsAlpha = 1.0 - dt;
-                fpsAlpha = Math.max(0, Math.min(1, fpsAlpha));
+                //
+                // after T seconds of updates, we'd like the
+                // effective weight of the existing estimate to be
+                // w.  In one second, there where will be (T / dt)
+                // updates. Solve for alpha.
+                //
+                // alpha^(T / dt) = w
+                //
+                //  (T / dt) * log(alpha) = log(w)
+                // alpha = exp( log(w) / (T / dt) )
 
-                if (fpsDt == 0)
-                    fpsAlpha = 0;
+                double T = 1;
+                double w = 0.2;
+                double fpsAlpha = Math.exp( Math.log(w) / (T / dtclamp) );
+
                 fpsDt = fpsDt * fpsAlpha + dt * (1.0 - fpsAlpha);
-
                 lastDrawTime = now;
             }
 
@@ -419,17 +481,23 @@ public class VisCanvas extends JComponent
     class EventHandler implements MouseMotionListener, MouseListener, MouseWheelListener, KeyListener
     {
         VisLayer mousePressedLayer;
+        VisLayer keyboardFocusLayer;
+
+        int lastex = -1, lastey = -1;
 
         public void keyPressed(KeyEvent e)
         {
+            dispatchKeyEvent(e);
         }
 
         public void keyReleased(KeyEvent e)
         {
+            dispatchKeyEvent(e);
         }
 
         public void keyTyped(KeyEvent e)
         {
+            dispatchKeyEvent(e);
         }
 
         public void mouseWheelMoved(MouseWheelEvent e)
@@ -473,6 +541,7 @@ public class VisCanvas extends JComponent
             dispatchMouseEvent(e);
         }
 
+        // Find a layer that can consume this event.
         void dispatchMouseEvent(MouseEvent e)
         {
             RenderInfo rinfo = lastRenderInfo;
@@ -482,6 +551,11 @@ public class VisCanvas extends JComponent
             int ex = e.getX();
             int ey = getHeight() - e.getY();
 
+            lastex = ex;
+            lastey = ey;
+
+            // these events go to the layer that got the MOUSE_PRESSED
+            // event, not the layer under the event.
             if (e.getID() == MouseEvent.MOUSE_DRAGGED || e.getID() == MouseEvent.MOUSE_RELEASED) {
                 if (mousePressedLayer != null)
                     dispatchMouseEventToLayer(VisCanvas.this, mousePressedLayer, rinfo,
@@ -517,6 +591,9 @@ public class VisCanvas extends JComponent
             }
         }
 
+        // this is used by dispatchMouseEvent. It processes the event
+        // handlers within the layer, returning true if one of them
+        // consumed the event.
         boolean dispatchMouseEventToLayer(VisCanvas vc, VisLayer layer, VisCanvas.RenderInfo rinfo, GRay3D ray, MouseEvent e)
         {
             boolean handled = false;
@@ -562,6 +639,60 @@ public class VisCanvas extends JComponent
             }
 
             return handled;
+        }
+
+        void dispatchKeyEvent(KeyEvent e)
+        {
+            RenderInfo rinfo = lastRenderInfo;
+            if (rinfo == null)
+                return;
+
+            for (int lidx = rinfo.layers.size()-1; lidx >= 0; lidx--) {
+                VisLayer layer = rinfo.layers.get(lidx);
+                if (!layer.enabled)
+                    continue;
+
+                int pos[] = rinfo.layerPositions.get(layer);
+
+                if (lastex >= pos[0] && lastey >= pos[1] &&
+                    lastex < pos[0]+pos[2] && lastey < pos[1]+pos[3]) {
+
+                    boolean handled = dispatchKeyEventToLayer(VisCanvas.this, layer, rinfo, e);
+
+                    if (handled)
+                        return;
+                }
+            }
+        }
+
+        boolean dispatchKeyEventToLayer(VisCanvas vc, VisLayer layer, VisCanvas.RenderInfo rinfo, KeyEvent e)
+        {
+            boolean handled = false;
+
+            synchronized (layer.eventHandlers) {
+                for (VisEventHandler eh : layer.eventHandlers) {
+
+                    switch (e.getID()) {
+                        case KeyEvent.KEY_TYPED:
+                            handled = eh.keyTyped(VisCanvas.this, layer, rinfo, e);
+                            break;
+                        case KeyEvent.KEY_PRESSED:
+                            handled = eh.keyPressed(VisCanvas.this, layer, rinfo, e);
+                            break;
+                        case KeyEvent.KEY_RELEASED:
+                            handled = eh.keyReleased(VisCanvas.this, layer, rinfo, e);
+                            break;
+                        default:
+                            System.out.println("Unhandled key event id: "+e.getID());
+                            break;
+                    }
+
+                    if (handled)
+                        break;
+                }
+
+                return handled;
+            }
         }
     }
 
@@ -661,7 +792,29 @@ public class VisCanvas extends JComponent
             JMenuItem jmi = new JMenuItem("Save scene (.vsc)");
             jmi.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-// XXX
+
+                    Calendar c = new GregorianCalendar();
+
+                    String s = String.format("%4d%02d%02d_%02d%02d%02d_%03d", c.get(Calendar.YEAR),
+                                             c.get(Calendar.MONTH)+1,
+                                             c.get(Calendar.DAY_OF_MONTH),
+                                             c.get(Calendar.HOUR_OF_DAY),
+                                             c.get(Calendar.MINUTE),
+                                             c.get(Calendar.SECOND),
+                                             c.get(Calendar.MILLISECOND)
+                        );
+
+                    String path = "v"+s+".vsc";
+
+                    try {
+                        DataOutputStream outs = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(path)));
+                        ObjectWriter ow = new ObjectWriter(outs);
+                        ow.writeObject(VisCanvas.this);
+                        outs.flush();
+                        outs.close();
+                    } catch (IOException ex) {
+                        System.out.println("ex: "+ex);
+                    }
                 }
             });
             jmenu.add(jmi);
@@ -732,8 +885,46 @@ public class VisCanvas extends JComponent
             jmis[bestIndex].setSelected(true);
 
             jmenu.add(jm);
-
         }
+
+        if (true) {
+        }
+    }
+
+    /** for serialization only **/
+    public VisCanvas(ObjectReader r)
+    {
+        canvasId = VisUtil.allocateID();
+
+        addComponentListener(new MyComponentListener());
+
+        addMouseMotionListener(eh);
+        addMouseListener(eh);
+        addMouseWheelListener(eh);
+        addKeyListener(eh);
+
+        setFocusTraversalKeysEnabled(false);
+    }
+
+    public void writeObject(ObjectWriter outs) throws IOException
+    {
+        outs.writeInt(layers.size());
+        for (VisLayer layer : layers)
+            outs.writeObject(layer);
+        outs.writeObject(privateWorld);
+        outs.writeObject(privateLayer);
+    }
+
+    public void readObject(ObjectReader ins) throws IOException
+    {
+        int n = ins.readInt();
+        for (int i = 0; i < n; i++)
+            addLayer((VisLayer) ins.readObject());
+
+        privateWorld = (VisWorld) ins.readObject();
+        privateLayer = (VisLayer) ins.readObject();
+
+        new RepaintThread().start();
     }
 }
 

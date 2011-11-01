@@ -222,12 +222,12 @@ public class Simulator implements Runnable
                     landmark_t cleanObs = new landmark_t();
                     cleanObs.utime = utime;
                     cleanObs.obs = clean_det_rt;
-                    cleanObs.id = i;//(knownDataAssoc? i : -1);
+                    cleanObs.id = (knownDataAssoc? i : -1);
 
                     landmark_t noisyObs = new landmark_t();
                     noisyObs.utime = utime;
                     noisyObs.obs = noisy_det_rt;
-                    noisyObs.id = i;//(knownDataAssoc? i : -1);
+                    noisyObs.id = (knownDataAssoc? i : -1);
 
                     clean_dets.add(cleanObs);
                     noisy_dets.add(noisyObs);

@@ -42,4 +42,19 @@ public class VisEventAdapter implements VisEventHandler
     {
         return false;
     }
+
+    public boolean keyPressed(VisCanvas vc, VisLayer vl, VisCanvas.RenderInfo rinfo, KeyEvent e)
+    {
+        return false;
+    }
+
+    public boolean keyTyped(VisCanvas vc, VisLayer vl, VisCanvas.RenderInfo rinfo, KeyEvent e)
+    {
+        return false;
+    }
+
+    public boolean keyReleased(VisCanvas vc, VisLayer vl, VisCanvas.RenderInfo rinfo, KeyEvent e)
+    {
+        return false;
+    }
 }

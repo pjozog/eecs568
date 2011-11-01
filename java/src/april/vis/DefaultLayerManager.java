@@ -1,13 +1,14 @@
 package april.vis;
 
 import java.util.*;
+import java.io.*;
 
 import april.jmat.*;
 
 /** Layer positions are given in Java window coordinates, i.e., with
  * 0,0 in the upper left.
  **/
-public class DefaultLayerManager implements VisLayerManager
+public class DefaultLayerManager implements VisLayerManager, VisSerializable
 {
     HashMap<VisLayer, LayerPosition> layerPositions = new HashMap<VisLayer, LayerPosition>();
 
@@ -24,7 +25,7 @@ public class DefaultLayerManager implements VisLayerManager
         layerPositions.put(vl, lpos);
     }
 
-    static class LayerPosition
+    static class LayerPosition implements VisSerializable
     {
         // The position of a layer is determined by four numbers:
         //
@@ -37,6 +38,10 @@ public class DefaultLayerManager implements VisLayerManager
         long mtime0;
         double dpos1[] = new double[] { 0, 0, 1, 1};
         long mtime1 = System.currentTimeMillis();
+
+        LayerPosition()
+        {
+        }
 
         double[] getPosition(long mtime)
         {
@@ -53,6 +58,26 @@ public class DefaultLayerManager implements VisLayerManager
                                   alpha0 * dpos0[1] + alpha1 * dpos1[1],
                                   alpha0 * dpos0[2] + alpha1 * dpos1[2],
                                   alpha0 * dpos0[3] + alpha1 * dpos1[3] };
+        }
+
+        public LayerPosition(ObjectReader r)
+        {
+        }
+
+        public void writeObject(ObjectWriter outs) throws IOException
+        {
+            outs.writeDoubles(dpos0);
+            outs.writeLong(mtime0);
+            outs.writeDoubles(dpos1);
+            outs.writeLong(mtime1);
+        }
+
+        public void readObject(ObjectReader ins) throws IOException
+        {
+            dpos0 = ins.readDoubles();
+            mtime0 = ins.readLong();
+            dpos1 = ins.readDoubles();
+            mtime1 = ins.readLong();
         }
     }
 
@@ -71,5 +96,30 @@ public class DefaultLayerManager implements VisLayerManager
                            (int) Math.round(viewport[3]*dpos[1]),
                            (int) Math.round(viewport[2]*dpos[2]),
                            (int) Math.round(viewport[3]*dpos[3]) };
+    }
+
+    public DefaultLayerManager(ObjectReader r)
+    {
+    }
+
+    public void writeObject(ObjectWriter outs) throws IOException
+    {
+        outs.writeInt(layerPositions.size());
+
+        for (VisLayer vl : layerPositions.keySet()) {
+            outs.writeObject(vl);
+            outs.writeObject(layerPositions.get(vl));
+        }
+    }
+
+    public void readObject(ObjectReader ins) throws IOException
+    {
+        int n = ins.readInt();
+
+        for (int i = 0; i < n; i++) {
+            VisLayer vl = (VisLayer) ins.readObject();
+            LayerPosition pos = (LayerPosition) ins.readObject();
+            layerPositions.put(vl, pos);
+        }
     }
 }

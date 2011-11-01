@@ -2,6 +2,7 @@
 syntax: glob
 
 april.jar
+lcm.jar
 gltest
 *.log
 *.class

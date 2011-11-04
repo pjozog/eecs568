@@ -1,3 +1,5 @@
+package team;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -35,7 +37,7 @@ public class Particle {
      * @param state -- length 3 in global XYT
      * @param features -- the features we're inheriting. NEED DEEP COPY.
      */
-    public Patricle(double[] state, List<KalmanFeature> features) {
+    public Particle(double[] state, List<KalmanFeature> features) {
 
         // With literals, is this a deep copy?
         stateXYT[0] = state[0];

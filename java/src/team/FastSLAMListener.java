@@ -88,7 +88,7 @@ public class FastSLAMListener implements Simulator.Listener
         }
 
 
-        for (Particles aParticle : tempParticles) {
+        for (Particle aParticle : tempParticles) {
 
             aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1], landmarkObs});
         }

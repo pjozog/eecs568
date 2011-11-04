@@ -58,8 +58,11 @@ public class Particle {
         stateXYT[2] = state[2];
 
         // Probably isn't a deep copy. Damn you Java.
-        featureList = new ArrayList<KalmanFeature>(features);
-
+        featureList = new ArrayList<KalmanFeature>();
+        for(KalmanFeature k : features){
+            featureList.add(new KalmanFeature(k));
+        }
+       
     }
 
     /**set threshold for new features**/

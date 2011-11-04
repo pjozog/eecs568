@@ -25,7 +25,7 @@ public class FastSLAMListener implements Simulator.Listener
     VisWorld vw;
     Config config;
 
-    
+
     private ArrayList<double[]> trajectory = new ArrayList<double[]>();
     double xyt[] = new double[3];
 
@@ -113,51 +113,51 @@ public class FastSLAMListener implements Simulator.Listener
             vb.swap();
         }
 
-    // public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
-    // {
-    //     // Draw local Trajectory -- the red robot path -- our least squares "best guess"
-    //     {
-    //         VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
-    //         vb.addBack(new VisLines(new VisVertexData(trajectory),
-    //                                 new VisConstantColor(new Color(160,30,30)),
-    //                                 1.5, VisLines.TYPE.LINE_STRIP));
-    //         vb.swap();
-    //     }
+        // public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
+        // {
+        //     // Draw local Trajectory -- the red robot path -- our least squares "best guess"
+        //     {
+        //         VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
+        //         vb.addBack(new VisLines(new VisVertexData(trajectory),
+        //                                 new VisConstantColor(new Color(160,30,30)),
+        //                                 1.5, VisLines.TYPE.LINE_STRIP));
+        //         vb.swap();
+        //     }
 
-    //     ArrayList<double[]> rpoints = new ArrayList<double[]>();
-    //     rpoints.add(new double[]{-.3, .3});
-    //     rpoints.add(new double[]{-.3, -.3});
-    //     rpoints.add(new double[]{.45,0});
+        //     ArrayList<double[]> rpoints = new ArrayList<double[]>();
+        //     rpoints.add(new double[]{-.3, .3});
+        //     rpoints.add(new double[]{-.3, -.3});
+        //     rpoints.add(new double[]{.45,0});
 
-    //     // Draws the robot triangle at xyt
-    //     {
-    //         VisWorld.Buffer vb = vw.getBuffer("robot-local");
-    //         VisObject robot = new VisLines(new VisVertexData(rpoints),
-    //                                        new VisConstantColor(Color.red),
-    //                                        3,
-    //                                        VisLines.TYPE.LINE_LOOP);
+        //     // Draws the robot triangle at xyt
+        //     {
+        //         VisWorld.Buffer vb = vw.getBuffer("robot-local");
+        //         VisObject robot = new VisLines(new VisVertexData(rpoints),
+        //                                        new VisConstantColor(Color.red),
+        //                                        3,
+        //                                        VisLines.TYPE.LINE_LOOP);
 
 
-    //         double xyzrpy[] = new double[]{xyt[0], xyt[1], 0,
-    //                                        0, 0, xyt[2]};
-    //         vb.addBack(new VisChain(LinAlg.xyzrpyToMatrix(xyzrpy), robot));
-    //         vb.swap();
-    //     }
+        //         double xyzrpy[] = new double[]{xyt[0], xyt[1], 0,
+        //                                        0, 0, xyt[2]};
+        //         vb.addBack(new VisChain(LinAlg.xyzrpyToMatrix(xyzrpy), robot));
+        //         vb.swap();
+        //     }
 
-    //     // Draw the landmark observations -- the blue lines shooting out of the red bot
-    //     {
-    //         VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
-    //         for (Simulator.landmark_t lmark : landmarks) {
-    //             double[] obs = lmark.obs;
-    //             ArrayList<double[]> obsPoints = new ArrayList<double[]>();
-    //             obsPoints.add(LinAlg.resize(xyt,2));
-    //             double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
-    //             obsPoints.add(LinAlg.transform(xyt, rel_xy));
-    //             vb.addBack(new VisLines(new VisVertexData(obsPoints),
-    //                                     new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
-    //         }
-    //         vb.swap();
-    //     }
+        //     // Draw the landmark observations -- the blue lines shooting out of the red bot
+        //     {
+        //         VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
+        //         for (Simulator.landmark_t lmark : landmarks) {
+        //             double[] obs = lmark.obs;
+        //             ArrayList<double[]> obsPoints = new ArrayList<double[]>();
+        //             obsPoints.add(LinAlg.resize(xyt,2));
+        //             double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
+        //             obsPoints.add(LinAlg.transform(xyt, rel_xy));
+        //             vb.addBack(new VisLines(new VisVertexData(obsPoints),
+        //                                     new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
+        //         }
+        //         vb.swap();
+        //     }
 
     }
 }

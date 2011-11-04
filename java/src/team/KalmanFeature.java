@@ -5,8 +5,8 @@ import april.jmat.*;
 public class KalmanFeature {
 
     // Every feature is represented by a mean and covariance
-    double mean[] = new double[3];
-    Matrix covariance;
+    private double mean[] = new double[3];
+    private Matrix covariance;
 
     public KalmanFeature(double[] startMean, Matrix startCov) {
 
@@ -33,7 +33,8 @@ public class KalmanFeature {
      * @param observation -- The direct RT observation
      * @param robotPose -- The pose from which the robot observed the feature
      */
-    public static void kalmanUpdate(double[] observation, double[] robotPose) {
+    public void kalmanUpdate(double[] observation, double[] robotPose) {
+            
 
     }
 
@@ -47,7 +48,7 @@ public class KalmanFeature {
      *
      * @return the likelihood that the observation corresponds to this feature
      */
-    public static double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose) {
+    public double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose) {
         /*TODO fill in*/
         return 0.0;
     }

@@ -130,6 +130,8 @@ public class Particle {
         if (maxLikelihood < threshold) {
 
             // Then we're going to treat it as a new feature
+            
+
             possibleMatch = new KalmanFeature(MEAN, COV);
 
         } else {

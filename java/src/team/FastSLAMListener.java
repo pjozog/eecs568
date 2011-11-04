@@ -82,7 +82,7 @@ public class FastSLAMListener implements Simulator.Listener
         // Copy the current set of particles...is this a deep copy?
         tempParticles = new ArrayList<Particle>(particles);
 
-        List<double[]> landmarkObs = new ArrayList<double[]>();
+        java.util.List<double[]> landmarkObs = new ArrayList<double[]>();
         for (Simulator.landmark_t det : dets) {
             landmarkObs.add(new double[]{det.obs[0], det.obs[1]});
         }
@@ -90,7 +90,7 @@ public class FastSLAMListener implements Simulator.Listener
 
         for (Particle aParticle : tempParticles) {
 
-            aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1], landmarkObs});
+            aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
         }
 
         //TODO: Resample from tempParticles to update particles

@@ -44,18 +44,25 @@ public class FastSLAMListener implements Simulator.Listener
     // The temporary list of particles that are updated and used for resampling
     private ArrayList<Particle> tempParticles;
 
+    private double newFeatThreshold;
+  
+
+
     public void init(Config _config, VisWorld _vw)
     {
         config  = _config;
         vw = _vw;
 
-        baseline           = config.requireDouble("robot.baseline_m");
+        baseline         = config.requireDouble("robot.baseline_m");
+        newFeatThreshold = config.requireDouble("fastSlam.threshold");
+        Particle.setThreshold(newFeatThreshold);
 
         // Allocate enough space for our particles
         particles = new ArrayList<Particle>(numParticles);
         tempParticles = new ArrayList<Particle>(numParticles);
 
     }
+
 
 
     public void update(Simulator.odometry_t odom, ArrayList<Simulator.landmark_t> dets)

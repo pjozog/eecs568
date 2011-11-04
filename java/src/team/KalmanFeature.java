@@ -19,6 +19,13 @@ public class KalmanFeature {
 
     }
 
+    public KalmanFeature(KalmanFeature k){
+        for(int i = 0; i < mean.length; i++){
+            mean[i] = k.mean[i];
+        }
+        covariance = k.covariance.copy();
+        
+    }
 
     /**
      * Static method to update a feature's mean and covariance after an observation
@@ -41,6 +48,7 @@ public class KalmanFeature {
      * @return the likelihood that the observation corresponds to this feature
      */
     public static double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose) {
-
+        /*TODO fill in*/
+        return 0.0;
     }
 }

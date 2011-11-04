@@ -21,6 +21,8 @@ public class Particle {
     // The weight will only be updated internally
     private double weight;
 
+    private static double threshold;
+
 
     // Default constructor...used when Simulator is just beginning
     public Particle() {
@@ -29,6 +31,17 @@ public class Particle {
         stateXYT[2] = 0;
     }
 
+    /** copy constructor**/
+    public Particle(Particle p){
+        
+        for(int i = 0; i < stateXYT.length; i++){
+            stateXYT[i] = p.stateXYT[i]; 
+        }   
+        for(KalmanFeature feature : p.featureList){
+            featureList.add(new KalmanFeature(feature));
+        }
+        
+    }
 
     /**
      * Constructor used after resampling. We want deep copies of state and
@@ -48,6 +61,12 @@ public class Particle {
         featureList = new ArrayList<KalmanFeature>(features);
 
     }
+
+    /**set threshold for new features**/
+    public static void setThreshold(double t){
+        threshold = t;
+    }
+  
 
     /**
      * Method called from FastSLAMListener with our new information. This will
@@ -105,7 +124,7 @@ public class Particle {
         // BUT, we have to consider that it's a new feature. Compare the maxLikelihood to
         // our "new feature threshold". See lines 11 and 12 in ProbRob.
 
-        if (maxLikelihood < SOMETHRESHOLD) {
+        if (maxLikelihood < threshold) {
 
             // Then we're going to treat it as a new feature
             possibleMatch = new KalmanFeature(MEAN, COV);

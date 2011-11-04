@@ -18,6 +18,7 @@ import april.jmat.*;
 import april.util.*;
 import april.config.*;
 import april.sim.*;
+import java.util.Random;
 
 public class FastSLAMListener implements Simulator.Listener
 {
@@ -46,7 +47,7 @@ public class FastSLAMListener implements Simulator.Listener
 
     private double newFeatThreshold;
   
-
+    private Random rand = new Random(1337);
 
     public void init(Config _config, VisWorld _vw)
     {
@@ -82,26 +83,50 @@ public class FastSLAMListener implements Simulator.Listener
                                                        Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
 
             trajectory.add(LinAlg.resize(xyt,2));
-
         }
 
-
         // Copy the current set of particles...is this a deep copy?
-        tempParticles = new ArrayList<Particle>(particles);
+        tempParticles = new ArrayList<Particle>();
+        for(Particle p : particles){
+            tempParticles.add(new Particle(p));
+        }
 
         java.util.List<double[]> landmarkObs = new ArrayList<double[]>();
         for (Simulator.landmark_t det : dets) {
             landmarkObs.add(new double[]{det.obs[0], det.obs[1]});
         }
 
-
+        double totWeight = 0;
         for (Particle aParticle : tempParticles) {
 
             aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
+            totWeight += aParticle.getWeight();
         }
 
         //TODO: Resample from tempParticles to update particles
+        particles.clear();
+        
+        double weights[] = new double[tempParticles.size()];
+        for(int i = 0; i < tempParticles.size(); i++){
+            weights[i] = tempParticles.get(i).getWeight() / totWeight;
+        }
 
+        for(int i = 0; i < tempParticles.size(); i++){
+            double pick = rand.nextDouble();
+            double running = 0;
+            for(int j = 0; j < weights.length; j++){
+                /*silly hack to make sure double precision doesnt bite us*/
+                if(running + weights[j] >= pick || (j + 1 == weights.length) ){
+                    particles.add(new Particle(tempParticles.get(j)));
+                    break;
+                }
+                running += weights[j];
+            }
+
+        }
+
+        assert(particles.size() == tempParticles.size());
+        
 
         drawDummy(dets);
 

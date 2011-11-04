@@ -11,3 +11,4 @@ gltest
 *.jnilib
 BeansAttempt/*
 *.orig
+*.DS_Store

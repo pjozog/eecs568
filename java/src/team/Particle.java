@@ -2,6 +2,7 @@ package team;
 
 import java.util.List;
 import java.util.ArrayList;
+import april.jmat.*;
 
 public class Particle {
 
@@ -13,7 +14,7 @@ public class Particle {
     // the point cloud over time.
 
     // Particle state in global XYT
-    double stateXYT[] = new double[3];
+    private double stateXYT[] = new double[3];
 
     // The list of features -- careful with deep copying
     List<KalmanFeature> featureList = new ArrayList<KalmanFeature>();
@@ -23,6 +24,12 @@ public class Particle {
 
     private static double threshold;
 
+
+    private static Matrix sigmaW = null;
+
+    private static void setSigmaW(Matrix m){
+        sigmaW = m;
+    }
 
     // Default constructor...used when Simulator is just beginning
     public Particle() {
@@ -110,9 +117,9 @@ public class Particle {
      * @param landmarkObs -- RT of the observation
      */
     private void dataCorrespondenceAndUpdate(double[] landmarkObs) {
-
+        assert(sigmaW != null);
         double maxLikelihood = Double.NEGATIVE_INFINITY;
-        KalmanFeature possibleMatch;
+        KalmanFeature possibleMatch = null;
 
         for (KalmanFeature aFeature : featureList) {
 
@@ -131,8 +138,12 @@ public class Particle {
 
             // Then we're going to treat it as a new feature
             
+            double mean [] = FastSLAMMotionModel.predictedFeaturePosXY(stateXYT, landmarkObs);
+            Matrix rw = new Matrix(FastSLAMMotionModel.jacobianJx(stateXYT, landmarkObs));
+ 
+            Matrix cov = rw.times(sigmaW.timesTranspose(rw));
 
-            possibleMatch = new KalmanFeature(MEAN, COV);
+            possibleMatch = new KalmanFeature(mean, cov);
 
         } else {
 

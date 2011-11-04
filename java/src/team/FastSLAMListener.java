@@ -35,6 +35,14 @@ public class FastSLAMListener implements Simulator.Listener
     private int numUpdates = 0;
     private boolean debug = true;
 
+    // The number of particles to use
+    private int numParticles = 50;
+
+    // The list of current particles
+    private ArrayList<Particle> particles;
+
+    // The temporary list of particles that are updated and used for resampling
+    private ArrayList<Particle> tempParticles;
 
     public void init(Config _config, VisWorld _vw)
     {
@@ -43,6 +51,10 @@ public class FastSLAMListener implements Simulator.Listener
 
         baseline           = config.requireDouble("robot.baseline_m");
 
+        // Allocate enough space for our particles
+        particles = new ArrayList<Particle>(numParticles);
+        tempParticles = new ArrayList<Particle>(numParticles);
+
     }
 
 
@@ -50,17 +62,38 @@ public class FastSLAMListener implements Simulator.Listener
     {
 
         numUpdates++;
-        DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
+    
+        {
+            DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
-        double x = ticksXYT.get(0);
-        double y = ticksXYT.get(1);
-        double t = ticksXYT.get(2);;
+            double x = ticksXYT.get(0);
+            double y = ticksXYT.get(1);
+            double t = ticksXYT.get(2);;
 
 
-        xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
-                                                   Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
+            xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
+                                                       Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
 
-        trajectory.add(LinAlg.resize(xyt,2));
+            trajectory.add(LinAlg.resize(xyt,2));
+
+        }
+
+
+        // Copy the current set of particles...is this a deep copy?
+        tempParticles = new ArrayList<Particle>(particles);
+
+        List<double[]> landmarkObs = new ArrayList<double[]>();
+        for (Simulator.landmark_t det : dets) {
+            landmarkObs.add(new double[]{det.obs[0], det.obs[1]});
+        }
+
+
+        for (Particles aParticle : tempParticles) {
+
+            aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1], landmarkObs});
+        }
+
+        //TODO: Resample from tempParticles to update particles
 
 
         drawDummy(dets);

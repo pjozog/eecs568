@@ -27,10 +27,13 @@ public class Particle {
 
     private static Matrix sigmaW = null;
 
-    private static void setSigmaW(Matrix m){
+    public static void setSigmaW(Matrix m){
         sigmaW = m;
     }
-
+    public static Matrix getSigmaW(){
+        assert(sigmaW != null);
+        return sigmaW;
+    }
     // Default constructor...used when Simulator is just beginning
     public Particle() {
         stateXYT[0] = 0;

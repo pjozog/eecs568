@@ -45,6 +45,10 @@ public class FastSLAMListener implements Simulator.Listener
     // The temporary list of particles that are updated and used for resampling
     private ArrayList<Particle> tempParticles;
 
+    // Ivars for drawing
+    private ArrayList<double[]> particlePositions = new ArrayList<Particle>();
+    private double[] mostLikelyParticleLocation;
+
     private double newFeatThreshold;
 
     private Random rand = new Random(1337);
@@ -120,6 +124,7 @@ public class FastSLAMListener implements Simulator.Listener
 
         assert(particles.size() == tempParticles.size());
 
+        updateDrawingVariables();
 
         drawDummy(dets);
 
@@ -143,14 +148,58 @@ public class FastSLAMListener implements Simulator.Listener
                 }
                 running += weights[j];
             }
+        }
+
+    }
+
+    public void updateDrawingVariables() {
+
+        double maxWeight = Double.NEGATIVE_INFINITY;
+        double [] mostLikelyPos = new double[3];
+
+        particlePositions.clear();
+
+        for (Particle aParticle : particles) {
+
+            double[] pos = aParticle.getPoseXYT();
+
+            particlePositions.add(new double[] {pos[0], pos[1]});
+
+            // Keep track of the most likely particle's weight
+            if (aParticle.getWeight() > maxWeight) {
+                maxWeight = aParticle.getWeight();
+                mostLikelyPos = aParticle.getPoseXYT();
+            }
 
         }
 
+        mostLikelyParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1]};
 
     }
 
     public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
     {
+
+
+        // Draw particle cloud
+        {
+            VisWorld.Buffer vb = vw.getBuffer("particle-cloud");
+
+            //Draw a point at the XY of all particle poses
+            vb.addBack(new VisPoints(new VisVertexData(particlePositions),
+                                     new VisConstantColor(new Color(255,0,0)),
+                                     2.0));
+
+            //Draw a larger point at the XY of the most likely particle
+            vb.addBack(new VisPoint(new VisVertexData(mostLikelyParticleLocation),
+                                    new VisConstantColor(new Color(0,255,0)),
+                                    4.0));
+
+            vb.swap();
+        }
+
+
+
         // Draw local Trajectory
         {
             VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
@@ -165,7 +214,7 @@ public class FastSLAMListener implements Simulator.Listener
         rpoints.add(new double[]{-.3, -.3});
         rpoints.add(new double[]{.45,0});
 
-        // Probably should be replaced with student-code
+        // Draws the robot triangle
         {
             VisWorld.Buffer vb = vw.getBuffer("robot-local");
             VisObject robot = new VisLines(new VisVertexData(rpoints),
@@ -194,52 +243,6 @@ public class FastSLAMListener implements Simulator.Listener
             }
             vb.swap();
         }
-
-        // public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
-        // {
-        //     // Draw local Trajectory -- the red robot path -- our least squares "best guess"
-        //     {
-        //         VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
-        //         vb.addBack(new VisLines(new VisVertexData(trajectory),
-        //                                 new VisConstantColor(new Color(160,30,30)),
-        //                                 1.5, VisLines.TYPE.LINE_STRIP));
-        //         vb.swap();
-        //     }
-
-        //     ArrayList<double[]> rpoints = new ArrayList<double[]>();
-        //     rpoints.add(new double[]{-.3, .3});
-        //     rpoints.add(new double[]{-.3, -.3});
-        //     rpoints.add(new double[]{.45,0});
-
-        //     // Draws the robot triangle at xyt
-        //     {
-        //         VisWorld.Buffer vb = vw.getBuffer("robot-local");
-        //         VisObject robot = new VisLines(new VisVertexData(rpoints),
-        //                                        new VisConstantColor(Color.red),
-        //                                        3,
-        //                                        VisLines.TYPE.LINE_LOOP);
-
-
-        //         double xyzrpy[] = new double[]{xyt[0], xyt[1], 0,
-        //                                        0, 0, xyt[2]};
-        //         vb.addBack(new VisChain(LinAlg.xyzrpyToMatrix(xyzrpy), robot));
-        //         vb.swap();
-        //     }
-
-        //     // Draw the landmark observations -- the blue lines shooting out of the red bot
-        //     {
-        //         VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
-        //         for (Simulator.landmark_t lmark : landmarks) {
-        //             double[] obs = lmark.obs;
-        //             ArrayList<double[]> obsPoints = new ArrayList<double[]>();
-        //             obsPoints.add(LinAlg.resize(xyt,2));
-        //             double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
-        //             obsPoints.add(LinAlg.transform(xyt, rel_xy));
-        //             vb.addBack(new VisLines(new VisVertexData(obsPoints),
-        //                                     new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
-        //         }
-        //         vb.swap();
-        //     }
 
     }
 }

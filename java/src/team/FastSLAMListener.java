@@ -46,7 +46,7 @@ public class FastSLAMListener implements Simulator.Listener
     private ArrayList<Particle> tempParticles;
 
     private double newFeatThreshold;
-  
+
     private Random rand = new Random(1337);
 
     public void init(Config _config, VisWorld _vw)
@@ -70,7 +70,7 @@ public class FastSLAMListener implements Simulator.Listener
     {
 
         numUpdates++;
-    
+
         {
             DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
@@ -96,6 +96,10 @@ public class FastSLAMListener implements Simulator.Listener
             landmarkObs.add(new double[]{det.obs[0], det.obs[1]});
         }
 
+        /////////////////////
+        // Particle Update
+        /////////////////////
+
         double totWeight = 0;
         for (Particle aParticle : tempParticles) {
 
@@ -103,21 +107,38 @@ public class FastSLAMListener implements Simulator.Listener
             totWeight += aParticle.getWeight();
         }
 
-        //TODO: Resample from tempParticles to update particles
+        //////////////////////
+        // Particle resampling
+        //////////////////////
+
         particles.clear();
-        
-        double weights[] = new double[tempParticles.size()];
-        for(int i = 0; i < tempParticles.size(); i++){
-            weights[i] = tempParticles.get(i).getWeight() / totWeight;
+
+        for (int i = 0; i <tempParticles.size(); i++) {
+            Particle fairParticleDraw = resampleFromList(tempParticles, totWeight);
+            particles.add(fairParticleDraw);
         }
 
-        for(int i = 0; i < tempParticles.size(); i++){
+        assert(particles.size() == tempParticles.size());
+
+
+        drawDummy(dets);
+
+    }
+
+    public Particle resampleFromList(List<Particle> tempList, double totalWeight) {
+
+        double weights[] = new double[tempList.size()];
+        for(int i = 0; i < tempList.size(); i++){
+            weights[i] = tempList.get(i).getWeight() / totalWeight;
+        }
+
+        for(int i = 0; i < tempList.size(); i++){
             double pick = rand.nextDouble();
             double running = 0;
             for(int j = 0; j < weights.length; j++){
                 /*silly hack to make sure double precision doesnt bite us*/
                 if(running + weights[j] >= pick || (j + 1 == weights.length) ){
-                    particles.add(new Particle(tempParticles.get(j)));
+                    particles.add(new Particle(tempList.get(j)));
                     break;
                 }
                 running += weights[j];
@@ -125,10 +146,6 @@ public class FastSLAMListener implements Simulator.Listener
 
         }
 
-        assert(particles.size() == tempParticles.size());
-        
-
-        drawDummy(dets);
 
     }
 

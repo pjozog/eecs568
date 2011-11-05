@@ -167,4 +167,14 @@ public class Particle {
         return weight;
     }
 
+    /**
+     * Returns the state of the particle. Used in the display function
+     * of FastSLAMListener.
+     *
+     * @return stateXYT
+     */
+    public double[] getPoseXYT() {
+        return stateXYT;
+    }
+
 }

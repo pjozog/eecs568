@@ -24,7 +24,7 @@ public class KalmanFeature {
             mean[i] = k.mean[i];
         }
         covariance = k.covariance.copy();
-        
+
     }
 
     /**
@@ -34,7 +34,7 @@ public class KalmanFeature {
      * @param robotPose -- The pose from which the robot observed the feature
      */
     public void kalmanUpdate(double[] observation, double[] robotPose) {
-            
+
 
     }
 
@@ -50,13 +50,13 @@ public class KalmanFeature {
      */
     public double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose) {
         /*TODO figure out Z*/
-       
+
         double [] zj_hat = FastSLAMMotionModel(robotPose, observation);
 
         Matrix rw = new Matrix(FastSLAMMotionModel.jacobianRw(robotPose, observation));
         Matrix sigmaW = Particle.getSigmaW();
         Matrix Qj = covariance.plus rw.times(sigmaW.timesTranspose(rw));
-        
+
         MultiGaussian mg = MultiGaussian(Qj.copyArray(), zj.copyArray());
         double w = Math.sqrt(Qj.times(2*Math.PI).det()) * Math.exp(-1/2*mg.chi2(zj_hat));
         return w;

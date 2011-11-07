@@ -46,7 +46,7 @@ public class FastSLAMListener implements Simulator.Listener
     private ArrayList<Particle> tempParticles;
 
     // Ivars for drawing
-    private ArrayList<double[]> particlePositions = new ArrayList<Particle>();
+    private ArrayList<double[]> particlePositions = new ArrayList<double[]>();
     private double[] mostLikelyParticleLocation;
 
     private double newFeatThreshold;
@@ -95,7 +95,7 @@ public class FastSLAMListener implements Simulator.Listener
             tempParticles.add(new Particle(p));
         }
 
-        java.util.List<double[]> landmarkObs = new ArrayList<double[]>();
+        java.util.ArrayList<double[]> landmarkObs = new ArrayList<double[]>();
         for (Simulator.landmark_t det : dets) {
             landmarkObs.add(new double[]{det.obs[0], det.obs[1]});
         }
@@ -118,8 +118,7 @@ public class FastSLAMListener implements Simulator.Listener
         particles.clear();
 
         for (int i = 0; i <tempParticles.size(); i++) {
-            Particle fairParticleDraw = resampleFromList(tempParticles, totWeight);
-            particles.add(fairParticleDraw);
+            resampleFromList(tempParticles, totWeight);
         }
 
         assert(particles.size() == tempParticles.size());
@@ -130,7 +129,7 @@ public class FastSLAMListener implements Simulator.Listener
 
     }
 
-    public Particle resampleFromList(List<Particle> tempList, double totalWeight) {
+    public void resampleFromList(ArrayList<Particle> tempList, double totalWeight) {
 
         double weights[] = new double[tempList.size()];
         for(int i = 0; i < tempList.size(); i++){
@@ -191,9 +190,11 @@ public class FastSLAMListener implements Simulator.Listener
                                      2.0));
 
             //Draw a larger point at the XY of the most likely particle
-            vb.addBack(new VisPoint(new VisVertexData(mostLikelyParticleLocation),
-                                    new VisConstantColor(new Color(0,255,0)),
-                                    4.0));
+	    ArrayList<double[]> mostLikelyParticleLocationList = 
+		new ArrayList<double[]>(Arrays.asList(mostLikelyParticleLocation));
+	    vb.addBack(new VisPoints(new VisVertexData(mostLikelyParticleLocationList),
+						       new VisConstantColor(new Color(0,255,0)),
+						       4.0));
 
             vb.swap();
         }

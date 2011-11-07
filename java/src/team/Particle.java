@@ -89,10 +89,10 @@ public class Particle {
      * @param odom -- EITHER XYT or RT...whatever we find more convenient here
      * @param landObs -- List of RT data. Not sure if this will compile...
      */
-    public void updateParticleWithOdomAndObs(double[] odom, List<double[]> landObs) {
+    public void updateParticleWithOdomAndObs(double[] xyt, List<double[]> landObs) {
 
         // Update our state estimate
-        sampleNewPoseFromOdom(odom);
+        sampleNewPoseFromOdom(xyt);
 
         // Perform data correspondence and Kalman filter updates
         for (double[] obs : landObs) {
@@ -107,9 +107,12 @@ public class Particle {
      *
      * @param odom -- EITHER XYT or RT...whatever we find more convenient here
      */
-    private void sampleNewPoseFromOdom(double[] odom) {
+    private void sampleNewPoseFromOdom(double[] xyt) {
 
         // Apply motion model. Add to current state.
+	//  We already applied motion model in FastSLAMListener
+	this.stateXYT = xyt;
+
     }
 
     /**

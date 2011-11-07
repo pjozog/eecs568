@@ -85,4 +85,11 @@ class FastSLAMMotionModel {
     }
 
 
+    //XYT is RELATIVE
+    public static DenseVec ticksToXYT(Simulator.odometry_t odom, double baseline) {
+
+	return TicksUtil.ticksToXYT(odom, baseline);
+
+    }
+
 }

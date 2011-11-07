@@ -107,7 +107,7 @@ public class FastSLAMListener implements Simulator.Listener
         double totWeight = 0;
         for (Particle aParticle : tempParticles) {
 
-            aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
+            aParticle.updateParticleWithOdomAndObs(xyt, landmarkObs);
             totWeight += aParticle.getWeight();
         }
 

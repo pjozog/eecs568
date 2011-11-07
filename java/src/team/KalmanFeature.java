@@ -28,13 +28,41 @@ public class KalmanFeature {
     }
 
     /**
-     * Static method to update a feature's mean and covariance after an observation
+     * Method to update a feature's mean and covariance after an observation
      *
      * @param observation -- The direct RT observation
      * @param robotPose -- The pose from which the robot observed the feature
      */
     public void kalmanUpdate(double[] observation, double[] robotPose) {
 
+	//We want to do the three Kalman update equations:
+	//K = this.covariance*Jx'*inv(Jx*SigmaX*Jx' + sigmaW)
+	//xprime = x + K*(residual);
+	//this.covariance = this.covariance - K*Jx*this.covariance
+
+	Matrix K            = new Matrix(2,2); //Kalman gain
+	double[] residual   = new double[2];
+	double[] predictObs = FastSLAMMotionModel.predictedFeaturePosRT(robotPose,
+									this.mean);
+
+	residual[0] = observation[0] - predictObs[0];
+	residual[1] = observation[1] - predictObs[1];
+
+	double[][] Jx = FastSLAMMotionModel.jacobianJx(robotPose, this.mean);
+	Matrix JxMat = new Matrix(Jx);
+
+	Matrix JxSigXJx = JxMat.times(this.covariance).times(JxMat.transpose());
+	Matrix SigW     = Matrix.identity(2,2);
+
+	K = this.covariance.times(covariance).times(JxSigXJx.plus(SigW).inverse());
+	double[] KResid = K.times(residual);
+
+	this.mean[0] += KResid[0];
+	this.mean[1] += KResid[1];
+
+	assert(KResid.length == 2);
+
+	this.covariance = this.covariance.minus(K.times(JxMat).times(this.covariance));
 
     }
 

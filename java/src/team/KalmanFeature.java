@@ -86,7 +86,7 @@ public class KalmanFeature {
         Matrix Qj = sigmaW.plus(rw.times(covariance.timesTranspose(rw)));
 
         MultiGaussian mg = new MultiGaussian(Qj.copyArray(), zj_hat);
-        double w = 1.0/Math.sqrt(Qj.times(2*Math.PI).det()) * Math.exp(-0.5*mg.chi2(observation));
+        double w = 1.0/Math.sqrt(Qj.times(2*Math.PI).det()) * MathUtil.exp(-0.5*mg.chi2(observation));
 
         // Let's work with log likelihood
         // double w = -Math.log(Qj.times(2*Math.PI).det()) - 0.5*mg.chi2(observation);

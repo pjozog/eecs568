@@ -33,7 +33,7 @@ class FastSLAMMotionModel {
 
         double r = Math.sqrt(Math.pow(fx-x,2) + Math.pow(fy-y,2));
 
-        double theta = MathUtil.mod2pi(Math.atan2(fy-y,fx-x) - t);
+        double theta = MathUtil.mod2pi(MathUtil.atan2(fy-y,fx-x) - t);
 
         double[] rangeTheta = new double[2];
         rangeTheta[0] = r;

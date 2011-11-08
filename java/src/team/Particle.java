@@ -129,7 +129,14 @@ public class Particle {
     }
 
     public double[] sampleFromMotionModel(double[][] cov, double[] mean) {
-        MultiGaussian mvg = new MultiGaussian(cov, mean);
+
+        double[][] proportionalCov = new double[2][2];
+        proportionalCov[0][0] = cov[0][0]*mean[0]*mean[0];
+        proportionalCov[0][1] = 0;
+        proportionalCov[1][0] = 0;
+        proportionalCov[1][1] = cov[1][1]*mean[1]*mean[1];
+
+        MultiGaussian mvg = new MultiGaussian(proportionalCov, mean);
         double[] ticksLR  = mvg.sample(rand);
         double[] xyt      = new double[3];
         double dPhi       = Math.atan2(ticksLR[1] - ticksLR[0], baseline);

@@ -51,7 +51,8 @@ public class FastSLAMListener implements Simulator.Listener
 
     private double newFeatThreshold;
 
-    private Random rand = new Random(1337);
+    private int randSeed = 0;
+    private Random rand;
 
     public void init(Config _config, VisWorld _vw)
     {
@@ -65,7 +66,10 @@ public class FastSLAMListener implements Simulator.Listener
         double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
         double featD[] = config.requireDoubles("noisemodels.landmarkDiag");
         numParticles   = config.requireInt("fastSlam.numParticles");
+        randSeed       = config.requireInt("fastSlam.randSeed");
 
+        rand = new Random(randSeed);
+        Particle.setRandom(rand);
         //Create diagonal ticks L/R covariance matrix
         double[][] odomCov = new double[2][2];
         odomCov[0][0] = odomD[0]*odomD[0]; odomCov[0][1] = 0;

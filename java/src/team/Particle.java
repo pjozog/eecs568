@@ -18,7 +18,7 @@ public class Particle {
     private double stateXYT[] = new double[3];
 
 
-    public static Random rand = new Random(1337);
+    private static Random rand = null;
 
     // The list of features -- careful with deep copying
     List<KalmanFeature> featureList = new ArrayList<KalmanFeature>();
@@ -33,6 +33,10 @@ public class Particle {
     private static Matrix sigmaW = null;
     private static Matrix sigmaTicksLR = null;
 
+    public static void setRandom(Random r){
+        rand = r;
+    }
+
     public static void setSigmaW(Matrix m){
         sigmaW = m;
     }
@@ -45,6 +49,7 @@ public class Particle {
         assert(sigmaW != null);
         return sigmaW;
     }
+
 
     // Default constructor...used when Simulator is just beginning
     public Particle() {
@@ -108,6 +113,7 @@ public class Particle {
      */
     public void updateParticleWithOdomAndObs(double[] ticksLR, List<double[]> landObs) {
         assert(sigmaW != null);
+        assert(rand != null);
         // Update our state estimate
         stateXYT = LinAlg.xytMultiply(stateXYT,
                                       this.sampleFromMotionModel(sigmaTicksLR.copyArray(), ticksLR));
@@ -130,6 +136,7 @@ public class Particle {
 
     public double[] sampleFromMotionModel(double[][] cov, double[] mean) {
 
+        assert(rand != null);
         double[][] proportionalCov = new double[2][2];
         proportionalCov[0][0] = cov[0][0]*mean[0]*mean[0];
         proportionalCov[0][1] = 0;
@@ -175,7 +182,7 @@ public class Particle {
         // BUT, we have to consider that it's a new feature. Compare the maxLikelihood to
         // our "new feature threshold". See lines 11 and 12 in ProbRob.
 
-        System.out.println("Maxlikelihood: " + maxLikelihood);
+        // System.out.println("Maxlikelihood: " + maxLikelihood);
 
         if (maxLikelihood < threshold) {
 

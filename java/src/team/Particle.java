@@ -51,13 +51,13 @@ public class Particle {
         stateXYT[0] = 0;
         stateXYT[1] = 0;
         stateXYT[2] = 0;
-        this.weight = 0;
+        this.weight = 1.0;
     }
 
     /** copy constructor**/
     public Particle(Particle p){
 
-        this.weight = 0;
+        this.weight = 1.0;
 
         for(int i = 0; i < stateXYT.length; i++){
             stateXYT[i] = p.stateXYT[i];
@@ -77,7 +77,7 @@ public class Particle {
      */
     public Particle(double[] state, List<KalmanFeature> features) {
 
-        this.weight = 0;
+        this.weight = 1.0;
 
         // With literals, is this a deep copy?
         stateXYT[0] = state[0];

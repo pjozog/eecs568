@@ -127,14 +127,18 @@ public class FastSLAMListener implements Simulator.Listener
         // Particle Update
         /////////////////////
 
-        double totWeight = 0;
+        // double totWeight = 0;
+        double maxWeight = Double.NEGATIVE_INFINITY;
         for (Particle aParticle : tempParticles) {
 
             //TODO:  change xyt
             aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
-            totWeight += aParticle.getWeight();
-
+            
+            double curWeight = aParticle.getWeight();
+            // totWeight += curWeight;
+            maxWeight = maxWeight < curWeight ? curWeight : maxWeight; 
         }
+
 
         //////////////////////
         // Particle resampling
@@ -142,7 +146,7 @@ public class FastSLAMListener implements Simulator.Listener
 
         particles.clear();
 
-        resampleFromList(tempParticles, totWeight);
+        resampleFromList(tempParticles,  maxWeight);
 
         assert(particles.size() == tempParticles.size());
 
@@ -152,12 +156,18 @@ public class FastSLAMListener implements Simulator.Listener
 
     }
 
-    public void resampleFromList(ArrayList<Particle> tempList, double totalWeight) {
+    public void resampleFromList(ArrayList<Particle> tempList, double maxWeight) {
 
         double weights[] = new double[tempList.size()];
-
+        double totWeight = 0;
         for(int i = 0; i < tempList.size(); i++){
-            weights[i] = tempList.get(i).getWeight() / totalWeight;
+            //weights[i] = tempList.get(i).getWeight() / totalWeight;
+            weights[i] = Math.exp(tempList.get(i).getWeight() - maxWeight);
+            totWeight += weights[i];
+        }
+
+        for(int i = 0; i < weights.length; i++){
+            weights[i] /= totWeight;
         }
 
         for(int i = 0; i < tempList.size(); i++){

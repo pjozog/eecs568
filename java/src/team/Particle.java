@@ -3,6 +3,7 @@ package team;
 import java.util.List;
 import java.util.ArrayList;
 import april.jmat.*;
+import java.util.Random;
 
 public class Particle {
 
@@ -16,6 +17,11 @@ public class Particle {
     // Particle state in global XYT
     private double stateXYT[] = new double[3];
 
+    //The covariance of ticks left/right
+    public static double[][] ticksCov;
+
+    public static Random rand = new Random();
+
     // The list of features -- careful with deep copying
     List<KalmanFeature> featureList = new ArrayList<KalmanFeature>();
 
@@ -24,6 +30,7 @@ public class Particle {
 
     private static double threshold;
 
+    public static double baseline;
 
     private static Matrix sigmaW = null;
 
@@ -39,11 +46,14 @@ public class Particle {
         stateXYT[0] = 0;
         stateXYT[1] = 0;
         stateXYT[2] = 0;
+	this.weight = 1;
     }
 
     /** copy constructor**/
     public Particle(Particle p){
-        
+
+	this.weight = 1;
+
         for(int i = 0; i < stateXYT.length; i++){
             stateXYT[i] = p.stateXYT[i]; 
         }   
@@ -86,33 +96,34 @@ public class Particle {
      * update our particles global state and will perform data association and
      * Kalman updates on associated features.
      *
-     * @param odom -- EITHER XYT or RT...whatever we find more convenient here
+     * @param odom -- noisey ticks LR from listener 
      * @param landObs -- List of RT data. Not sure if this will compile...
      */
-    public void updateParticleWithOdomAndObs(double[] xyt, List<double[]> landObs) {
+    public void updateParticleWithOdomAndObs(double[] ticksLR, List<double[]> landObs) {
 
         // Update our state estimate
-        sampleNewPoseFromOdom(xyt);
+	stateXYT = LinAlg.xytMultiply(stateXYT, 
+				      this.sampleFromMotionModel(this.ticksCov, ticksLR));
 
         // Perform data correspondence and Kalman filter updates
-        for (double[] obs : landObs) {
-            dataCorrespondenceAndUpdate(obs);
-        }
+        // for (double[] obs : landObs) {
+        //     dataCorrespondenceAndUpdate(obs);
+        // }
 
     }
 
-    /**
-     * The only method that touches ivar stateXYT. This is just a direct
-     * application of our motion model to this particle's current state.
-     *
-     * @param odom -- EITHER XYT or RT...whatever we find more convenient here
-     */
-    private void sampleNewPoseFromOdom(double[] xyt) {
+    public double[] sampleFromMotionModel(double[][] cov, double[] mean) {
+	MultiGaussian mvg = new MultiGaussian(cov, mean);
+	double[] ticksLR  = mvg.sample(rand);
+	double[] xyt      = new double[3];
+        double dPhi       = Math.atan2(ticksLR[1] - ticksLR[0], baseline);
 
-        // Apply motion model. Add to current state.
-	//  We already applied motion model in FastSLAMListener
-	this.stateXYT = xyt;
+	xyt[0] = (ticksLR[0]+ticksLR[1])/2;
+        xyt[1] = 0;
+        xyt[2] = dPhi;
 
+	return xyt;
+	
     }
 
     /**

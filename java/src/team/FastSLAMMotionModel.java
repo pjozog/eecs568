@@ -5,6 +5,8 @@ import april.jmat.*;
 import java.lang.Math;
 
 class FastSLAMMotionModel {
+
+    public static double baseline;
     
     public static double[] predictedFeaturePosXY(double[] posObs, double[] rTheta) {
 	
@@ -84,7 +86,6 @@ class FastSLAMMotionModel {
 	return Matrix.identity(2, 2).copyArray();
 
     }
-
 
     //XYT is RELATIVE
     public static DenseVec ticksToXYT(Simulator.odometry_t odom, double baseline) {

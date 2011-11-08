@@ -58,13 +58,29 @@ public class FastSLAMListener implements Simulator.Listener
         config  = _config;
         vw = _vw;
 
-        baseline         = config.requireDouble("robot.baseline_m");
-        newFeatThreshold = config.requireDouble("fastSlam.threshold");
+        baseline          = config.requireDouble("robot.baseline_m");
+	Particle.baseline = baseline;
+        newFeatThreshold  = config.requireDouble("fastSlam.threshold");
+
+        double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
+
+	//Create diagonal ticks L/R covariance matrix
+	double[][] odomCov = new double[2][2];
+	odomCov[0][0] = odomD[0]*odomD[0]; odomCov[0][1] = 0;
+	odomCov[1][0] = 0;                 odomCov[1][1] = odomD[1]*odomD[1];
+
+	Particle.ticksCov = odomCov;
+
         Particle.setThreshold(newFeatThreshold);
 
         // Allocate enough space for our particles
-        particles = new ArrayList<Particle>(numParticles);
-        tempParticles = new ArrayList<Particle>(numParticles);
+        particles = new ArrayList<Particle>();
+	for (int i = 0; i<numParticles; i++)
+	    particles.add(new Particle());
+
+        tempParticles = new ArrayList<Particle>();
+	for (int i = 0; i<numParticles; i++)
+	    tempParticles.add(new Particle());
 
     }
 
@@ -89,7 +105,7 @@ public class FastSLAMListener implements Simulator.Listener
             trajectory.add(LinAlg.resize(xyt,2));
         }
 
-        // Copy the current set of particles...is this a deep copy?
+        // Deep copy the current set of particles
         tempParticles = new ArrayList<Particle>();
         for(Particle p : particles){
             tempParticles.add(new Particle(p));
@@ -107,8 +123,10 @@ public class FastSLAMListener implements Simulator.Listener
         double totWeight = 0;
         for (Particle aParticle : tempParticles) {
 
-            aParticle.updateParticleWithOdomAndObs(xyt, landmarkObs);
+	    //TODO:  change xyt
+            aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
             totWeight += aParticle.getWeight();
+
         }
 
         //////////////////////
@@ -117,10 +135,8 @@ public class FastSLAMListener implements Simulator.Listener
 
         particles.clear();
 
-        for (int i = 0; i <tempParticles.size(); i++) {
-            resampleFromList(tempParticles, totWeight);
-        }
-
+	resampleFromList(tempParticles, totWeight);
+	
         assert(particles.size() == tempParticles.size());
 
         updateDrawingVariables();
@@ -132,6 +148,7 @@ public class FastSLAMListener implements Simulator.Listener
     public void resampleFromList(ArrayList<Particle> tempList, double totalWeight) {
 
         double weights[] = new double[tempList.size()];
+
         for(int i = 0; i < tempList.size(); i++){
             weights[i] = tempList.get(i).getWeight() / totalWeight;
         }
@@ -179,7 +196,6 @@ public class FastSLAMListener implements Simulator.Listener
     public void drawDummy(ArrayList<Simulator.landmark_t> landmarks)
     {
 
-
         // Draw particle cloud
         {
             VisWorld.Buffer vb = vw.getBuffer("particle-cloud");
@@ -191,10 +207,10 @@ public class FastSLAMListener implements Simulator.Listener
 
             //Draw a larger point at the XY of the most likely particle
 	    ArrayList<double[]> mostLikelyParticleLocationList = 
-		new ArrayList<double[]>(Arrays.asList(mostLikelyParticleLocation));
+	    	new ArrayList<double[]>(Arrays.asList(mostLikelyParticleLocation));
 	    vb.addBack(new VisPoints(new VisVertexData(mostLikelyParticleLocationList),
-						       new VisConstantColor(new Color(0,255,0)),
-						       4.0));
+	    					       new VisConstantColor(new Color(0,255,0)),
+	    					       4.0));
 
             vb.swap();
         }
@@ -202,48 +218,48 @@ public class FastSLAMListener implements Simulator.Listener
 
 
         // Draw local Trajectory
-        {
-            VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
-            vb.addBack(new VisLines(new VisVertexData(trajectory),
-                                    new VisConstantColor(new Color(160,30,30)),
-                                    1.5, VisLines.TYPE.LINE_STRIP));
-            vb.swap();
-        }
+        // {
+        //     VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
+        //     vb.addBack(new VisLines(new VisVertexData(trajectory),
+        //                             new VisConstantColor(new Color(160,30,30)),
+        //                             1.5, VisLines.TYPE.LINE_STRIP));
+        //     vb.swap();
+        // }
 
-        ArrayList<double[]> rpoints = new ArrayList<double[]>();
-        rpoints.add(new double[]{-.3, .3});
-        rpoints.add(new double[]{-.3, -.3});
-        rpoints.add(new double[]{.45,0});
+        // ArrayList<double[]> rpoints = new ArrayList<double[]>();
+        // rpoints.add(new double[]{-.3, .3});
+        // rpoints.add(new double[]{-.3, -.3});
+        // rpoints.add(new double[]{.45,0});
 
         // Draws the robot triangle
-        {
-            VisWorld.Buffer vb = vw.getBuffer("robot-local");
-            VisObject robot = new VisLines(new VisVertexData(rpoints),
-                                           new VisConstantColor(Color.red),
-                                           3,
-                                           VisLines.TYPE.LINE_LOOP);
+        // {
+        //     VisWorld.Buffer vb = vw.getBuffer("robot-local");
+        //     VisObject robot = new VisLines(new VisVertexData(rpoints),
+        //                                    new VisConstantColor(Color.red),
+        //                                    3,
+        //                                    VisLines.TYPE.LINE_LOOP);
 
 
-            double xyzrpy[] = new double[]{xyt[0], xyt[1], 0,
-                                           0, 0, xyt[2]};
-            vb.addBack(new VisChain(LinAlg.xyzrpyToMatrix(xyzrpy), robot));
-            vb.swap();
-        }
+        //     double xyzrpy[] = new double[]{xyt[0], xyt[1], 0,
+        //                                    0, 0, xyt[2]};
+        //     vb.addBack(new VisChain(LinAlg.xyzrpyToMatrix(xyzrpy), robot));
+        //     vb.swap();
+        // }
 
         // Draw the landmark observations
-        {
-            VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
-            for (Simulator.landmark_t lmark : landmarks) {
-                double[] obs = lmark.obs;
-                ArrayList<double[]> obsPoints = new ArrayList<double[]>();
-                obsPoints.add(LinAlg.resize(xyt,2));
-                double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
-                obsPoints.add(LinAlg.transform(xyt, rel_xy));
-                vb.addBack(new VisLines(new VisVertexData(obsPoints),
-                                        new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
-            }
-            vb.swap();
-        }
+        // {
+        //     VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
+        //     for (Simulator.landmark_t lmark : landmarks) {
+        //         double[] obs = lmark.obs;
+        //         ArrayList<double[]> obsPoints = new ArrayList<double[]>();
+        //         obsPoints.add(LinAlg.resize(xyt,2));
+        //         double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
+        //         obsPoints.add(LinAlg.transform(xyt, rel_xy));
+        //         vb.addBack(new VisLines(new VisVertexData(obsPoints),
+        //                                 new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
+        //     }
+        //     vb.swap();
+        // }
 
     }
 }

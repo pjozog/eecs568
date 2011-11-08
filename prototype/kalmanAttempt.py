@@ -98,8 +98,8 @@ def drivingNoiseJacobian(size,position, obs, currTheta):
 
     R = zeros((size,2))
 
-    R[position,0] = cos(obs[1] + currTheta)
-    R[position,1] = -obs[0]*sin(obs[1] + currTheta)
+    R[position,0]   = cos(obs[1] + currTheta)
+    R[position,1]   = -obs[0]*sin(obs[1] + currTheta)
     R[position+1,0] = sin(obs[1] + currTheta)
     R[position+1,1] = obs[0]*cos(obs[1] + currTheta)
 

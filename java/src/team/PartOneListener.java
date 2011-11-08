@@ -89,7 +89,7 @@ public class PartOneListener implements Simulator.Listener
         landmarksHaveId    = config.requireBoolean("simulator.knownDataAssoc");
         landmarkDistThresh = config.requireDouble("simulator.landmarkThresh");
         chi2Thresh         = config.requireDouble("simulator.chi2Thresh");
-       
+
         OdNode initial = new OdNode(0, nextAbsStateRowIndex, 0, 0, 0);
         lastOdNode = initial;
         nextAbsStateRowIndex += lastOdNode.stateLength();
@@ -120,7 +120,7 @@ public class PartOneListener implements Simulator.Listener
         boolean forceOldLandmark = false;
 
         for (Map.Entry<Integer, Integer> entry : landmarksSeen.entrySet()) {
-           
+
             Integer ID = entry.getKey();
             Integer nodeIndex = entry.getValue();
 
@@ -163,19 +163,19 @@ public class PartOneListener implements Simulator.Listener
 
 
             double chi2Error = getChi2Error(J, deltaX, trialResiduals, newSigmaInverse);
-            
+
             double [] newPos = currentPos.getState();
             double []pos     = LandUtil.rThetaToXY(det.obs[0], det.obs[1], newPos[0], newPos[1], newPos[2]);
             double x_global  = pos[0];
             double y_global  = pos[1];
             Node node        = stateVector.get(entry.getValue());
-   
+
             assert(node.isLand());
-   
-            
+
+
             double state[] = node.getState();
             double dist = Math.sqrt(Math.pow(x_global - state[0], 2) + Math.pow(y_global - state[1], 2));
-            
+
             if(dist < landmarkDistThresh){
                 forceOldLandmark = true;
             }
@@ -201,13 +201,13 @@ public class PartOneListener implements Simulator.Listener
             if(mapMyIdToRealId.containsValue(new Integer(det.id))){
                 numErrors++;
             }
-            mapMyIdToRealId.put(new Integer(returnVal), new Integer(det.id)); 
+            mapMyIdToRealId.put(new Integer(returnVal), new Integer(det.id));
             System.out.println("Adding " + returnVal + " " + det.id);
             nextLandmarkId++;
         }
         else{/*found old landmark*/
             if (debug == 1) {
-            System.out.println("using old id " + returnVal);
+                System.out.println("using old id " + returnVal);
             }
             if(mapMyIdToRealId.get(returnVal) != det.id){
                 numErrors++;
@@ -266,7 +266,7 @@ public class PartOneListener implements Simulator.Listener
             }
             else{
                 thisLandmarkId = getLandmarkId(odNode, det, odom, lastOdNode);
-               
+
             }
 
             /*If this is a duplicate*/
@@ -361,13 +361,13 @@ public class PartOneListener implements Simulator.Listener
                     FileWriter outFile = new FileWriter("data.txt");
                     PrintWriter out = new PrintWriter(outFile);
                     if(landmarksHaveId){
-                        
-                        out.println(numConverge + " " + curChi2Error);  
+
+                        out.println(numConverge + " " + curChi2Error);
                     }
                     else{
                         out.println("" + numErrors);
                     }
-                    
+
                     out.close();
                 }
                 catch (Exception e){
@@ -375,15 +375,15 @@ public class PartOneListener implements Simulator.Listener
                     assert(false);
                 }
             }
-            
+
         } // End all iterations of Ax = b
-        
+
         drawFrame();
-        
+
         drawDummy(dets);
         if (debug == 1) {
             System.out.println("We have seen "+ landmarksSeen.size() + " landmarks and the state vector is " + nextAbsStateRowIndex+  " long");
-            
+
             System.out.println("number of errors: " + numErrors);
         }
     }

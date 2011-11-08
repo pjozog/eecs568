@@ -5,6 +5,7 @@ SCRIPTDIR=$(dirname $0)
 
 CONFIG_FILE=$SCRIPTDIR/../config/sim.config
 LISTENER=team.FastSLAMListener
+# LISTENER=april.sim.DummyListener
 
 JAVA='java -ea -server'
 

@@ -17,8 +17,6 @@ public class Particle {
     // Particle state in global XYT
     private double stateXYT[] = new double[3];
 
-    //The covariance of ticks left/right
-    public static double[][] ticksCov;
 
     public static Random rand = new Random();
 
@@ -46,21 +44,21 @@ public class Particle {
         stateXYT[0] = 0;
         stateXYT[1] = 0;
         stateXYT[2] = 0;
-	this.weight = 1;
+        this.weight = 1;
     }
 
     /** copy constructor**/
     public Particle(Particle p){
 
-	this.weight = 1;
+        this.weight = 1;
 
         for(int i = 0; i < stateXYT.length; i++){
-            stateXYT[i] = p.stateXYT[i]; 
-        }   
+            stateXYT[i] = p.stateXYT[i];
+        }
         for(KalmanFeature feature : p.featureList){
             featureList.add(new KalmanFeature(feature));
         }
-        
+
     }
 
     /**
@@ -72,6 +70,8 @@ public class Particle {
      */
     public Particle(double[] state, List<KalmanFeature> features) {
 
+        this.weight = 1;
+
         // With literals, is this a deep copy?
         stateXYT[0] = state[0];
         stateXYT[1] = state[1];
@@ -82,48 +82,57 @@ public class Particle {
         for(KalmanFeature k : features){
             featureList.add(new KalmanFeature(k));
         }
-       
+
     }
 
     /**set threshold for new features**/
     public static void setThreshold(double t){
         threshold = t;
     }
-  
+
 
     /**
      * Method called from FastSLAMListener with our new information. This will
      * update our particles global state and will perform data association and
      * Kalman updates on associated features.
      *
-     * @param odom -- noisey ticks LR from listener 
+     * @param odom -- noisey ticks LR from listener
      * @param landObs -- List of RT data. Not sure if this will compile...
      */
     public void updateParticleWithOdomAndObs(double[] ticksLR, List<double[]> landObs) {
-
+        assert(sigmaW != null);
         // Update our state estimate
-	stateXYT = LinAlg.xytMultiply(stateXYT, 
-				      this.sampleFromMotionModel(this.ticksCov, ticksLR));
+        stateXYT = LinAlg.xytMultiply(stateXYT,
+                                      this.sampleFromMotionModel(sigmaW.copyArray(), ticksLR));
+        stateXYT[2] = MathUtil.mod2pi(stateXYT[2]);
 
         // Perform data correspondence and Kalman filter updates
-        // for (double[] obs : landObs) {
-        //     dataCorrespondenceAndUpdate(obs);
-        // }
+        double maxWeightResult = Double.NEGATIVE_INFINITY;
+        for (double[] obs : landObs) {
+            double result = dataCorrespondenceAndUpdate(obs);
+            if (result > maxWeightResult) {
+                maxWeightResult = result;
+            }
+        }
+
+        if (maxWeightResult > Double.NEGATIVE_INFINITY) {
+            weight = maxWeightResult;
+        }
 
     }
 
     public double[] sampleFromMotionModel(double[][] cov, double[] mean) {
-	MultiGaussian mvg = new MultiGaussian(cov, mean);
-	double[] ticksLR  = mvg.sample(rand);
-	double[] xyt      = new double[3];
+        MultiGaussian mvg = new MultiGaussian(cov, mean);
+        double[] ticksLR  = mvg.sample(rand);
+        double[] xyt      = new double[3];
         double dPhi       = Math.atan2(ticksLR[1] - ticksLR[0], baseline);
 
-	xyt[0] = (ticksLR[0]+ticksLR[1])/2;
+        xyt[0] = (ticksLR[0]+ticksLR[1])/2;
         xyt[1] = 0;
-        xyt[2] = dPhi;
+        xyt[2] = MathUtil.mod2pi(dPhi);
 
-	return xyt;
-	
+        return xyt;
+
     }
 
     /**
@@ -133,7 +142,7 @@ public class Particle {
      *
      * @param landmarkObs -- RT of the observation
      */
-    private void dataCorrespondenceAndUpdate(double[] landmarkObs) {
+    private double dataCorrespondenceAndUpdate(double[] landmarkObs) {
         assert(sigmaW != null);
         double maxLikelihood = Double.NEGATIVE_INFINITY;
         KalmanFeature possibleMatch = null;
@@ -141,6 +150,7 @@ public class Particle {
         for (KalmanFeature aFeature : featureList) {
 
             double likelihood = aFeature.calculateLikelihoodOfCorrespondence(landmarkObs, stateXYT);
+            // System.out.println("Likelihood: " + likelihood);
             if (likelihood > maxLikelihood) {
                 maxLikelihood = likelihood;
                 possibleMatch = aFeature;
@@ -151,16 +161,22 @@ public class Particle {
         // BUT, we have to consider that it's a new feature. Compare the maxLikelihood to
         // our "new feature threshold". See lines 11 and 12 in ProbRob.
 
+        System.out.println("Maxlikelihood: " + maxLikelihood);
+
         if (maxLikelihood < threshold) {
 
             // Then we're going to treat it as a new feature
-            
+
             double mean [] = FastSLAMMotionModel.predictedFeaturePosXY(stateXYT, landmarkObs);
-            Matrix rw = new Matrix(FastSLAMMotionModel.jacobianJx(stateXYT, landmarkObs));
- 
+            Matrix rw = new Matrix(FastSLAMMotionModel.jacobianRw(stateXYT, landmarkObs));
+
             Matrix cov = rw.times(sigmaW.timesTranspose(rw));
 
             possibleMatch = new KalmanFeature(mean, cov);
+
+            featureList.add(possibleMatch);
+
+            return threshold;
 
         } else {
 
@@ -168,7 +184,11 @@ public class Particle {
             // There's no need to do this if it's a new features (residuals are zero)
             possibleMatch.kalmanUpdate(landmarkObs, stateXYT);
 
+            return maxLikelihood;
+
         }
+
+
 
     }
 

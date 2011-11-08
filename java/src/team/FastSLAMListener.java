@@ -37,7 +37,7 @@ public class FastSLAMListener implements Simulator.Listener
     private boolean debug = true;
 
     // The number of particles to use
-    private int numParticles = 50;
+    private int numParticles = 500;
 
     // The list of current particles
     private ArrayList<Particle> particles;
@@ -59,28 +59,28 @@ public class FastSLAMListener implements Simulator.Listener
         vw = _vw;
 
         baseline          = config.requireDouble("robot.baseline_m");
-	Particle.baseline = baseline;
+        Particle.baseline = baseline;
         newFeatThreshold  = config.requireDouble("fastSlam.threshold");
 
         double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
 
-	//Create diagonal ticks L/R covariance matrix
-	double[][] odomCov = new double[2][2];
-	odomCov[0][0] = odomD[0]*odomD[0]; odomCov[0][1] = 0;
-	odomCov[1][0] = 0;                 odomCov[1][1] = odomD[1]*odomD[1];
+        //Create diagonal ticks L/R covariance matrix
+        double[][] odomCov = new double[2][2];
+        odomCov[0][0] = odomD[0]*odomD[0]; odomCov[0][1] = 0;
+        odomCov[1][0] = 0;                 odomCov[1][1] = odomD[1]*odomD[1];
 
-	Particle.ticksCov = odomCov;
+        Particle.setSigmaW(new Matrix(odomCov));
 
         Particle.setThreshold(newFeatThreshold);
 
         // Allocate enough space for our particles
         particles = new ArrayList<Particle>();
-	for (int i = 0; i<numParticles; i++)
-	    particles.add(new Particle());
+        for (int i = 0; i<numParticles; i++)
+            particles.add(new Particle());
 
         tempParticles = new ArrayList<Particle>();
-	for (int i = 0; i<numParticles; i++)
-	    tempParticles.add(new Particle());
+        for (int i = 0; i<numParticles; i++)
+            tempParticles.add(new Particle());
 
     }
 
@@ -123,7 +123,7 @@ public class FastSLAMListener implements Simulator.Listener
         double totWeight = 0;
         for (Particle aParticle : tempParticles) {
 
-	    //TODO:  change xyt
+            //TODO:  change xyt
             aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
             totWeight += aParticle.getWeight();
 
@@ -135,8 +135,8 @@ public class FastSLAMListener implements Simulator.Listener
 
         particles.clear();
 
-	resampleFromList(tempParticles, totWeight);
-	
+        resampleFromList(tempParticles, totWeight);
+
         assert(particles.size() == tempParticles.size());
 
         updateDrawingVariables();
@@ -189,7 +189,7 @@ public class FastSLAMListener implements Simulator.Listener
 
         }
 
-        mostLikelyParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1]};
+        mostLikelyParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1], mostLikelyPos[2]};
 
     }
 
@@ -206,11 +206,11 @@ public class FastSLAMListener implements Simulator.Listener
                                      2.0));
 
             //Draw a larger point at the XY of the most likely particle
-	    ArrayList<double[]> mostLikelyParticleLocationList = 
-	    	new ArrayList<double[]>(Arrays.asList(mostLikelyParticleLocation));
-	    vb.addBack(new VisPoints(new VisVertexData(mostLikelyParticleLocationList),
-	    					       new VisConstantColor(new Color(0,255,0)),
-	    					       4.0));
+            ArrayList<double[]> mostLikelyParticleLocationList =
+                new ArrayList<double[]>(Arrays.asList(LinAlg.resize(mostLikelyParticleLocation,2)));
+            vb.addBack(new VisPoints(new VisVertexData(mostLikelyParticleLocationList),
+                                     new VisConstantColor(new Color(0,255,0)),
+                                     4.0));
 
             vb.swap();
         }
@@ -247,19 +247,19 @@ public class FastSLAMListener implements Simulator.Listener
         // }
 
         // Draw the landmark observations
-        // {
-        //     VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
-        //     for (Simulator.landmark_t lmark : landmarks) {
-        //         double[] obs = lmark.obs;
-        //         ArrayList<double[]> obsPoints = new ArrayList<double[]>();
-        //         obsPoints.add(LinAlg.resize(xyt,2));
-        //         double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
-        //         obsPoints.add(LinAlg.transform(xyt, rel_xy));
-        //         vb.addBack(new VisLines(new VisVertexData(obsPoints),
-        //                                 new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
-        //     }
-        //     vb.swap();
-        // }
+        {
+            VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
+            for (Simulator.landmark_t lmark : landmarks) {
+                double[] obs = lmark.obs;
+                ArrayList<double[]> obsPoints = new ArrayList<double[]>();
+                obsPoints.add(LinAlg.resize(mostLikelyParticleLocation,2));
+                double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
+                obsPoints.add(LinAlg.transform(mostLikelyParticleLocation, rel_xy));
+                vb.addBack(new VisLines(new VisVertexData(obsPoints),
+                                        new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
+            }
+            vb.swap();
+        }
 
     }
 }

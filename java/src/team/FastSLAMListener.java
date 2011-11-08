@@ -19,13 +19,14 @@ import april.util.*;
 import april.config.*;
 import april.sim.*;
 import java.util.Random;
+import april.vis.VisCanvas.Movie;
 
 public class FastSLAMListener implements Simulator.Listener
 {
 
     VisWorld vw;
     Config config;
-
+    Movie movie;
 
     private ArrayList<double[]> trajectory = new ArrayList<double[]>();
     double xyt[] = new double[3];
@@ -54,6 +55,8 @@ public class FastSLAMListener implements Simulator.Listener
     private int randSeed = 0;
     private Random rand;
 
+    String moviePath;
+
     public void init(Config _config, VisWorld _vw)
     {
         config  = _config;
@@ -67,6 +70,11 @@ public class FastSLAMListener implements Simulator.Listener
         double featD[] = config.requireDoubles("noisemodels.landmarkDiag");
         numParticles   = config.requireInt("fastSlam.numParticles");
         randSeed       = config.requireInt("fastSlam.randSeed");
+        moviePath      = config.requireString("fastSlam.moviePath");
+        
+        boolean autoframes = true;
+
+        //movie = movieCreate(moviePath, true);
 
         rand = new Random(randSeed);
         Particle.setRandom(rand);

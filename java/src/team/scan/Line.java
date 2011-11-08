@@ -54,33 +54,32 @@ public class Line {
             if (aPoint[0] > extremeY[1]) {
                 extremeY[1] = aPoint[0];
             }
-
-
-            // Find radiiiii
-            double r1 = Math.sqrt(Math.pow(extremeX[1] - centroid[0], 2) +
-                                  Math.pow(extremeY[1] - centroid[1], 2));
-
-            double r2 = Math.sqrt(Math.pow(extremeX[0] - centroid[0], 2) +
-                                  Math.pow(extremeY[0] - centroid[1], 2));
-
-            double[] pointOne = new double[] {r1*Math.cos(theta), r1*Math.sin(theta)};
-            double[] pointTwo = new double[] {-r2*Math.cos(theta), -r2*Math.sin(theta)};
-
-            // Add the centroids to finish'er up
-
-            for (int i = 0; i < centroid.length; i++) {
-                pointOne[i] += centroid[i];
-                pointTwo[i] += centroid[i];
-            }
-
-
-            List<double[]> finalPoints = new ArrayList<double[]>();
-            finalPoints.add(pointOne);
-            finalPoints.add(pointTwo);
-
-            return finalPoints;
-
         }
+
+        // Find radiiiii
+        double r1 = Math.sqrt(Math.pow(extremeX[1] - centroid[0], 2) +
+                              Math.pow(extremeY[1] - centroid[1], 2));
+
+        double r2 = Math.sqrt(Math.pow(extremeX[0] - centroid[0], 2) +
+                              Math.pow(extremeY[0] - centroid[1], 2));
+
+        double[] pointOne = new double[] {r1*Math.cos(theta), r1*Math.sin(theta)};
+        double[] pointTwo = new double[] {-r2*Math.cos(theta), -r2*Math.sin(theta)};
+
+        // Add the centroids to finish'er up
+
+        for (int i = 0; i < centroid.length; i++) {
+            pointOne[i] += centroid[i];
+            pointTwo[i] += centroid[i];
+        }
+
+
+        List<double[]> finalPoints = new ArrayList<double[]>();
+        finalPoints.add(pointOne);
+        finalPoints.add(pointTwo);
+
+        return finalPoints;
+
 
     }
 

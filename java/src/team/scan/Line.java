@@ -83,6 +83,20 @@ public class Line {
 
     }
 
+    public double computeMSE() {
+
+		int N        = points.size();
+		double Mxx   = PointMoments.getMomentXX(points);
+		double Mxy   = PointMoments.getMomentXX(points);
+		double Myy   = PointMoments.getMomentXX(points);
+		double nHatX = -Math.sin(theta);
+		double nHatY = Math.cos(theta);
+		double MSE   = Mxx*nHatX*nHatX/N + Mxy*nHatX*nHatY/N + Myy*nHatY*nHatY/N;
+		
+		return MSE;
+
+    }
+
     public List<double[]> getPoints() {
         return points;
     }

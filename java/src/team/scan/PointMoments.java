@@ -3,11 +3,11 @@ package team.scan;
 import java.util.ArrayList;
 import java.lang.Math;
 
-public class LineMoments {
+public class PointMoments {
 
     private ArrayList<double[]> points;
     
-    public LineMoments() {
+    public PointMoments() {
 	this.points = new ArrayList<double[]>();
     }
 

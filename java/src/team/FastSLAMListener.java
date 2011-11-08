@@ -37,7 +37,7 @@ public class FastSLAMListener implements Simulator.Listener
     private boolean debug = true;
 
     // The number of particles to use
-    private int numParticles = 500;
+    private int numParticles;
 
     // The list of current particles
     private ArrayList<Particle> particles;
@@ -64,6 +64,7 @@ public class FastSLAMListener implements Simulator.Listener
 
         double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
         double featD[] = config.requireDoubles("noisemodels.landmarkDiag");
+        numParticles   = config.requireInt("fastSlam.numParticles");
 
         //Create diagonal ticks L/R covariance matrix
         double[][] odomCov = new double[2][2];

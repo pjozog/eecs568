@@ -133,10 +133,10 @@ public class FastSLAMListener implements Simulator.Listener
 
             //TODO:  change xyt
             aParticle.updateParticleWithOdomAndObs(new double[]{odom.obs[0], odom.obs[1]}, landmarkObs);
-            
+
             double curWeight = aParticle.getWeight();
             // totWeight += curWeight;
-            maxWeight = maxWeight < curWeight ? curWeight : maxWeight; 
+            maxWeight = maxWeight < curWeight ? curWeight : maxWeight;
         }
 
 
@@ -144,9 +144,17 @@ public class FastSLAMListener implements Simulator.Listener
         // Particle resampling
         //////////////////////
 
-        particles.clear();
+        // Only resample if we have seen one or more landmarks
+        if (!landmarkObs.isEmpty()) {
+            particles.clear();
+            resampleFromList(tempParticles,  maxWeight);
+        } else {
+            particles = new ArrayList<Particle>();
+            for (Particle p : tempParticles) {
+                particles.add(new Particle(p));
+            }
+        }
 
-        resampleFromList(tempParticles,  maxWeight);
 
         assert(particles.size() == tempParticles.size());
 

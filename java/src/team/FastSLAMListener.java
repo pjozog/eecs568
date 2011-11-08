@@ -164,12 +164,13 @@ public class FastSLAMListener implements Simulator.Listener
             //weights[i] = tempList.get(i).getWeight() / totalWeight;
             weights[i] = Math.exp(tempList.get(i).getWeight() - maxWeight);
             totWeight += weights[i];
-        }
+        } 
 
         for(int i = 0; i < weights.length; i++){
             weights[i] /= totWeight;
             //System.out.println("Weight i " + i + " " + weights[i]);
         }
+        HashMap<Integer, Integer> count = new HashMap<Integer, Integer>();
 
         for(int i = 0; i < tempList.size(); i++){
             double pick = rand.nextDouble();
@@ -178,12 +179,28 @@ public class FastSLAMListener implements Simulator.Listener
                 /*silly hack to make sure double precision doesnt bite us*/
                 if(running + weights[j] >= pick || (j + 1 == weights.length) ){
                     // System.out.println("Picked particle " + j);
+                    if(count.containsKey(j)){
+                        int val = count.get(j);
+                        count.put(j, val + 1);
+                    }
+                    else{
+                        count.put(j, 1);
+                    }
                     particles.add(new Particle(tempList.get(j)));
                     break;
                 }
                 running += weights[j];
             }
         }
+
+        int maxCount = 0;
+        for(Map.Entry<Integer, Integer> entry : count.entrySet()){
+            if(maxCount < entry.getValue()){
+                maxCount = entry.getValue();
+            }
+            System.out.println("Saw " + entry.getKey() + " " + entry.getValue() + " times.");
+        }
+        System.out.println("Max count " + maxCount);
 
     }
 

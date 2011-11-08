@@ -157,7 +157,7 @@ public class FastSLAMListener implements Simulator.Listener
     }
 
     public void resampleFromList(ArrayList<Particle> tempList, double maxWeight) {
-
+        System.out.println("Using max weight " +  maxWeight);
         double weights[] = new double[tempList.size()];
         double totWeight = 0;
         for(int i = 0; i < tempList.size(); i++){
@@ -168,6 +168,7 @@ public class FastSLAMListener implements Simulator.Listener
 
         for(int i = 0; i < weights.length; i++){
             weights[i] /= totWeight;
+            //System.out.println("Weight i " + i + " " + weights[i]);
         }
 
         for(int i = 0; i < tempList.size(); i++){
@@ -176,6 +177,7 @@ public class FastSLAMListener implements Simulator.Listener
             for(int j = 0; j < weights.length; j++){
                 /*silly hack to make sure double precision doesnt bite us*/
                 if(running + weights[j] >= pick || (j + 1 == weights.length) ){
+                    // System.out.println("Picked particle " + j);
                     particles.add(new Particle(tempList.get(j)));
                     break;
                 }

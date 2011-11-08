@@ -29,13 +29,9 @@ public class Task2 implements LCMSubscriber, ParameterListener
 
     laser_t laser; // synchronize on 'this'
 
-    LineFitter lineFitter;
-
     public Task2()
     {
 	
-	this.lineFitter = new LineFitter();
-
         pg.addDoubleSlider("thresh","Thresh",0,1,.5);
 
         jf.setLayout(new BorderLayout());

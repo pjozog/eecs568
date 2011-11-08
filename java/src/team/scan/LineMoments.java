@@ -3,27 +3,26 @@ package team.scan;
 import java.util.ArrayList;
 import java.lang.Math;
 
-public class LineFitter {
+public class LineMoments {
 
-    private ArrayList<double[]> laserPoints;
+    private ArrayList<double[]> points;
     
-    public LineFitter() {
-	this.laserPoints = new ArrayList<double[]>();
-	System.out.println("Creating new line fitter");
+    public LineMoments() {
+	this.points = new ArrayList<double[]>();
     }
 
     public void setPoints(ArrayList<double[]> points) {
-	this.laserPoints = new ArrayList<double[]>();
+	this.points = new ArrayList<double[]>();
 	for (double[] p : points)
-	    this.laserPoints.add(p);
+	    this.points.add(p);
     }
 
     public double[] getCentroid() {
 
 	double[] sum = new double[]{0,0};
 
-	sum[0] = this.getMomentX() / laserPoints.size();
-	sum[1] = this.getMomentY() / laserPoints.size();
+	sum[0] = this.getMomentX() / points.size();
+	sum[1] = this.getMomentY() / points.size();
 
 	return sum;
 
@@ -31,7 +30,7 @@ public class LineFitter {
 
     public double getMomentX() {
 	double sum = 0;
-	for (double[] pnt : this.laserPoints) {
+	for (double[] pnt : this.points) {
 	    sum += pnt[0];
 	}
 	return sum;
@@ -39,7 +38,7 @@ public class LineFitter {
 
     public double getMomentY() {
 	double sum = 0;
-	for (double[] pnt : this.laserPoints) {
+	for (double[] pnt : this.points) {
 	    sum += pnt[1];
 	}
 	return sum;
@@ -47,7 +46,7 @@ public class LineFitter {
 
     public double getMomentXY() {
 	double sum = 0;
-	for (double[] pnt : this.laserPoints) {
+	for (double[] pnt : this.points) {
 	    sum += pnt[0]*pnt[1];
 	}
 	return sum;
@@ -55,7 +54,7 @@ public class LineFitter {
 
     public double getMomentXX() {
 	double sum = 0;
-	for (double[] pnt : this.laserPoints) {
+	for (double[] pnt : this.points) {
 	    sum += pnt[0]*pnt[0];
 	}
 	return sum;
@@ -63,26 +62,26 @@ public class LineFitter {
 
     public double getMomentYY() {
 	double sum = 0;
-	for (double[] pnt : this.laserPoints) {
+	for (double[] pnt : this.points) {
 	    sum += pnt[1]*pnt[1];
 	}
 	return sum;
     }
 
     public double getCentroidXX() {
-	int N = this.laserPoints.size();
+	int N = this.points.size();
 	double cxx = getMomentXX()/N - Math.pow(getMomentX()/N, 2);
 	return cxx;
     }
 
     public double getCentroidXY() {
-	int N = this.laserPoints.size();
+	int N = this.points.size();
 	double cxy = getMomentXY()/N - getMomentX()/N * getMomentY()/N;
 	return cxy;
     }
 
     public double getCentroidYY() {
-	int N = this.laserPoints.size();
+	int N = this.points.size();
 	double cyy = getMomentYY()/N - Math.pow(getMomentX()/N, 2);
 	return cyy;
     }

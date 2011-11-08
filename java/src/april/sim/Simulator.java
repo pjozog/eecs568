@@ -124,7 +124,12 @@ public class Simulator implements Runnable
         StepThread steps = new StepThread();
         pg.addListener(steps);
         steps.start();
-
+        try{
+            vc.movieCreate("MOVIE", true);
+        }
+        catch(Exception e){
+            System.out.println("Caught exception trying to make movie " + e.getMessage());
+        }
         jf.setLayout(new BorderLayout());
         jf.add(vc, BorderLayout.CENTER);
         jf.add(pg, BorderLayout.SOUTH);

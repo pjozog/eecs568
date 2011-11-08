@@ -63,13 +63,19 @@ public class FastSLAMListener implements Simulator.Listener
         newFeatThreshold  = config.requireDouble("fastSlam.threshold");
 
         double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
+	double featD[] = config.requireDoubles("noisemodels.landmarkDiag");
 
         //Create diagonal ticks L/R covariance matrix
         double[][] odomCov = new double[2][2];
         odomCov[0][0] = odomD[0]*odomD[0]; odomCov[0][1] = 0;
         odomCov[1][0] = 0;                 odomCov[1][1] = odomD[1]*odomD[1];
 
-        Particle.setSigmaW(new Matrix(odomCov));
+        double[][] featCov = new double[2][2];
+        featCov[0][0] = featD[0]*featD[0]; featCov[0][1] = 0;
+        featCov[1][0] = 0;                 featCov[1][1] = featD[1]*featD[1];
+
+        Particle.setSigmaW(new Matrix(featCov));
+        Particle.setSigmaTicksLR(new Matrix(odomCov));
 
         Particle.setThreshold(newFeatThreshold);
 

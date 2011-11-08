@@ -31,14 +31,21 @@ public class Particle {
     public static double baseline;
 
     private static Matrix sigmaW = null;
+    private static Matrix sigmaTicksLR = null;
 
     public static void setSigmaW(Matrix m){
         sigmaW = m;
     }
+
+    public static void setSigmaTicksLR(Matrix m){
+        sigmaTicksLR = m;
+    }
+
     public static Matrix getSigmaW(){
         assert(sigmaW != null);
         return sigmaW;
     }
+
     // Default constructor...used when Simulator is just beginning
     public Particle() {
         stateXYT[0] = 0;
@@ -103,7 +110,7 @@ public class Particle {
         assert(sigmaW != null);
         // Update our state estimate
         stateXYT = LinAlg.xytMultiply(stateXYT,
-                                      this.sampleFromMotionModel(sigmaW.copyArray(), ticksLR));
+                                      this.sampleFromMotionModel(sigmaTicksLR.copyArray(), ticksLR));
         stateXYT[2] = MathUtil.mod2pi(stateXYT[2]);
 
         // Perform data correspondence and Kalman filter updates

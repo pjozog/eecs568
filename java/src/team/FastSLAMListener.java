@@ -169,11 +169,11 @@ public class FastSLAMListener implements Simulator.Listener
         double weights[] = new double[tempList.size()];
         double totWeight = 0;
         for(int i = 0; i < tempList.size(); i++){
-            //weights[i] = tempList.get(i).getWeight() / totalWeight;
-            weights[i] = Math.exp(tempList.get(i).getWeight() - maxWeight);
+            weights[i] = tempList.get(i).getWeight();
+            // weights[i] = Math.exp(tempList.get(i).getWeight() - maxWeight);
             totWeight += weights[i];
-        } 
-
+        }
+        System.out.println("Total Weight " + totWeight);
         for(int i = 0; i < weights.length; i++){
             weights[i] /= totWeight;
             //System.out.println("Weight i " + i + " " + weights[i]);
@@ -206,7 +206,7 @@ public class FastSLAMListener implements Simulator.Listener
             if(maxCount < entry.getValue()){
                 maxCount = entry.getValue();
             }
-            System.out.println("Saw " + entry.getKey() + " " + entry.getValue() + " times.");
+            // System.out.println("Saw " + entry.getKey() + " " + entry.getValue() + " times.");
         }
         System.out.println("Max count " + maxCount);
 

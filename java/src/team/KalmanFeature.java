@@ -79,6 +79,8 @@ public class KalmanFeature {
     public double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose) {
         double [] zj_hat = FastSLAMMotionModel.predictedFeaturePosRT(robotPose, this.mean);
 
+        // TODO: Which one is correct?
+        // Matrix rw = new Matrix(FastSLAMMotionModel.jacobianJx(robotPose, observation));
         Matrix rw = new Matrix(FastSLAMMotionModel.jacobianRw(robotPose, observation));
         Matrix sigmaW = Particle.getSigmaW();
         Matrix Qj = sigmaW.plus(rw.times(covariance.timesTranspose(rw)));

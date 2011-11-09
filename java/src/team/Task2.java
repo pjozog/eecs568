@@ -32,12 +32,14 @@ public class Task2 implements LCMSubscriber, ParameterListener
     ArrayList<double[]> origin = new ArrayList<double[]>();
 
     private static double threshold;
-
+    private static int numSteps;
     public Task2()
     {
     
         pg.addDoubleSlider("thresh","Thresh",0,0.1,0.05);
-        pg.addButtons("refresh", "Refresh");
+  
+        pg.addInt("steps", "Steps", 100);
+        pg.addButtons("refresh", "Refresh");  
         pg.addListener(new ParameterListener(){
                 public void parameterChanged(ParameterGUI pg, String name)
                 {
@@ -53,6 +55,9 @@ public class Task2 implements LCMSubscriber, ParameterListener
                             System.out.println("Caught exception trying to refresh, Try stepping LCM");
 
                         }
+                    }
+                    if(name.equals("steps")){
+                        numSteps = pg.gi("steps");
                     }
                     
                 }
@@ -71,6 +76,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
         lcm.subscribe("LIDAR_FRONT",this);
         lcm.subscribe("POSE",this);
         pg.notifyListeners("thresh");
+        pg.notifyListeners("steps");
 
     }
 
@@ -99,6 +105,9 @@ public class Task2 implements LCMSubscriber, ParameterListener
         return threshold;
     }
 
+    public static int getSteps(){
+        return numSteps;
+    }
     public synchronized void update()
     {
         {

@@ -32,11 +32,12 @@ public class AggloLineFit {
         //Populate this.lines
         this.init();
 
-        double numIter      = 0;
+
+        double numIter      = Task2.getSteps();
         double MSEThreshold = Task2.getThreshold();
 
         //Go forth!
-        while (true) {
+        for(int step = 0; step < numIter; step++){
             //Need to keep track of some stuff...
             double lowestMSE        = Double.POSITIVE_INFINITY;
             int    lowestMSEIndex1  = -1;
@@ -93,6 +94,7 @@ public class AggloLineFit {
             double THIS_IS_FOR_BREAKPOINT = 1337;
         }
 
+        return this.lines;
     }
 
     /**

@@ -24,9 +24,22 @@ public class Line {
         for (double [] aPoint : one.getPoints()) {
             this.points.add(new double[] {aPoint[0], aPoint[1]});
         }
+
         for (double [] aPoint : two.getPoints()) {
-            this.points.add(new double[] {aPoint[0], aPoint[1]});
+
+            // Ensure we didn't already add this point to the list
+            if (!one.getPoints().contains(aPoint)) {
+                this.points.add(new double[] {aPoint[0], aPoint[1]});
+            } else {
+
+                // System.out.println("We found a duplicate point and ignored it");
+            }
+
         }
+
+
+
+
 
         this.centroid = PointMoments.getCentroid(points);
         double Cxx        = PointMoments.getCentroidXX(points);
@@ -37,7 +50,7 @@ public class Line {
     }
 
     public Line(List<double[]> points) {
-        
+
         double[] centroid = PointMoments.getCentroid(points);
         double Cxx        = PointMoments.getCentroidXX(points);
         double Cxy        = PointMoments.getCentroidXY(points);
@@ -109,13 +122,28 @@ public class Line {
         double nHatX = -Math.sin(theta);
         double nHatY = Math.cos(theta);
         double MSE   = Cxx*nHatX*nHatX/N + Cxy*nHatX*nHatY/N + Cyy*nHatY*nHatY/N;
-        
+
         return MSE;
 
     }
 
     public List<double[]> getPoints() {
         return points;
+    }
+
+
+    public static List<Line> removeTwoPointLines(List<Line> origLines) {
+
+        List<Line> newLines = new ArrayList<Line>();
+        for (Line aLine : origLines) {
+            if (aLine.getPoints().size() > 2) {
+                newLines.add(aLine);
+            }
+        }
+
+        return newLines;
+
+
     }
 
 }

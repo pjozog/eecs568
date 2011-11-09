@@ -77,7 +77,7 @@ public class AggloLineFit {
                     float b = rand.nextFloat();
 
                     this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
-                                                       new VisConstantColor(new Color(r, g, b)),
+                                                       new VisConstantColor(Color.red),
                                                        2, VisLines.TYPE.LINES));
                 }
 

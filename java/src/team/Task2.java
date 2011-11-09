@@ -44,7 +44,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
         jf.setVisible(true);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-	origin.add(new double[]{0,0});
+        origin.add(new double[]{0,0});
 
         lcm.subscribe("LIDAR_FRONT",this);
         lcm.subscribe("POSE",this);
@@ -70,18 +70,18 @@ public class Task2 implements LCMSubscriber, ParameterListener
     public synchronized void update()
     {
         {
-	    //Draw the points, then the lines (for debugging)
+            //Draw the points, then the lines (for debugging)
             VisWorld.Buffer vb = vw.getBuffer("laser-points");
             vb.addBack(new VisPoints(new VisVertexData(laserToPoints(this.laser)),
                                      new VisConstantColor(Color.green),
                                      4));
 	    
             vb.addBack(new VisPoints(new VisVertexData(this.origin),
-                                     new VisConstantColor(Color.red),
+                                     new VisConstantColor(Color.cyan),
                                      6));
-	    vb.swap();
+            vb.swap();
 
-	    VisWorld.Buffer lineBuff = vw.getBuffer("fitted-lines");
+            VisWorld.Buffer lineBuff = vw.getBuffer("fitted-lines");
             AggloLineFit fitter = new AggloLineFit(laserToPoints(this.laser), lineBuff);
             fitter.getLines();
 

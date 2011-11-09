@@ -17,7 +17,7 @@ public class AggloLineFit {
 
         this.points = new ArrayList<double[]>();
         this.lines  = new ArrayList<Line>();
-	this.lineBuff = lineBuff;
+		this.lineBuff = lineBuff;
 
         for (double[] point : points) {
             this.points.add(point);
@@ -31,16 +31,17 @@ public class AggloLineFit {
         this.init();
 
         double numIter      = 0;
-        double MSEThreshold = 100;
+        double MSEThreshold = 0.01;
 
         //Go forth!
         while (true) {
 
             //Need to keep track of some stuff...
-            double lowestMSE = Double.POSITIVE_INFINITY;
-            int   lowestMSEIndex1 = -1;
-            int   lowestMSEIndex2 = -1;
-            Line mergedLine = null;
+            double lowestMSE        = Double.POSITIVE_INFINITY;
+            int    lowestMSEIndex1  = -1;
+            int    lowestMSEIndex2  = -1;
+            Line   mergedLine       = null;
+			Line   lowestMergedLine = null;
 
             //for each pair of adjacent lines i, i+1
             for (int i = 0; i < lines.size()-1; i++) {
@@ -56,6 +57,7 @@ public class AggloLineFit {
                     lowestMSE = MSE;
                     lowestMSEIndex1 = i;
                     lowestMSEIndex2 = i+1;
+					lowestMergedLine = mergedLine;
                 }
 
             }
@@ -67,22 +69,22 @@ public class AggloLineFit {
             
             else {
                 //Merge lines with minimum error
-                this.lines.set(lowestMSEIndex1, mergedLine);
+                this.lines.set(lowestMSEIndex1, lowestMergedLine);
                 this.lines.remove(lowestMSEIndex2);
                 assert(lowestMSEIndex1 == lowestMSEIndex2 + 1);
             }
 
             //Repeat
 
-	    //Draw the shits, for debugging
-	    this.lineBuff.clear();
-	    for (Line l : this.lines) {
-		this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
-						   new VisConstantColor(Color.blue),
-						   1, VisLines.TYPE.LINES));
-	    }
-	    lineBuff.swap();
-            double fml = 1337;
+			//Draw the shits, for debugging
+			this.lineBuff.clear();
+			for (Line l : this.lines) {
+				this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
+												   new VisConstantColor(Color.red),
+												   2, VisLines.TYPE.LINES));
+			}
+			lineBuff.swap();
+            double THIS_IS_FOR_BREAKPOINT = 1337;
         }
 
     }

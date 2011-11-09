@@ -72,7 +72,7 @@ public class AggloLineFit {
                 //Merge lines with minimum error
                 this.lines.set(lowestMSEIndex1, lowestMergedLine);
                 this.lines.remove(lowestMSEIndex2);
-                assert(lowestMSEIndex1 == lowestMSEIndex2 + 1);
+                assert(lowestMSEIndex2 == lowestMSEIndex1 + 1);
             }
 
             //Repeat

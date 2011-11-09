@@ -2,7 +2,7 @@ package team.scan;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.lang.Math;
 
 public class Line {
 
@@ -16,7 +16,7 @@ public class Line {
         this.theta = aTheta;
     }
 
-    public Line(Line one, Line two, double[] aCentroid, double aTheta) {
+    public Line(Line one, Line two) {
 
         // Copy both sets of points
         // Make sure this is as deep as possible (that's what she said)
@@ -28,59 +28,75 @@ public class Line {
             this.points.add(new double[] {aPoint[0], aPoint[1]});
         }
 
-        this.centroid = aCentroid;
-        this.theta = aTheta;
+        this.centroid = PointMoments.getCentroid(points);
+        double Cxx        = PointMoments.getCentroidXX(points);
+        double Cxy        = PointMoments.getCentroidXY(points);
+        double Cyy        = PointMoments.getCentroidYY(points);
+        this.theta        = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
 
     }
 
-    public List<double[]> getPointsForDisplay() {
+    public Line(List<double[]> points) {
+        
+        double[] centroid = PointMoments.getCentroid(points);
+        double Cxx        = PointMoments.getCentroidXX(points);
+        double Cxy        = PointMoments.getCentroidXY(points);
+        double Cyy        = PointMoments.getCentroidYY(points);
+        double theta      = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
 
-        double[] extremeX = new double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
-        double[] extremeY = new double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
+        this.points = points;
+        this.theta = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
+        this.centroid = centroid;
 
-        for (double[] aPoint : points) {
+    }
 
-            // X
-            if (aPoint[0] < extremeX[0]) {
-                extremeX[0] = aPoint[0];
-            }
-            if (aPoint[0] > extremeX[1]) {
-                extremeX[1] = aPoint[0];
-            }
-            // Y
-            if (aPoint[0] < extremeY[0]) {
-                extremeY[0] = aPoint[0];
-            }
-            if (aPoint[0] > extremeY[1]) {
-                extremeY[1] = aPoint[0];
-            }
-        }
+    public ArrayList<double[]> getPointsForDisplay() {
+	//Find biggest/smallest x
+	double biggestX = Double.NEGATIVE_INFINITY;
+	double biggestY = Double.NEGATIVE_INFINITY;
+	double smallestX = Double.POSITIVE_INFINITY;
+	double smallestY = Double.POSITIVE_INFINITY;
+	//... and biggest/smallest indeces
+	int biggestXInd = -1;
+	int biggestYInd = -1;
+	int smallestXInd = -1;
+	int smallestYInd = -1;
 
-        // Find radiiiii
-        double r1 = Math.sqrt(Math.pow(extremeX[1] - centroid[0], 2) +
-                              Math.pow(extremeY[1] - centroid[1], 2));
+	//Iterate through all points
+	for (int i = 0; i < points.size(); i++) {
+	    if (points.get(i)[0] > biggestX) {
+		biggestX = points.get(i)[0];
+		biggestXInd = i;
+	    }
+	    if (points.get(i)[1] > biggestY) {
+		biggestY = points.get(i)[1];
+		biggestYInd = i;
+	    }
+	    if (points.get(i)[0] < smallestX) {
+		smallestX = points.get(i)[0];
+		smallestXInd = i;
+	    }
+	    if (points.get(i)[1] < smallestY) {
+		smallestY = points.get(i)[1];
+		smallestYInd = i;
+	    }
+	}
 
-        double r2 = Math.sqrt(Math.pow(extremeX[0] - centroid[0], 2) +
-                              Math.pow(extremeY[0] - centroid[1], 2));
+	//Which variation is bigger?  X or Y?
+	double xVariation = biggestX - smallestX;
+	double yVariation = biggestY - smallestY;
+	ArrayList<double[]> finalPoints = new ArrayList<double[]>();
 
-        double[] pointOne = new double[] {r1*Math.cos(theta), r1*Math.sin(theta)};
-        double[] pointTwo = new double[] {-r2*Math.cos(theta), -r2*Math.sin(theta)};
+	if (yVariation > xVariation) {
+	    finalPoints.add(points.get(smallestYInd));
+	    finalPoints.add(points.get(biggestYInd));
+	} else {
+	    finalPoints.add(points.get(smallestXInd));
+	    finalPoints.add(points.get(biggestXInd));
+	}
 
-        // Add the centroids to finish'er up
-
-        for (int i = 0; i < centroid.length; i++) {
-            pointOne[i] += centroid[i];
-            pointTwo[i] += centroid[i];
-        }
-
-
-        List<double[]> finalPoints = new ArrayList<double[]>();
-        finalPoints.add(pointOne);
-        finalPoints.add(pointTwo);
-
-        return finalPoints;
-
-
+	return finalPoints;
+	
     }
 
     public double computeMSE() {

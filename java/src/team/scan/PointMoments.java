@@ -77,7 +77,7 @@ public class PointMoments {
 
     public static double getCentroidYY(List<double[]> points) {
         int N = points.size();
-        double cyy = getMomentYY(points)/N - Math.pow(getMomentX(points)/N, 2);
+        double cyy = getMomentYY(points)/N - Math.pow(getMomentY(points)/N, 2);
         return cyy;
     }
 

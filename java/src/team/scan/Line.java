@@ -51,52 +51,53 @@ public class Line {
     }
 
     public ArrayList<double[]> getPointsForDisplay() {
-	//Find biggest/smallest x
-	double biggestX = Double.NEGATIVE_INFINITY;
-	double biggestY = Double.NEGATIVE_INFINITY;
-	double smallestX = Double.POSITIVE_INFINITY;
-	double smallestY = Double.POSITIVE_INFINITY;
-	//... and biggest/smallest indeces
-	int biggestXInd = -1;
-	int biggestYInd = -1;
-	int smallestXInd = -1;
-	int smallestYInd = -1;
 
-	//Iterate through all points
-	for (int i = 0; i < points.size(); i++) {
-	    if (points.get(i)[0] > biggestX) {
-		biggestX = points.get(i)[0];
-		biggestXInd = i;
-	    }
-	    if (points.get(i)[1] > biggestY) {
-		biggestY = points.get(i)[1];
-		biggestYInd = i;
-	    }
-	    if (points.get(i)[0] < smallestX) {
-		smallestX = points.get(i)[0];
-		smallestXInd = i;
-	    }
-	    if (points.get(i)[1] < smallestY) {
-		smallestY = points.get(i)[1];
-		smallestYInd = i;
-	    }
-	}
+        double[] extremeX = new double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
+        double[] extremeY = new double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
 
-	//Which variation is bigger?  X or Y?
-	double xVariation = biggestX - smallestX;
-	double yVariation = biggestY - smallestY;
-	ArrayList<double[]> finalPoints = new ArrayList<double[]>();
+        for (double[] aPoint : points) {
 
-	if (yVariation > xVariation) {
-	    finalPoints.add(points.get(smallestYInd));
-	    finalPoints.add(points.get(biggestYInd));
-	} else {
-	    finalPoints.add(points.get(smallestXInd));
-	    finalPoints.add(points.get(biggestXInd));
-	}
+            // X
+            if (aPoint[0] < extremeX[0]) {
+                extremeX[0] = aPoint[0];
+            }
+            if (aPoint[0] > extremeX[1]) {
+                extremeX[1] = aPoint[0];
+            }
+            // Y
+            if (aPoint[0] < extremeY[0]) {
+                extremeY[0] = aPoint[0];
+            }
+            if (aPoint[0] > extremeY[1]) {
+                extremeY[1] = aPoint[0];
+            }
+        }
 
-	return finalPoints;
-	
+        // Find radiiiii
+        double r1 = Math.sqrt(Math.pow(extremeX[1] - centroid[0], 2) +
+                              Math.pow(extremeY[1] - centroid[1], 2));
+
+        double r2 = Math.sqrt(Math.pow(extremeX[0] - centroid[0], 2) +
+                              Math.pow(extremeY[0] - centroid[1], 2));
+
+        double[] pointOne = new double[] {r1*Math.cos(theta), r1*Math.sin(theta)};
+        double[] pointTwo = new double[] {-r2*Math.cos(theta), -r2*Math.sin(theta)};
+
+        // Add the centroids to finish'er up
+
+        for (int i = 0; i < centroid.length; i++) {
+            pointOne[i] += centroid[i];
+            pointTwo[i] += centroid[i];
+        }
+
+
+        ArrayList<double[]> finalPoints = new ArrayList<double[]>();
+        finalPoints.add(pointOne);
+        finalPoints.add(pointTwo);
+
+        return finalPoints;
+
+
     }
 
     public double computeMSE() {

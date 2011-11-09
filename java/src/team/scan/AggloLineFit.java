@@ -79,7 +79,7 @@ public class AggloLineFit {
 	    for (Line l : this.lines) {
 		this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
 						   new VisConstantColor(Color.blue),
-						   2, VisLines.TYPE.LINES));
+						   1, VisLines.TYPE.LINES));
 	    }
 	    lineBuff.swap();
             double fml = 1337;

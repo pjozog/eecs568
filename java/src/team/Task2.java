@@ -74,7 +74,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
             VisWorld.Buffer vb = vw.getBuffer("laser-points");
             vb.addBack(new VisPoints(new VisVertexData(laserToPoints(this.laser)),
                                      new VisConstantColor(Color.green),
-                                     2));
+                                     4));
 	    
             vb.addBack(new VisPoints(new VisVertexData(this.origin),
                                      new VisConstantColor(Color.red),

@@ -36,17 +36,23 @@ public class Task2 implements LCMSubscriber, ParameterListener
     public Task2()
     {
     
-        pg.addDoubleSlider("thresh","Thresh",0,1,0.5);
+        pg.addDoubleSlider("thresh","Thresh",0,0.1,0.05);
+        pg.addButtons("refresh", "Refresh");
         pg.addListener(new ParameterListener(){
                 public void parameterChanged(ParameterGUI pg, String name)
                 {
                     if (name.equals("thresh")){
                         
                         threshold = pg.gd("thresh");
-                        System.out.println("saw thresh " + threshold);
                     }
-                    else{
-                        System.out.println("Not thresh");
+                    if(name.equals("refresh")){
+                        try{
+                            update();
+                        }
+                        catch(Exception e){
+                            System.out.println("Caught exception trying to refresh, Try stepping LCM");
+
+                        }
                     }
                     
                 }
@@ -68,6 +74,12 @@ public class Task2 implements LCMSubscriber, ParameterListener
 
     }
 
+    public void parameterChanged(ParameterGUI pg, String name)
+    {
+        /*Might should do stuff here*/
+        
+    }
+    
     public synchronized void messageReceived(LCM lcm, String channel, LCMDataInputStream ins)
     {
         try {
@@ -84,7 +96,6 @@ public class Task2 implements LCMSubscriber, ParameterListener
     }
 
     public static double getThreshold(){
-        System.out.println("in get threshold with " + threshold);
         return threshold;
     }
 
@@ -106,20 +117,6 @@ public class Task2 implements LCMSubscriber, ParameterListener
             AggloLineFit fitter = new AggloLineFit(laserToPoints(this.laser), lineBuff);
             fitter.getLines();
 
-        }
-
-    }
-
-    public void parameterChanged(ParameterGUI pg, String name)
-    {
-        if (name.equals("thresh")){
- 
-            update();
-            threshold = pg.gd("thresh");
-            System.out.println("saw thresh " + threshold);
-        }
-        else{
-            System.out.println("Not thresh");
         }
 
     }

@@ -37,7 +37,6 @@ public class AggloLineFit {
 
         //Go forth!
         while (true) {
-            System.out.println(MSEThreshold);
             //Need to keep track of some stuff...
             double lowestMSE        = Double.POSITIVE_INFINITY;
             int    lowestMSEIndex1  = -1;

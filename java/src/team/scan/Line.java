@@ -65,11 +65,11 @@ public class Line {
                 extremeX[1] = aPoint[0];
             }
             // Y
-            if (aPoint[0] < extremeY[0]) {
-                extremeY[0] = aPoint[0];
+            if (aPoint[1] < extremeY[0]) {
+                extremeY[0] = aPoint[1];
             }
-            if (aPoint[0] > extremeY[1]) {
-                extremeY[1] = aPoint[0];
+            if (aPoint[1] > extremeY[1]) {
+                extremeY[1] = aPoint[1];
             }
         }
 

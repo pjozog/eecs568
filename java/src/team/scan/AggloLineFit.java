@@ -14,7 +14,7 @@ public class AggloLineFit {
 
     public static final int MAXITER = 1000;
     public static Random rand = new Random();
-    
+
     public AggloLineFit(ArrayList<double[]> points, VisWorld.Buffer lineBuff) {
 
         this.points = new ArrayList<double[]>();
@@ -67,8 +67,8 @@ public class AggloLineFit {
             //if minimum error > thresh, then we're done
             if (lowestMSE > MSEThreshold) {
                 return this.lines;
-            } 
-            
+            }
+
             else {
                 //Merge lines with minimum error
                 this.lines.set(lowestMSEIndex1, lowestMergedLine);
@@ -80,7 +80,7 @@ public class AggloLineFit {
 
             //Draw the shits, for debugging
             this.lineBuff.clear();
-            for (Line l : this.lines) {
+            for (Line l : Line.removeTwoPointLines(this.lines)) {
 
                 float r = rand.nextFloat();
                 float g = rand.nextFloat();

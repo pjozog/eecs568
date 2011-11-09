@@ -12,6 +12,7 @@ public class AggloLineFit {
     VisWorld.Buffer lineBuff;
 
     public static final int MAXITER = 1000;
+    public static Random rand = new Random();
     
     public AggloLineFit(ArrayList<double[]> points, VisWorld.Buffer lineBuff) {
 
@@ -79,8 +80,13 @@ public class AggloLineFit {
 			//Draw the shits, for debugging
 			this.lineBuff.clear();
 			for (Line l : this.lines) {
+
+                float r = rand.nextFloat();
+                float g = rand.nextFloat();
+                float b = rand.nextFloat();
+
 				this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
-												   new VisConstantColor(Color.red),
+												   new VisConstantColor(new Color(r, g, b)),
 												   2, VisLines.TYPE.LINES));
 			}
 			lineBuff.swap();

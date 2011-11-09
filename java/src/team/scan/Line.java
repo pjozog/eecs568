@@ -18,6 +18,8 @@ public class Line {
 
         if (theta > Math.PI/2) {
             theta = theta - Math.PI;
+        } else if (theta < - Math.PI/2) {
+            theta = theta + Math.PI;
         }
     }
 
@@ -53,6 +55,8 @@ public class Line {
         this.theta        = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
         if (theta > Math.PI/2) {
             theta = theta - Math.PI;
+        } else if (theta < - Math.PI/2) {
+            theta = theta + Math.PI;
         }
 
     }
@@ -71,6 +75,8 @@ public class Line {
 
         if (theta > Math.PI/2) {
             theta = theta - Math.PI;
+        } else if (theta < - Math.PI/2) {
+            theta = theta + Math.PI;
         }
 
     }

@@ -102,15 +102,15 @@ public class Line {
 
     public double computeMSE() {
 
-		int N        = points.size();
-		double Cxx   = PointMoments.getCentroidXX(points);
-		double Cxy   = PointMoments.getCentroidXX(points);
-		double Cyy   = PointMoments.getCentroidXX(points);
-		double nHatX = -Math.sin(theta);
-		double nHatY = Math.cos(theta);
-		double MSE   = Cxx*nHatX*nHatX/N + Cxy*nHatX*nHatY/N + Cyy*nHatY*nHatY/N;
-		
-		return MSE;
+        int N        = points.size();
+        double Cxx   = PointMoments.getCentroidXX(points);
+        double Cxy   = PointMoments.getCentroidXX(points);
+        double Cyy   = PointMoments.getCentroidXX(points);
+        double nHatX = -Math.sin(theta);
+        double nHatY = Math.cos(theta);
+        double MSE   = Cxx*nHatX*nHatX/N + Cxy*nHatX*nHatY/N + Cyy*nHatY*nHatY/N;
+        
+        return MSE;
 
     }
 

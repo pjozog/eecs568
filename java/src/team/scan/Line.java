@@ -3,6 +3,7 @@ package team.scan;
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.Math;
+import team.ArrayUtil;
 
 public class Line {
 
@@ -14,6 +15,10 @@ public class Line {
         this.points = new ArrayList<double[]>(initialPoints);
         this.centroid = aCentroid;
         this.theta = aTheta;
+
+        if (theta > Math.PI/2) {
+            theta = theta - Math.PI;
+        }
     }
 
     public Line(Line one, Line two) {
@@ -46,6 +51,9 @@ public class Line {
         double Cxy        = PointMoments.getCentroidXY(points);
         double Cyy        = PointMoments.getCentroidYY(points);
         this.theta        = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
+        if (theta > Math.PI/2) {
+            theta = theta - Math.PI;
+        }
 
     }
 
@@ -61,6 +69,10 @@ public class Line {
         this.theta = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
         this.centroid = centroid;
 
+        if (theta > Math.PI/2) {
+            theta = theta - Math.PI;
+        }
+
     }
 
     public ArrayList<double[]> getPointsForDisplay() {
@@ -68,7 +80,11 @@ public class Line {
         double[] extremeX = new double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
         double[] extremeY = new double[]{Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
 
+        // System.out.println("Point Locations");
         for (double[] aPoint : points) {
+
+
+            // ArrayUtil.print1dArray(aPoint);
 
             // X
             if (aPoint[0] < extremeX[0]) {
@@ -86,6 +102,11 @@ public class Line {
             }
         }
 
+
+        // System.out.println("Extremes");
+        // ArrayUtil.print1dArray(extremeX);
+        // ArrayUtil.print1dArray(extremeY);
+
         // Find radiiiii
         double r1 = Math.sqrt(Math.pow(extremeX[1] - centroid[0], 2) +
                               Math.pow(extremeY[1] - centroid[1], 2));
@@ -93,8 +114,16 @@ public class Line {
         double r2 = Math.sqrt(Math.pow(extremeX[0] - centroid[0], 2) +
                               Math.pow(extremeY[0] - centroid[1], 2));
 
+        // System.out.println("Radiiiii: " + r1 + "   " +r2);
+
+
+
         double[] pointOne = new double[] {r1*Math.cos(theta), r1*Math.sin(theta)};
         double[] pointTwo = new double[] {-r2*Math.cos(theta), -r2*Math.sin(theta)};
+
+        // System.out.println("Centroid");
+        // ArrayUtil.print1dArray(centroid);
+
 
         // Add the centroids to finish'er up
 
@@ -102,6 +131,10 @@ public class Line {
             pointOne[i] += centroid[i];
             pointTwo[i] += centroid[i];
         }
+
+        // System.out.println("FinalPoints");
+        // ArrayUtil.print1dArray(pointOne);
+        // ArrayUtil.print1dArray(pointTwo);
 
 
         ArrayList<double[]> finalPoints = new ArrayList<double[]>();

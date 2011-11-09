@@ -66,6 +66,25 @@ public class AggloLineFit {
 
             //if minimum error > thresh, then we're done
             if (lowestMSE > MSEThreshold) {
+
+                //Draw the shits, for debugging
+                this.lineBuff.clear();
+
+                for (Line l : Line.removeTwoPointLines(this.lines)) {
+
+                    float r = rand.nextFloat();
+                    float g = rand.nextFloat();
+                    float b = rand.nextFloat();
+
+                    this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
+                                                       new VisConstantColor(new Color(r, g, b)),
+                                                       2, VisLines.TYPE.LINES));
+                }
+
+                lineBuff.swap();
+
+                double THIS_IS_FOR_BREAKPOINT = 1337;
+
                 return this.lines;
             }
 
@@ -78,20 +97,7 @@ public class AggloLineFit {
 
             //Repeat
 
-            //Draw the shits, for debugging
-            this.lineBuff.clear();
-            for (Line l : Line.removeTwoPointLines(this.lines)) {
 
-                float r = rand.nextFloat();
-                float g = rand.nextFloat();
-                float b = rand.nextFloat();
-
-                this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
-                                                   new VisConstantColor(new Color(r, g, b)),
-                                                   2, VisLines.TYPE.LINES));
-            }
-            lineBuff.swap();
-            double THIS_IS_FOR_BREAKPOINT = 1337;
         }
 
     }

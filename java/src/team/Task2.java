@@ -36,9 +36,9 @@ public class Task2 implements LCMSubscriber, ParameterListener
     public Task2()
     {
     
-        pg.addDoubleSlider("thresh","Thresh",0,0.1,0.05);
+        pg.addDoubleSlider("thresh","Thresh",0,0.01,0.005);
   
-        pg.addInt("steps", "Steps", 100);
+        pg.addInt("steps", "Steps", 100000);
         pg.addButtons("refresh", "Refresh");  
         pg.addListener(new ParameterListener(){
                 public void parameterChanged(ParameterGUI pg, String name)

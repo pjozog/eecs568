@@ -31,11 +31,27 @@ public class Task2 implements LCMSubscriber, ParameterListener
 
     ArrayList<double[]> origin = new ArrayList<double[]>();
 
+    private static double threshold;
+
     public Task2()
     {
     
-        pg.addDoubleSlider("thresh","Thresh",0,1,.5);
-
+        pg.addDoubleSlider("thresh","Thresh",0,1,0.5);
+        pg.addListener(new ParameterListener(){
+                public void parameterChanged(ParameterGUI pg, String name)
+                {
+                    if (name.equals("thresh")){
+                        
+                        threshold = pg.gd("thresh");
+                        System.out.println("saw thresh " + threshold);
+                    }
+                    else{
+                        System.out.println("Not thresh");
+                    }
+                    
+                }
+                
+            });
         jf.setLayout(new BorderLayout());
         jf.add(vc, BorderLayout.CENTER);
         jf.add(pg, BorderLayout.SOUTH);
@@ -48,6 +64,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
 
         lcm.subscribe("LIDAR_FRONT",this);
         lcm.subscribe("POSE",this);
+        pg.notifyListeners("thresh");
 
     }
 
@@ -66,6 +83,10 @@ public class Task2 implements LCMSubscriber, ParameterListener
         }
     }
 
+    public static double getThreshold(){
+        System.out.println("in get threshold with " + threshold);
+        return threshold;
+    }
 
     public synchronized void update()
     {
@@ -91,8 +112,16 @@ public class Task2 implements LCMSubscriber, ParameterListener
 
     public void parameterChanged(ParameterGUI pg, String name)
     {
-        if (name.equals("thresh"))
+        if (name.equals("thresh")){
+ 
             update();
+            threshold = pg.gd("thresh");
+            System.out.println("saw thresh " + threshold);
+        }
+        else{
+            System.out.println("Not thresh");
+        }
+
     }
 
     public static ArrayList<double[]> laserToPoints(laser_t laser)

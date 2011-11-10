@@ -51,16 +51,21 @@ public class AggloLineFit {
                 Line currentLine = this.lines.get(i);
                 Line nextLine = this.lines.get(i+1);
 
-                mergedLine = new Line(currentLine, nextLine);
-                double MSE = mergedLine.computeMSE();
+                mergedLine = Line.mergeLines(currentLine, nextLine);
 
-                //Find the minimum error and lines with minimum error
-                if (MSE < lowestMSE) {
-                    lowestMSE = MSE;
-                    lowestMSEIndex1 = i;
-                    lowestMSEIndex2 = i+1;
-                    lowestMergedLine = mergedLine;
+                // The line will be null if the join exceeded some distance threshold.
+                if (mergedLine != null) {
+                    double MSE = mergedLine.computeMSE();
+
+                    //Find the minimum error and lines with minimum error
+                    if (MSE < lowestMSE) {
+                        lowestMSE = MSE;
+                        lowestMSEIndex1 = i;
+                        lowestMSEIndex2 = i+1;
+                        lowestMergedLine = mergedLine;
+                    }
                 }
+
 
             }
 

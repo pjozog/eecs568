@@ -10,20 +10,16 @@ public class Line {
     private List<double[]> points = null;
     private double[] centroid;
     private double theta;
+    public static double pointDistanceThreshold;
 
     public Line(List<double[]> initialPoints, double[] aCentroid, double aTheta) {
         this.points = new ArrayList<double[]>(initialPoints);
         this.centroid = aCentroid;
-        this.theta = aTheta;
-
-        if (theta > Math.PI/2) {
-            theta = theta - Math.PI;
-        } else if (theta < - Math.PI/2) {
-            theta = theta + Math.PI;
-        }
+        this.theta = fullThetaToLimitedTheta(aTheta);
     }
 
     public Line(Line one, Line two) {
+
 
         // Copy both sets of points
         // Make sure this is as deep as possible (that's what she said)
@@ -38,7 +34,6 @@ public class Line {
             if (!one.getPoints().contains(aPoint)) {
                 this.points.add(new double[] {aPoint[0], aPoint[1]});
             } else {
-
                 // System.out.println("We found a duplicate point and ignored it");
             }
 
@@ -48,14 +43,19 @@ public class Line {
         double Cxx        = PointMoments.getCentroidXX(points);
         double Cxy        = PointMoments.getCentroidXY(points);
         double Cyy        = PointMoments.getCentroidYY(points);
-        this.theta        = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
-        if (theta > Math.PI/2) {
-            theta = theta - Math.PI;
-        } else if (theta < - Math.PI/2) {
-            theta = theta + Math.PI;
-        }
+        this.theta        = fullThetaToLimitedTheta(Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx));
+
 
     }
+
+    public static Line mergeLines(Line one, Line two) {
+        if (shouldConsiderMergingLines(one, two)) {
+            return new Line(one, two);
+        } else {
+            return null;
+        }
+    }
+
 
     public static Line initialLine(List<double[]> points) {
         // Point sanity check
@@ -63,9 +63,7 @@ public class Line {
         double[] pointTwo = points.get(1);
         double dist = Math.pow(pointOne[0] - pointTwo[0],2) + Math.pow(pointOne[1]-pointTwo[1],2);
 
-        double thresh = 4;
-
-        if (dist < thresh) {
+        if (dist < pointDistanceThreshold) {
             return new Line(points);
         } else {
             return null;
@@ -82,14 +80,47 @@ public class Line {
         double theta      = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
 
         this.points = points;
-        this.theta = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
         this.centroid = centroid;
+        this.theta = fullThetaToLimitedTheta( Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx));
 
-        if (theta > Math.PI/2) {
-            theta = theta - Math.PI;
-        } else if (theta < - Math.PI/2) {
-            theta = theta + Math.PI;
+    }
+
+
+
+    /**
+     * This will look at the end points of both lines and compute the distances between
+     * all four possibilities. If the shortest of the four exceeds our pointDistanceThreshold,
+     * then we should not even attempt to merge the lines.
+     */
+    public static boolean shouldConsiderMergingLines(Line one, Line two) {
+
+        // UGLY CODE. Sorry Schuyler.
+        List<double[]> lOnePoints = one.getPoints();
+        List<double[]> lTwoPoints = two.getPoints();
+        double[] lOneStart = lOnePoints.get(0);
+        double[] lOneEnd = lOnePoints.get(lOnePoints.size()-1);
+        double[] lTwoStart = lTwoPoints.get(0);
+        double[] lTwoEnd = lTwoPoints.get(lTwoPoints.size()-1);
+
+        double smallestDistance = euclidianDistanceBetweenPoints(lOneStart, lTwoStart);
+
+        double tempDist = euclidianDistanceBetweenPoints(lOneStart, lTwoEnd);
+        if (tempDist < smallestDistance) {
+            smallestDistance = tempDist;
         }
+
+        tempDist = euclidianDistanceBetweenPoints(lOneEnd, lTwoStart);
+        if (tempDist < smallestDistance) {
+            smallestDistance = tempDist;
+        }
+
+        tempDist = euclidianDistanceBetweenPoints(lOneEnd, lTwoEnd);
+        if (tempDist < smallestDistance) {
+            smallestDistance = tempDist;
+        }
+
+
+        return (smallestDistance < pointDistanceThreshold) ? true : false;
 
     }
 
@@ -200,6 +231,24 @@ public class Line {
         return newLines;
 
 
+    }
+
+    // Ensures that the parameter reprsents an angle between -pi/2 to pi/2
+    private double fullThetaToLimitedTheta(double theta) {
+
+        if (theta > Math.PI/2) {
+            return theta - Math.PI;
+        } else if (theta < - Math.PI/2) {
+            return theta + Math.PI;
+        } else {
+            return theta;
+        }
+
+    }
+
+    private static double euclidianDistanceBetweenPoints(double[] one, double[] two) {
+        return  Math.sqrt(Math.pow(one[0] - two[0], 2) +
+                          Math.pow(one[1] - two[1], 2));
     }
 
 }

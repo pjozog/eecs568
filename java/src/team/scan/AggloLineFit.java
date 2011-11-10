@@ -108,7 +108,10 @@ public class AggloLineFit {
      */
     private void init() {
         for (int i = 0; i < points.size()-1; i++) {
-            lines.add(new Line(points.subList(i, i+2)));
+            Line newLine = Line.initialLine(points.subList(i, i+2));
+            if (newLine != null) {
+                lines.add(newLine);
+            }
         }
     }
 

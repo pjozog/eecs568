@@ -57,6 +57,22 @@ public class Line {
 
     }
 
+    public static Line initialLine(List<double[]> points) {
+        // Point sanity check
+        double[] pointOne = points.get(0);
+        double[] pointTwo = points.get(1);
+        double dist = Math.pow(pointOne[0] - pointTwo[0],2) + Math.pow(pointOne[1]-pointTwo[1],2);
+
+        double thresh = 4;
+
+        if (dist < thresh) {
+            return new Line(points);
+        } else {
+            return null;
+        }
+
+    }
+
     public Line(List<double[]> points) {
 
         double[] centroid = PointMoments.getCentroid(points);

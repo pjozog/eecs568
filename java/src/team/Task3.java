@@ -1,5 +1,7 @@
 package team;
 
+import team.scan.*;
+
 import lcm.logging.*;
 
 import java.awt.*;
@@ -38,6 +40,9 @@ public class Task3 implements ParameterListener
 
     Log loga, logb;
 
+    private static double threshold;
+    private static int numSteps = 1000;
+
     public static void main(String args[])
     {
         if (args.length != 1) {
@@ -54,16 +59,28 @@ public class Task3 implements ParameterListener
 
     public void parameterChanged(ParameterGUI pg, String name)
     {
+	if (name.equals("thresh")){
+	    threshold = pg.gd("thresh");
+	}
         update();
     }
 
     ArrayList<pose_t> allPoses = new ArrayList<pose_t>();
     ArrayList<Double> allPosesPosition = new ArrayList<Double>();
 
+    public static double getThreshold(){
+        return threshold;
+    }
+
+    public static int getSteps(){
+        return numSteps;
+    }
+
     public Task3(String args[]) throws IOException
     {
         pg.addDoubleSlider("loga_pos", "Position A", 0, 1, 0.0);
         pg.addDoubleSlider("logb_pos", "Position B", 0, 1, 0.0);
+        pg.addDoubleSlider("thresh","Thresh",0,1,0.025);
 
         loga = new Log(args[0], "r");
         logb = new Log(args[0], "r");
@@ -238,13 +255,13 @@ public class Task3 implements ParameterListener
             for (pose_t p : allPoses)
                 points.add(p.pos);
             vb.addBack(new VisPoints(new VisVertexData(points),
-                                   new VisConstantColor(Color.gray), 2));
+				     new VisConstantColor(Color.gray), 2));
 
             vb.addBack(new VisChain(LinAlg.quatPosToMatrix(posea.orientation, posea.pos),
-                                        new VisRobot(Color.blue)));
+				    new VisRobot(Color.blue)));
 
             vb.addBack(new VisChain(LinAlg.quatPosToMatrix(poseb.orientation, poseb.pos),
-                                        new VisRobot(Color.red)));
+				    new VisRobot(Color.red)));
 
             vb.swap();
         }
@@ -255,6 +272,12 @@ public class Task3 implements ParameterListener
             vb.addBack(new VisPoints(new VisVertexData(pointsa),
                                      new VisConstantColor(Color.blue),2));
             vb.swap();
+
+	    // Find and draw A's features
+            VisWorld.Buffer lineBuffA = vwa.getBuffer("fitted-lines-a");
+            AggloLineFit fitterA = new AggloLineFit(pointsa, lineBuffA, this.getSteps(), this.getThreshold());
+            fitterA.getLines();
+
         }
 
         if (true) {
@@ -263,6 +286,12 @@ public class Task3 implements ParameterListener
             vb.addBack(new VisPoints(new VisVertexData(pointsb),
                                      new VisConstantColor(Color.blue),2));
             vb.swap();
+
+	    // Find and draw B's features
+            VisWorld.Buffer lineBuffB = vwb.getBuffer("fitted-lines-b");
+            AggloLineFit fitterB = new AggloLineFit(pointsb, lineBuffB, this.getSteps(), this.getThreshold());
+            fitterB.getLines();
+
         }
 
     }

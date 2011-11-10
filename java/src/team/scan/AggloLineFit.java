@@ -12,14 +12,18 @@ public class AggloLineFit {
     ArrayList<Line> lines;
     VisWorld.Buffer lineBuff;
 
-    public static final int MAXITER = 1000;
     public static Random rand = new Random();
+    private int numIter;
+    private double threshold;
 
-    public AggloLineFit(ArrayList<double[]> points, VisWorld.Buffer lineBuff) {
+    public AggloLineFit(ArrayList<double[]> points, VisWorld.Buffer lineBuff, 
+                        int numIter, double threshold) {
 
-        this.points = new ArrayList<double[]>();
-        this.lines  = new ArrayList<Line>();
-        this.lineBuff = lineBuff;
+        this.points    = new ArrayList<double[]>();
+        this.lines     = new ArrayList<Line>();
+        this.lineBuff  = lineBuff;
+        this.numIter   = numIter;
+        this.threshold = threshold;
 
         for (double[] point : points) {
             this.points.add(point);
@@ -32,9 +36,8 @@ public class AggloLineFit {
         //Populate this.lines
         this.init();
 
-
-        double numIter      = Task2.getSteps();
-        double MSEThreshold = Task2.getThreshold();
+        int    numIter      = this.numIter;
+        double MSEThreshold = this.threshold;
 
         //Go forth!
         for(int step = 0; step < numIter; step++){

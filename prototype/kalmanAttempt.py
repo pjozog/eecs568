@@ -128,6 +128,18 @@ def kalmanUpdateJacobian(size, position, obsXY, location):
     J[1,1] = -1/((l_x - x0)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0))
     J[1,2] = -1.0
 
+    # TODO: Check this bugfix
+    J[0,position]   = (2.0*l_x - 2*x0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
+    J[0,position+1]   = (2.0*l_y - 2*y0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
+    J[1,position] = -(l_y - y0)/(pow(l_x - x0,2)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0));
+    J[1,position+1] = 1/((l_x - x0)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0));
+
+    return J
+
+
+def smallUpdateJacobian(size, position, obsXY, location):
+
+    J = zeros((2,size))
     J[0,position]   = (2.0*l_x - 2*x0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
     J[1,position]   = (2.0*l_y - 2*y0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
     J[0,position+1] = -(l_y - y0)/(pow(l_x - x0,2)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0));
@@ -135,6 +147,43 @@ def kalmanUpdateJacobian(size, position, obsXY, location):
 
     return J
 
+def simpleKalmanUpdate(x,cov,obs, roboPose):
+
+    xPredict = x.copy()
+    sigmaObs = diag([3,1])
+
+    drivingR = drivingNoiseJacobian(xPredict.shape[0],
+                                    0,
+                                    obs,
+                                    x[2])
+
+    J = smallUpdateJacobian(xPredict.shape[0],
+                            0,
+                            predictedFeaturePosXY(roboPose, obs),
+                            roboPose)
+
+    # How much does our predicted RT differ from what we observed?
+    residual = obs - predictedFeaturePosRT(roboPose, x[0:2])
+
+
+    covPredict = cov + dot(drivingR,dot(sigmaObs,drivingR.transpose()))
+
+
+    #####################
+    # FINALLY - the big 3
+    #####################
+
+    # Compute Kalman Gain
+    S = dot(J, dot(covPredict, J.transpose())) + sigmaObs
+    K = dot(covPredict, dot(J.transpose(), inv(S)))
+
+    # Compute new mean vector
+    newX = xPredict + dot(K, residual)
+
+    # Compute new covariance
+    newCov = covPredict - dot(K, dot(J, covPredict))
+
+    return newX, newCov
 
 
 def kalmanUpdate(x,cov,obs,obsIndex):

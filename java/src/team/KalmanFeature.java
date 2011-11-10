@@ -8,6 +8,9 @@ public class KalmanFeature {
     private double mean[] = new double[2];
     private Matrix covariance;
 
+    public double [] getLoc(){
+        return mean;
+    }
     public KalmanFeature(double[] startMean, Matrix startCov) {
 
         // Deep?

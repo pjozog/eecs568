@@ -32,7 +32,7 @@ public class FastSLAMListener implements Simulator.Listener
     double xyt[] = new double[3];
 
     private double baseline;
-
+    private Particle mostLikelyParticle;
 
     private int numUpdates = 0;
     private boolean debug = true;
@@ -48,7 +48,7 @@ public class FastSLAMListener implements Simulator.Listener
 
     // Ivars for drawing
     private ArrayList<double[]> particlePositions = new ArrayList<double[]>();
-    private double[] mostLikelyParticleLocation;
+    //private double[] mostLikelyParticleLocation;
 
     private double newFeatThreshold;
 
@@ -240,12 +240,13 @@ public class FastSLAMListener implements Simulator.Listener
             // Keep track of the most likely particle's weight
             if (aParticle.getWeight() > maxWeight) {
                 maxWeight = aParticle.getWeight();
-                mostLikelyPos = aParticle.getPoseXYT();
+                //mostLikelyPos = aParticle.getPoseXYT();
+                mostLikelyParticle = aParticle;
             }
 
         }
 
-        mostLikelyParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1], mostLikelyPos[2]};
+        //mostLikelyParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1], mostLikelyPos[2]};
 
     }
 
@@ -263,16 +264,25 @@ public class FastSLAMListener implements Simulator.Listener
 
             //Draw a larger point at the XY of the most likely particle
             ArrayList<double[]> mostLikelyParticleLocationList =
-                new ArrayList<double[]>(Arrays.asList(LinAlg.resize(mostLikelyParticleLocation,2)));
+                new ArrayList<double[]>(Arrays.asList(LinAlg.resize(mostLikelyParticle.getPoseXYT(),2)));
+
             vb.addBack(new VisPoints(new VisVertexData(mostLikelyParticleLocationList),
                                      new VisConstantColor(new Color(0,255,0)),
                                      4.0));
 
+            ArrayList<double[]> featureLocations = new ArrayList<double[]>();
+            java.util.List<KalmanFeature> features = mostLikelyParticle.getFeatures();
+            for(KalmanFeature kf : features){
+                
+                featureLocations.add(kf.getLoc());
+            }
+            vb.addBack(new VisPoints(new VisVertexData(featureLocations), new VisConstantColor(new Color(111,111,111)), 10));
+  
             vb.swap();
         }
 
 
-
+ 
         // Draw local Trajectory
         // {
         //     VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
@@ -303,19 +313,26 @@ public class FastSLAMListener implements Simulator.Listener
         // }
 
         // Draw the landmark observations
+        /*
         {
+        
             VisWorld.Buffer vb = vw.getBuffer("landmarks-noisy");
             for (Simulator.landmark_t lmark : landmarks) {
+                
                 double[] obs = lmark.obs;
+                
                 ArrayList<double[]> obsPoints = new ArrayList<double[]>();
                 obsPoints.add(LinAlg.resize(mostLikelyParticleLocation,2));
                 double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
                 obsPoints.add(LinAlg.transform(mostLikelyParticleLocation, rel_xy));
+                
                 vb.addBack(new VisLines(new VisVertexData(obsPoints),
                                         new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));
             }
-            vb.swap();
+          
+            //vb.swap();
         }
+        */
 
     }
 }

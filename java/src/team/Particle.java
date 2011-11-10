@@ -49,7 +49,9 @@ public class Particle {
         assert(sigmaW != null);
         return sigmaW;
     }
-
+    public List<KalmanFeature> getFeatures(){
+        return featureList;
+    }
 
     // Default constructor...used when Simulator is just beginning
     public Particle() {

@@ -140,27 +140,46 @@ def kalmanUpdateJacobian(size, position, obsXY, location):
 def smallUpdateJacobian(size, position, obsXY, location):
 
     J = zeros((2,size))
+
+    l_x = obsXY[0]
+    l_y = obsXY[1]
+    x0 = location[0]
+    y0 = location[1]
+
     J[0,position]   = (2.0*l_x - 2*x0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
-    J[1,position]   = (2.0*l_y - 2*y0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
-    J[0,position+1] = -(l_y - y0)/(pow(l_x - x0,2)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0));
+    J[0,position+1]   = (2.0*l_y - 2*y0)/(2*sqrt(pow(l_x - x0,2) + pow(l_y - y0,2)));
+    J[1,position] = -(l_y - y0)/(pow(l_x - x0,2)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0));
     J[1,position+1] = 1/((l_x - x0)*(pow(l_y - y0,2)/pow(l_x - x0,2) + 1.0));
 
     return J
 
-def simpleKalmanUpdate(x,cov,obs, roboPose):
 
-    xPredict = x.copy()
+
+def simpleKalmanUpdate(x,cov,obs, obsIndex, roboPose):
+
     sigmaObs = diag([3,1])
 
-    drivingR = drivingNoiseJacobian(xPredict.shape[0],
+    drivingR = drivingNoiseJacobian(2,
                                     0,
                                     obs,
-                                    x[2])
+                                    roboPose[2])
 
-    J = smallUpdateJacobian(xPredict.shape[0],
+    J = smallUpdateJacobian(2,
                             0,
                             predictedFeaturePosXY(roboPose, obs),
                             roboPose)
+
+
+    if obsIndex == -1:
+        newX = predictedFeaturePosXY(roboPose, obs)
+        newCov = dot(drivingR,dot(sigmaObs,drivingR.transpose()))
+
+        return newX, newCov
+
+
+
+    xPredict = x.copy()
+    sigmaObs = diag([3,1])
 
     # How much does our predicted RT differ from what we observed?
     residual = obs - predictedFeaturePosRT(roboPose, x[0:2])
@@ -335,3 +354,57 @@ if __name__ == "__main__":
     text(0, 7, 'Initial state hidden underneath first update', fontsize=12)
     ax.set_title('PS3 Task 1 Results')
 
+
+
+
+
+    ###########
+    # SIMPLE KALMAN FILTER -- POSITION GIVEN
+    ###########
+
+
+    # Let's visualize this
+    fig2 = plt.figure()
+    ax = fig2.add_subplot(111)
+    ax.set_ylim(-10, 18)
+    ax.set_xlim(-10, 18)
+    grid(True)
+
+
+
+    ax.arrow(x[0],x[1], arrowLength*cos(x[2]),arrowLength*sin(x[2]), width=0.1)
+    hold(True)
+
+    # The two observations
+    z1 = array([10, 0.5*pi])
+    z2 = array([11, 0.6*pi])
+
+    ###########
+    # FIRST UPDATE
+    ###########
+
+    x2,cov2 = simpleKalmanUpdate(x,cov,z1,-1, x[0:3])
+
+    print "Updated state vector\n", x2, "\n\n"
+    print "Updated covariance\n", cov2, "\n\n"
+
+    u1 = ax.scatter(x2[0],x2[1],s=80,marker=(5,1),edgecolor='r', color='r')
+
+    ###########
+    # SECOND UPDATE
+    ###########
+
+    # We are manually specifying here that we know where the feature is in the state vector.
+    # In the actual assignment, we'll have to do this data association in the kalmanUpdate
+    # function.
+    x3,cov3 = simpleKalmanUpdate(x2,cov2,z2,1234, x[0:3])
+
+
+    print "Updated state vector\n", x3, "\n\n"
+    print "Updated covariance\n", cov3, "\n\n"
+
+    u2 = ax.scatter(x3[0],x3[1],s=80,marker=(5,1),edgecolor='b', color='b')
+
+    ax.legend((u0,u1,u2),('Initial State', 'First Update', 'Second Update'), loc='upper left')
+    text(0, 7, 'Initial state hidden underneath first update', fontsize=12)
+    ax.set_title('PS3 Task 1 Results')

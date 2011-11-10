@@ -41,6 +41,7 @@ public class Task3 implements ParameterListener
     Log loga, logb;
 
     private static double threshold;
+    private static double pointDistThresh;
     private static int numSteps = 1000;
 
     public static void main(String args[])
@@ -59,9 +60,13 @@ public class Task3 implements ParameterListener
 
     public void parameterChanged(ParameterGUI pg, String name)
     {
-	if (name.equals("thresh")){
-	    threshold = pg.gd("thresh");
-	}
+        if (name.equals("thresh")){
+            threshold = pg.gd("thresh");
+        }
+        if (name.equals("pointDistThresh")){
+            // pointDistThresh = pg.gd("pointDistThresh");
+            Line.pointDistanceThreshold = pg.gd("pointDistThresh");
+        }
         update();
     }
 
@@ -70,6 +75,10 @@ public class Task3 implements ParameterListener
 
     public static double getThreshold(){
         return threshold;
+    }
+
+    public static double getPointDistanceThreshold() {
+        return pointDistThresh;
     }
 
     public static int getSteps(){
@@ -81,6 +90,7 @@ public class Task3 implements ParameterListener
         pg.addDoubleSlider("loga_pos", "Position A", 0, 1, 0.0);
         pg.addDoubleSlider("logb_pos", "Position B", 0, 1, 0.0);
         pg.addDoubleSlider("thresh","Thresh",0,1,0.025);
+        pg.addDoubleSlider("pointDistThresh","Maximum point distance in line", 0.1, 25.0, 3.0);
 
         loga = new Log(args[0], "r");
         logb = new Log(args[0], "r");
@@ -98,9 +108,13 @@ public class Task3 implements ParameterListener
         loga.seekPositionFraction(0);
 
         pg.addListener(this);
+        pg.notifyListeners("thresh");
+        pg.notifyListeners("steps");
+        pg.notifyListeners("pointDistThresh");
 
         jf = new JFrame(this.getClass().getName());
         jf.setLayout(new BorderLayout());
+        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vca, vcb);
         jsp.setDividerLocation(0.5);
         jsp.setResizeWeight(0.5);

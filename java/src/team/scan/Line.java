@@ -44,10 +44,6 @@ public class Line {
 
         }
 
-
-
-
-
         this.centroid = PointMoments.getCentroid(points);
         double Cxx        = PointMoments.getCentroidXX(points);
         double Cxy        = PointMoments.getCentroidXY(points);
@@ -88,7 +84,6 @@ public class Line {
 
         // System.out.println("Point Locations");
         for (double[] aPoint : points) {
-
 
             // ArrayUtil.print1dArray(aPoint);
 
@@ -154,13 +149,19 @@ public class Line {
 
     public double computeMSE() {
 
+        //duplicate points, and center at origin
+        ArrayList<double[]> dupPoints = new ArrayList<double[]>();
+        for (double[] point : this.points) {
+            dupPoints.add(new double[]{point[0]-centroid[0], point[1]-centroid[1]});
+        }
+
         int N        = points.size();
-        double Cxx   = PointMoments.getCentroidXX(points);
-        double Cxy   = PointMoments.getCentroidXY(points);
-        double Cyy   = PointMoments.getCentroidYY(points);
+        double Mxx   = PointMoments.getMomentXX(dupPoints);
+        double Mxy   = PointMoments.getMomentXY(dupPoints);
+        double Myy   = PointMoments.getMomentYY(dupPoints);
         double nHatX = -Math.sin(theta);
         double nHatY = Math.cos(theta);
-        double MSE   = Cxx*nHatX*nHatX/N + Cxy*nHatX*nHatY/N + Cyy*nHatY*nHatY/N;
+        double MSE   = Mxx*nHatX*nHatX + Mxy*nHatX*nHatY + Myy*nHatY*nHatY;
 
         return MSE;
 
@@ -186,4 +187,3 @@ public class Line {
     }
 
 }
-

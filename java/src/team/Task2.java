@@ -36,7 +36,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
     public Task2()
     {
     
-        pg.addDoubleSlider("thresh","Thresh",0,0.01,0.005);
+        pg.addDoubleSlider("thresh","Thresh",0,1,0.025);
   
         pg.addInt("steps", "Steps", 100000);
         pg.addButtons("refresh", "Refresh");  
@@ -115,7 +115,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
             VisWorld.Buffer vb = vw.getBuffer("laser-points");
             vb.addBack(new VisPoints(new VisVertexData(laserToPoints(this.laser)),
                                      new VisConstantColor(Color.green),
-                                     4));
+                                     2));
         
             vb.addBack(new VisPoints(new VisVertexData(this.origin),
                                      new VisConstantColor(Color.cyan),

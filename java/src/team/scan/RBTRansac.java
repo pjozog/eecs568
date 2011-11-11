@@ -6,12 +6,17 @@ import java.util.*;
 
 public class RBTRansac {
 
+    private int numIterations = 40;
+
     private List<Corner> cornersA;
     private List<Corner> cornersB;
 
     private List<Line> linesA;
     private List<Line> linesB;
-    
+
+    private List<double[]> pointsA;
+    private List<double[]> pointsB;
+
     public RBTRansac(ArrayList<double[]> pointsA, ArrayList<double[]> pointsB,
                      VisWorld.Buffer lineBuffA, VisWorld.Buffer lineBuffB,
                      int numIter, double threshold) {
@@ -27,12 +32,46 @@ public class RBTRansac {
         this.cornersA = Corner.getAllCorners(this.linesA);
         this.cornersB = Corner.getAllCorners(this.linesB);
 
+        this.pointsA = pointsA;
+        this.pointsB = pointsB;
+
     }
 
     //Bjarne would hate us but this returns x, y, and theta describing
     //2D RBT.  Use
     private double[] doRansac() {
-        return null;
+
+        //BestModel
+        double [] bestRBT = null;
+        double bestConsensus = -1.0;
+
+        Random randGuy = new Random();
+
+        for (int i = 0; i < numIterations; i++) {
+
+            // Select two corners at random
+            int indexOne = randGuy.nextInt(cornersA.size());
+            int indexTwo = randGuy.nextInt(cornersB.size());
+
+            Corner cornerOne = cornersA.get(indexOne);
+            Corner cornerTwo = cornersB.get(indexTwo);
+
+            // Compute the RBT between the two corners
+            double[] theRBT = rbtFromCorners(cornerOne, cornerTwo);
+
+            // Perform the RBT on the second scan's points
+            List<double[]> newPointsB = applyTransform(theRBT, pointsB);
+
+            // Compute the consesus score with the transformed points and the first scan's points
+            double currConsesus = consensusScore(pointsA, newPointsB);
+
+            if (currConsesus > bestConsensus) {
+                bestConsensus = currConsesus;
+                bestRBT = new double[] {theRBT[0], theRBT[1], theRBT[2]};
+            }
+        }
+
+        return bestRBT;
     }
 
     private double consensusScore() {
@@ -40,6 +79,44 @@ public class RBTRansac {
         //for points in b
         //  compute dist from a to b, count num points inside circle
         return 0;
+    }
+
+    private double[] rbtFromCorners(Corner one, Corner two) {
+
+        double thetaOne = one.getTheta();
+        double thetaTwo = two.getTheta();
+
+        double[] xyPosOne = one.getXYPos();
+        double[] xyPosTwo = two.getXYPos();
+
+
+        double theta = thetaOne - thetaTwo;
+        double dX = xyPosOne[0] - Math.cos(theta)*xyPosTwo[0] + Math.sin(theta)*xyPosTwo[1];
+        double dY = xyPosOne[1] - Math.sin(theta)*xyPosTwo[0] - Math.cos(theta)*xyPosTwo[1];
+
+        return new double[] {dX, dY, theta};
+
+    }
+
+    //Given a RBT (x,y,theta) from frame A to B, this *should* apply
+    //RBT on points in frame A, and the resulting ArrayList will be
+    //points in frame B
+    private ArrayList<double[]> applyTransform(double[] RBT, List<double[]> points) {
+        ArrayList<double[]> transformedPoints = new ArrayList<double[]>();
+
+        for (double[] point : points) {
+
+            //Make the point homogeneous
+            double[] homoPoint   = new double[]{point[0], point[1], 1.0};
+            double[][] RBTMatrix = LinAlg.xytToMatrix(RBT);
+
+            double[] trannyHomoPoint = LinAlg.matrixAB(RBTMatrix, homoPoint);
+            double[] trannyPoint = new double[]{trannyHomoPoint[0], trannyHomoPoint[1]};
+
+            transformedPoints.add(trannyPoint);
+
+        }
+        return transformedPoints;
     }
 
 }

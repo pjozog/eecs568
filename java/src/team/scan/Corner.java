@@ -1,5 +1,6 @@
 package team.scan;
 
+import java.util.*;
 
 public class Corner{
 
@@ -63,18 +64,23 @@ public class Corner{
         return c.getTheta() - theta;
     }
 
-    public static List<Corner> getAllCorners(List<Line> ls1, List<Line> ls2){
+    public static List<Corner> getAllCorners(List<Line> lines){
         ArrayList<Corner> corners = new ArrayList<Corner>();
-        for(Line l1 : ls1){
-            for(Line l2 : ls2){
+        for(int i = 0; i < lines.size(); i++){
+  
+            Line l1 = lines.get(i);
+
+            for(int j = i; j < lines.size(); j++){
+
+                Line l2 = lines.get(j);
+
                 double deltaTheta = Math.abs(l1.getTheta() - l2.getTheta());
+               
                 if(deltaTheta > minAngle && deltaTheta < maxAngle){
-                    
+                    corners.add(new Corner(l1, l2));
                 }
-                
             }
         }
         return corners;
-
     }
 }

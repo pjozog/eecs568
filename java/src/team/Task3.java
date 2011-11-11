@@ -278,44 +278,54 @@ public class Task3 implements ParameterListener
             for (pose_t p : allPoses)
                 points.add(p.pos);
             vb.addBack(new VisPoints(new VisVertexData(points),
-				     new VisConstantColor(Color.gray), 2));
+                                     new VisConstantColor(Color.gray), 2));
 
             vb.addBack(new VisChain(LinAlg.quatPosToMatrix(posea.orientation, posea.pos),
-				    new VisRobot(Color.blue)));
+                                    new VisRobot(Color.blue)));
 
             vb.addBack(new VisChain(LinAlg.quatPosToMatrix(poseb.orientation, poseb.pos),
-				    new VisRobot(Color.red)));
+                                    new VisRobot(Color.red)));
 
             vb.swap();
         }
 
-        if (true) {
-            // draw middle panel (laser scan a)
-            VisWorld.Buffer vb = vwa.getBuffer("points");
-            vb.addBack(new VisPoints(new VisVertexData(pointsa),
-                                     new VisConstantColor(Color.blue),2));
-            vb.swap();
 
-	    // Find and draw A's features
-            VisWorld.Buffer lineBuffA = vwa.getBuffer("fitted-lines-a");
-            AggloLineFit fitterA = new AggloLineFit(pointsa, lineBuffA, this.getSteps(), this.getThreshold());
-            fitterA.getLines();
+        // draw middle panel (laser scan a)
+        VisWorld.Buffer vba = vwa.getBuffer("points");
+        vba.addBack(new VisPoints(new VisVertexData(pointsa),
+                                  new VisConstantColor(Color.blue),2));
+        vba.swap();
 
-        }
+        // Find and draw A's features
+        // VisWorld.Buffer lineBuffA = vwa.getBuffer("fitted-lines-a");
+        // AggloLineFit fitterA = new AggloLineFit(pointsa, lineBuffA, this.getSteps(), this.getThreshold());
+        // fitterA.getLines();
 
-        if (true) {
-            // draw right panel (laser scan b)
-            VisWorld.Buffer vb = vwb.getBuffer("points");
-            vb.addBack(new VisPoints(new VisVertexData(pointsb),
-                                     new VisConstantColor(Color.blue),2));
-            vb.swap();
 
-	    // Find and draw B's features
-            VisWorld.Buffer lineBuffB = vwb.getBuffer("fitted-lines-b");
-            AggloLineFit fitterB = new AggloLineFit(pointsb, lineBuffB, this.getSteps(), this.getThreshold());
-            fitterB.getLines();
 
-        }
+
+        // draw right panel (laser scan b)
+        VisWorld.Buffer vbb = vwb.getBuffer("points");
+        vbb.addBack(new VisPoints(new VisVertexData(pointsb),
+                                  new VisConstantColor(Color.blue),2));
+        vbb.swap();
+
+        // Find and draw B's features
+        // VisWorld.Buffer lineBuffB = vwb.getBuffer("fitted-lines-b");
+        // AggloLineFit fitterB = new AggloLineFit(pointsb, lineBuffB, this.getSteps(), this.getThreshold());
+        // fitterB.getLines();
+
+        RBTRansac myRansac = new RBTRansac(pointsa, pointsb, vba, vbb, this.getSteps(), this.getThreshold());
+
+        List<double[]> transPointsB = myRansac.doRansac();
+
+        VisWorld.Buffer vbc = vwc.getBuffer("points");
+        vbc.addBack(new VisPoints(new VisVertexData(pointsa),
+                                  new VisConstantColor(Color.blue),2));
+        vbc.addBack(new VisPoints(new VisVertexData(transPointsB),
+                                  new VisConstantColor(Color.red),2));
+        vbc.swap();
+
 
 
     }

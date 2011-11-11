@@ -38,13 +38,13 @@ public class RBTRansac {
         this.pointsA = pointsA;
         this.pointsB = pointsB;
 
-        this.consensusThresh = threshold;
+        this.consensusThresh = 3;
 
     }
 
     //Bjarne would hate us but this returns x, y, and theta describing
     //2D RBT.  Use
-    private double[] doRansac() {
+    public List<double[]> doRansac() {
 
         //BestModel
         double [] bestRBT = null;
@@ -76,7 +76,7 @@ public class RBTRansac {
             }
         }
 
-        return bestRBT;
+        return applyTransform(bestRBT, pointsB);
     }
 
     private double consensusScore(List<double []> listA, List<double []> listB) {

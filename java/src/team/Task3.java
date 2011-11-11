@@ -36,6 +36,10 @@ public class Task3 implements ParameterListener
     VisLayer vlb = new VisLayer(vwb);
     VisCanvas vcb = new VisCanvas(vlb);
 
+    VisWorld vwc = new VisWorld();
+    VisLayer vlc = new VisLayer(vwc);
+    VisCanvas vcc = new VisCanvas(vlc);
+
     ParameterGUI pg = new ParameterGUI();
 
     Log loga, logb;
@@ -123,7 +127,12 @@ public class Task3 implements ParameterListener
         jsp2.setDividerLocation(0.33);
         jsp2.setResizeWeight(0.33);
 
-        jf.add(jsp2, BorderLayout.CENTER);
+
+        JSplitPane jsp3 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, jsp2, vcc);
+        jsp3.setDividerLocation(0.75);
+        jsp3.setResizeWeight(0.75);
+
+        jf.add(jsp3, BorderLayout.CENTER);
         jf.add(pg.getPanel(), BorderLayout.SOUTH);
 
         jf.setSize(1024,600);
@@ -307,6 +316,7 @@ public class Task3 implements ParameterListener
             fitterB.getLines();
 
         }
+
 
     }
 }

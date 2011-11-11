@@ -16,7 +16,7 @@ public class Particle {
 
     // Particle state in global XYT
     private double stateXYT[] = new double[3];
-
+    private ArrayList<double[]> cumStateXYT = new ArrayList<double[]>();
 
     private static Random rand = null;
 
@@ -25,6 +25,11 @@ public class Particle {
 
     // The weight will only be updated internally
     private double weight;
+
+    // The chi2 is updated after every motion and every landmark
+    // observation (except the first time a landmark is seen, which
+    // has chi2 of 0)
+    private double chi2;
 
     private static double threshold;
 
@@ -55,10 +60,12 @@ public class Particle {
 
     // Default constructor...used when Simulator is just beginning
     public Particle() {
+        cumStateXYT.add(new double[]{0,0,0});
         stateXYT[0] = 0;
         stateXYT[1] = 0;
         stateXYT[2] = 0;
         this.weight = 1.0;
+        this.chi2   = 0.0;
     }
 
     /** copy constructor**/
@@ -71,6 +78,13 @@ public class Particle {
         }
         for(KalmanFeature feature : p.featureList){
             featureList.add(new KalmanFeature(feature));
+        }
+
+        this.chi2 = p.getChi2();
+
+        this.cumStateXYT = new ArrayList<double[]>();
+        for(double[] aState : p.getCumStateXYT()) {
+            this.cumStateXYT.add(new double[]{aState[0],aState[1],aState[2]});
         }
 
     }
@@ -121,6 +135,8 @@ public class Particle {
                                       this.sampleFromMotionModel(sigmaTicksLR.copyArray(), ticksLR));
         stateXYT[2] = MathUtil.mod2pi(stateXYT[2]);
 
+        this.cumStateXYT.add(stateXYT);
+
         // Perform data correspondence and Kalman filter updates
         double maxWeightResult = Double.NEGATIVE_INFINITY;
         for (double[] obs : landObs) {
@@ -147,6 +163,7 @@ public class Particle {
 
         MultiGaussian mvg = new MultiGaussian(proportionalCov, mean);
         double[] ticksLR  = mvg.sample(rand);
+        this.chi2        += mvg.chi2(ticksLR);
         double[] xyt      = new double[3];
         double dPhi       = Math.atan2(ticksLR[1] - ticksLR[0], baseline);
 
@@ -170,14 +187,19 @@ public class Particle {
         double maxLikelihood = Double.NEGATIVE_INFINITY;
         KalmanFeature possibleMatch = null;
 
-        for (KalmanFeature aFeature : featureList) {
+        double minChi2 = Double.POSITIVE_INFINITY;
 
-            double likelihood = aFeature.calculateLikelihoodOfCorrespondence(landmarkObs, stateXYT);
+        for (KalmanFeature aFeature : featureList) {
+        
+            double potentialChi2 = aFeature.getCorrespChi2(landmarkObs, stateXYT);
+            double likelihood = aFeature.calculateLikelihoodOfCorrespondence(landmarkObs, stateXYT, potentialChi2);
             // System.out.println("Likelihood: " + likelihood);
             if (likelihood > maxLikelihood) {
                 maxLikelihood = likelihood;
                 possibleMatch = aFeature;
+                minChi2       = potentialChi2;
             }
+
         }
 
         // Now "possibleMatch" represents the most likely feature to use for association
@@ -199,6 +221,8 @@ public class Particle {
 
             featureList.add(possibleMatch);
 
+            //Do not change this.chi2
+
             return threshold;
 
         } else {
@@ -206,6 +230,9 @@ public class Particle {
             // Perform the Kalman Filter update only on this feature in the list
             // There's no need to do this if it's a new features (residuals are zero)
             possibleMatch.kalmanUpdate(landmarkObs, stateXYT);
+
+            //Keep running total chi2
+            this.chi2 += minChi2;
 
             return maxLikelihood;
 
@@ -225,6 +252,13 @@ public class Particle {
     }
 
     /**
+     * Get the running chi2 error
+     */
+    public double getChi2() {
+        return this.chi2;
+    }
+
+    /**
      * Returns the state of the particle. Used in the display function
      * of FastSLAMListener.
      *
@@ -232,6 +266,10 @@ public class Particle {
      */
     public double[] getPoseXYT() {
         return stateXYT;
+    }
+
+    public ArrayList<double[]> getCumStateXYT() {
+        return this.cumStateXYT;
     }
 
 }

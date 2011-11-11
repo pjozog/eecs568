@@ -29,10 +29,9 @@ public class FastSLAMListener implements Simulator.Listener
     Movie movie;
 
     private ArrayList<double[]> trajectory = new ArrayList<double[]>();
-    double xyt[] = new double[3];
 
     private double baseline;
-    private Particle mostLikelyParticle;
+    private Particle bestChi2Particle;
 
     private int numUpdates = 0;
     private boolean debug = true;
@@ -48,7 +47,7 @@ public class FastSLAMListener implements Simulator.Listener
 
     // Ivars for drawing
     private ArrayList<double[]> particlePositions = new ArrayList<double[]>();
-    //private double[] mostLikelyParticleLocation;
+    //private double[] bestChi2ParticleLocation;
 
     private double newFeatThreshold;
 
@@ -84,8 +83,8 @@ public class FastSLAMListener implements Simulator.Listener
         odomCov[1][0] = 0;                 odomCov[1][1] = odomD[1]*odomD[1];
 
         double[][] featCov = new double[2][2];
-        featCov[0][0] = featD[0]*featD[0]; featCov[0][1] = 0;
-        featCov[1][0] = 0;                 featCov[1][1] = featD[1]*featD[1];
+        featCov[0][0] = featD[0]; featCov[0][1] = 0;
+        featCov[1][0] = 0;        featCov[1][1] = featD[1];
 
         Particle.setSigmaW(new Matrix(featCov));
         Particle.setSigmaTicksLR(new Matrix(odomCov));
@@ -109,20 +108,6 @@ public class FastSLAMListener implements Simulator.Listener
     {
 
         numUpdates++;
-
-        {
-            DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
-
-            double x = ticksXYT.get(0);
-            double y = ticksXYT.get(1);
-            double t = ticksXYT.get(2);;
-
-
-            xyt = LinAlg.xytMultiply(xyt, new double[]{(odom.obs[0] + odom.obs[1]) /2, 0,
-                                                       Math.atan((odom.obs[1] - odom.obs[0])/baseline)});
-
-            trajectory.add(LinAlg.resize(xyt,2));
-        }
 
         // Deep copy the current set of particles
         tempParticles = new ArrayList<Particle>();
@@ -220,13 +205,13 @@ public class FastSLAMListener implements Simulator.Listener
             }
             // System.out.println("Saw " + entry.getKey() + " " + entry.getValue() + " times.");
         }
-        System.out.println("Max count " + maxCount);
+        //System.out.println("Max count " + maxCount);
 
     }
 
     public void updateDrawingVariables() {
 
-        double maxWeight = Double.NEGATIVE_INFINITY;
+        double minChi2 = Double.POSITIVE_INFINITY;
         double [] mostLikelyPos = new double[3];
 
         particlePositions.clear();
@@ -237,16 +222,22 @@ public class FastSLAMListener implements Simulator.Listener
 
             particlePositions.add(new double[] {pos[0], pos[1]});
 
-            // Keep track of the most likely particle's weight
-            if (aParticle.getWeight() > maxWeight) {
-                maxWeight = aParticle.getWeight();
+            // Keep track of the best particle's weight
+            if (aParticle.getChi2() < minChi2) {
+                minChi2 = aParticle.getChi2();
                 //mostLikelyPos = aParticle.getPoseXYT();
-                mostLikelyParticle = aParticle;
+                bestChi2Particle = aParticle;
+
             }
 
         }
 
-        //mostLikelyParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1], mostLikelyPos[2]};
+	//Put the best particle's trajectory
+	for (double[] xyt : bestChi2Particle.getCumStateXYT()) {
+	    trajectory.add(LinAlg.resize(xyt,2));
+	}
+
+        //bestChi2ParticleLocation = new double[] {mostLikelyPos[0], mostLikelyPos[1], mostLikelyPos[2]};
 
     }
 
@@ -263,17 +254,16 @@ public class FastSLAMListener implements Simulator.Listener
                                      2.0));
 
             //Draw a larger point at the XY of the most likely particle
-            ArrayList<double[]> mostLikelyParticleLocationList =
-                new ArrayList<double[]>(Arrays.asList(LinAlg.resize(mostLikelyParticle.getPoseXYT(),2)));
+            ArrayList<double[]> bestChi2ParticleLocationList =
+                new ArrayList<double[]>(Arrays.asList(LinAlg.resize(bestChi2Particle.getPoseXYT(),2)));
 
-            vb.addBack(new VisPoints(new VisVertexData(mostLikelyParticleLocationList),
+            vb.addBack(new VisPoints(new VisVertexData(bestChi2ParticleLocationList),
                                      new VisConstantColor(new Color(0,255,0)),
                                      4.0));
 
             ArrayList<double[]> featureLocations = new ArrayList<double[]>();
-            java.util.List<KalmanFeature> features = mostLikelyParticle.getFeatures();
+            java.util.List<KalmanFeature> features = bestChi2Particle.getFeatures();
             for(KalmanFeature kf : features){
-                
                 featureLocations.add(kf.getLoc());
             }
             vb.addBack(new VisPoints(new VisVertexData(featureLocations), new VisConstantColor(new Color(111,111,111)), 10));
@@ -284,13 +274,14 @@ public class FastSLAMListener implements Simulator.Listener
 
  
         // Draw local Trajectory
-        // {
-        //     VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
-        //     vb.addBack(new VisLines(new VisVertexData(trajectory),
-        //                             new VisConstantColor(new Color(160,30,30)),
-        //                             1.5, VisLines.TYPE.LINE_STRIP));
-        //     vb.swap();
-        // }
+        {
+            VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
+            vb.addBack(new VisLines(new VisVertexData(trajectory),
+                                    new VisConstantColor(new Color(160,30,30)),
+                                    1.5, VisLines.TYPE.LINE_STRIP));
+            vb.swap();
+	    trajectory.clear();
+        }
 
         // ArrayList<double[]> rpoints = new ArrayList<double[]>();
         // rpoints.add(new double[]{-.3, .3});
@@ -322,9 +313,9 @@ public class FastSLAMListener implements Simulator.Listener
                 double[] obs = lmark.obs;
                 
                 ArrayList<double[]> obsPoints = new ArrayList<double[]>();
-                obsPoints.add(LinAlg.resize(mostLikelyParticleLocation,2));
+                obsPoints.add(LinAlg.resize(bestChi2ParticleLocation,2));
                 double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
-                obsPoints.add(LinAlg.transform(mostLikelyParticleLocation, rel_xy));
+                obsPoints.add(LinAlg.transform(bestChi2ParticleLocation, rel_xy));
                 
                 vb.addBack(new VisLines(new VisVertexData(obsPoints),
                                         new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan), 2, VisLines.TYPE.LINE_STRIP));

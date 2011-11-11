@@ -69,6 +69,21 @@ public class KalmanFeature {
 
     }
 
+    public double getCorrespChi2(double[] observation, double[] robotPose) {
+	
+        double [] zj_hat = FastSLAMMotionModel.predictedFeaturePosRT(robotPose, this.mean);
+
+        // TODO: Which one is correct?
+        // Matrix rw = new Matrix(FastSLAMMotionModel.jacobianJx(robotPose, observation));
+        Matrix rw = new Matrix(FastSLAMMotionModel.jacobianRw(robotPose, observation));
+        Matrix sigmaW = Particle.getSigmaW();
+        Matrix Qj = sigmaW.plus(rw.times(covariance.timesTranspose(rw)));
+
+        MultiGaussian mg = new MultiGaussian(Qj.copyArray(), zj_hat);
+	return mg.chi2(observation);
+
+    }
+
     /**
      * Used in unknown data association. Each particle will loop over all of its
      * KalmanFeatures and choose the feature with the highest likelihood of
@@ -79,21 +94,16 @@ public class KalmanFeature {
      *
      * @return the likelihood that the observation corresponds to this feature
      */
-    public double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose) {
-        double [] zj_hat = FastSLAMMotionModel.predictedFeaturePosRT(robotPose, this.mean);
+    public double calculateLikelihoodOfCorrespondence(double[] observation, double[] robotPose, double chi2) {
 
-        // TODO: Which one is correct?
-        // Matrix rw = new Matrix(FastSLAMMotionModel.jacobianJx(robotPose, observation));
         Matrix rw = new Matrix(FastSLAMMotionModel.jacobianRw(robotPose, observation));
         Matrix sigmaW = Particle.getSigmaW();
         Matrix Qj = sigmaW.plus(rw.times(covariance.timesTranspose(rw)));
 
-        MultiGaussian mg = new MultiGaussian(Qj.copyArray(), zj_hat);
-        double w = 1.0/Math.sqrt(Qj.times(2*Math.PI).det()) * MathUtil.exp(-0.5*mg.chi2(observation));
-
         // Let's work with log likelihood
         // double w = -Math.log(Qj.times(2*Math.PI).det()) - 0.5*mg.chi2(observation);
 
+        double w = 1.0/Math.sqrt(Qj.times(2*Math.PI).det()) * MathUtil.exp(-0.5*chi2);
         return w;
     }
 }

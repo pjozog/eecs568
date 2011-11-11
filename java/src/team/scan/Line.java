@@ -85,7 +85,13 @@ public class Line {
 
     }
 
+    public double getTheta(){
+        return theta;
+    }
 
+    public double [] getCentroid(){
+        return centroid;
+    }
 
     /**
      * This will look at the end points of both lines and compute the distances between

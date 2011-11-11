@@ -317,14 +317,16 @@ public class Task3 implements ParameterListener
 
         RBTRansac myRansac = new RBTRansac(pointsa, pointsb, vba, vbb, this.getSteps(), this.getThreshold());
 
-        List<double[]> transPointsB = myRansac.doRansac();
+        ArrayList<double[]> transPointsB = myRansac.doRansac();
 
-        VisWorld.Buffer vbc = vwc.getBuffer("points");
-        vbc.addBack(new VisPoints(new VisVertexData(pointsa),
-                                  new VisConstantColor(Color.blue),2));
-        vbc.addBack(new VisPoints(new VisVertexData(transPointsB),
-                                  new VisConstantColor(Color.red),2));
-        vbc.swap();
+        if (transPointsB != null) {
+            VisWorld.Buffer vbc = vwc.getBuffer("points");
+            vbc.addBack(new VisPoints(new VisVertexData(pointsa),
+                                      new VisConstantColor(Color.blue),2));
+            vbc.addBack(new VisPoints(new VisVertexData(transPointsB),
+                                      new VisConstantColor(Color.red),2));
+            vbc.swap();
+        }
 
 
 

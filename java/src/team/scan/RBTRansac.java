@@ -24,17 +24,21 @@ public class RBTRansac {
                      VisWorld.Buffer lineBuffA, VisWorld.Buffer lineBuffB,
                      int numIter, double threshold) {
 
+
+        System.out.println("Num points " + pointsA.size() + " " + pointsB.size());
         AggloLineFit lineFitterA = new AggloLineFit(pointsA, lineBuffA, numIter, threshold);
         AggloLineFit lineFitterB = new AggloLineFit(pointsB, lineBuffB, numIter, threshold);
 
         //get the lines
         this.linesA = lineFitterA.getLines();
         this.linesB = lineFitterB.getLines();
+        System.out.println("Num lines " + linesA.size() + " " + linesB.size());
 
         //get the corners
         this.cornersA = Corner.getAllCorners(this.linesA);
         this.cornersB = Corner.getAllCorners(this.linesB);
 
+        System.out.println("Num corners " + cornersA.size() + " " + cornersB.size());
         this.pointsA = pointsA;
         this.pointsB = pointsB;
 
@@ -44,13 +48,17 @@ public class RBTRansac {
 
     //Bjarne would hate us but this returns x, y, and theta describing
     //2D RBT.  Use
-    public List<double[]> doRansac() {
+    public ArrayList<double[]> doRansac() {
+
+        if (cornersA.size() == 0 || cornersB.size() == 0) {
+            return null;
+        }
 
         //BestModel
         double [] bestRBT = null;
         double bestConsensus = -1.0;
 
-        Random randGuy = new Random();
+        Random randGuy = new Random(0);
 
         for (int i = 0; i < numIterations; i++) {
 
@@ -65,7 +73,7 @@ public class RBTRansac {
             double[] theRBT = rbtFromCorners(cornerOne, cornerTwo);
 
             // Perform the RBT on the second scan's points
-            List<double[]> newPointsB = applyTransform(theRBT, pointsB);
+            ArrayList<double[]> newPointsB = applyTransform(theRBT, pointsB);
 
             // Compute the consesus score with the transformed points and the first scan's points
             double currConsesus = consensusScore(pointsA, newPointsB);

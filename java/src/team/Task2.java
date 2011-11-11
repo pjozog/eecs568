@@ -37,8 +37,8 @@ public class Task2 implements LCMSubscriber, ParameterListener
     public Task2()
     {
 
-        pg.addDoubleSlider("thresh","Thresh",0,1,0.025);
-        pg.addDoubleSlider("pointDistThresh","Maximum point distance in line", 0.1, 25.0, 3.0);
+        pg.addDoubleSlider("thresh","Thresh",0,1,0.01);
+        pg.addDoubleSlider("pointDistThresh","Maximum point distance in line", 0.1, 25.0, .849739);
         pg.addInt("steps", "Steps", 100000);
         pg.addButtons("refresh", "Refresh");
         pg.addListener(new ParameterListener(){

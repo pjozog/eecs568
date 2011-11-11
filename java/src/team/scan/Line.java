@@ -10,11 +10,13 @@ public class Line {
     private List<double[]> points = null;
     private double[] centroid;
     private double theta;
+    private double fullTheta;
     public static double pointDistanceThreshold;
 
     public Line(List<double[]> initialPoints, double[] aCentroid, double aTheta) {
         this.points = new ArrayList<double[]>(initialPoints);
         this.centroid = aCentroid;
+        this.fullTheta = aTheta;
         this.theta = fullThetaToLimitedTheta(aTheta);
     }
 
@@ -43,7 +45,8 @@ public class Line {
         double Cxx        = PointMoments.getCentroidXX(points);
         double Cxy        = PointMoments.getCentroidXY(points);
         double Cyy        = PointMoments.getCentroidYY(points);
-        this.theta        = fullThetaToLimitedTheta(Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx));
+        this.fullTheta    = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
+        this.theta        = fullThetaToLimitedTheta(fullTheta);
 
 
     }
@@ -81,12 +84,17 @@ public class Line {
 
         this.points = points;
         this.centroid = centroid;
-        this.theta = fullThetaToLimitedTheta( Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx));
+        this.fullTheta = Math.PI/2 + 0.5 * Math.atan2(-2*Cxy, Cyy - Cxx);
+        this.theta = fullThetaToLimitedTheta(fullTheta);
 
     }
 
     public double getTheta(){
         return theta;
+    }
+
+    public double getFullTheta(){
+        return fullTheta;
     }
 
     public double [] getCentroid(){
@@ -227,9 +235,16 @@ public class Line {
 
     public static List<Line> removeTwoPointLines(List<Line> origLines) {
 
+        return removeNPointLines(origLines, 2);
+
+    }
+
+
+    public static List<Line> removeNPointLines(List<Line> origLines, int N) {
+
         List<Line> newLines = new ArrayList<Line>();
         for (Line aLine : origLines) {
-            if (aLine.getPoints().size() > 2) {
+            if (aLine.getPoints().size() > N) {
                 newLines.add(aLine);
             }
         }

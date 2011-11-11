@@ -4,15 +4,16 @@ import team.*;
 import april.vis.*;
 import java.util.*;
 import april.jmat.*;
+import team.ArrayUtil;
 
 public class RBTRansac {
 
-    private int numIterations = 40;
+    private int numIterations = 4000;
 
     private double consensusThresh;
 
-    private List<Corner> cornersA;
-    private List<Corner> cornersB;
+    private ArrayList<Corner> cornersA;
+    private ArrayList<Corner> cornersB;
 
     private List<Line> linesA;
     private List<Line> linesB;
@@ -32,6 +33,9 @@ public class RBTRansac {
         //get the lines
         this.linesA = lineFitterA.getLines(false);
         this.linesB = lineFitterB.getLines(false);
+        linesA = Line.removeNPointLines(linesA,4);
+        linesB = Line.removeNPointLines(linesB,4);
+
         System.out.println("Num lines " + linesA.size() + " " + linesB.size());
 
         //get the corners
@@ -84,6 +88,10 @@ public class RBTRansac {
             }
         }
 
+        System.out.println("The best RBT with consensus "+ bestConsensus);
+        ArrayUtil.print1dArray(bestRBT);
+        System.out.println();
+
         return applyTransform(bestRBT, pointsB);
     }
 
@@ -120,7 +128,7 @@ public class RBTRansac {
         double[] xyPosTwo = two.getXYPos();
 
 
-        double theta = thetaOne - thetaTwo;
+        double theta = MathUtil.mod2pi(thetaOne - thetaTwo);
         double dX = xyPosOne[0] - Math.cos(theta)*xyPosTwo[0] + Math.sin(theta)*xyPosTwo[1];
         double dY = xyPosOne[1] - Math.sin(theta)*xyPosTwo[0] - Math.cos(theta)*xyPosTwo[1];
 
@@ -154,6 +162,26 @@ public class RBTRansac {
 
         }
         return transformedPoints;
+    }
+
+    public ArrayList<double[]> getCornersA() {
+
+        ArrayList<double[]> xyCornerPos = new ArrayList<double[]>();
+        for (Corner aCorner : cornersA) {
+            double[] xyPos = aCorner.getXYPos();
+            xyCornerPos.add(new double[] {xyPos[0], xyPos[1]});
+        }
+        return xyCornerPos;
+    }
+
+   public ArrayList<double[]> getCornersB() {
+
+        ArrayList<double[]> xyCornerPos = new ArrayList<double[]>();
+        for (Corner aCorner : cornersB) {
+            double[] xyPos = aCorner.getXYPos();
+            xyCornerPos.add(new double[] {xyPos[0], xyPos[1]});
+        }
+        return xyCornerPos;
     }
 
 }

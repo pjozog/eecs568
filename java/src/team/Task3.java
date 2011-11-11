@@ -72,8 +72,8 @@ public class Task3 implements ParameterListener
             // pointDistThresh = pg.gd("pointDistThresh");
             Line.pointDistanceThreshold = pg.gd("pointDistThresh");
         }
-        if(name.equals("conThreshold")){
-            conThreshold = pg.gd("conThreshold");
+        if(name.equals("conThresh")){
+            conThreshold = pg.gd("conThresh");
         }
         update();
     }
@@ -99,11 +99,11 @@ public class Task3 implements ParameterListener
 
     public Task3(String args[]) throws IOException
     {
-        pg.addDoubleSlider("loga_pos", "Position A", 0, 1, 0.0);
+        pg.addDoubleSlider("loga_pos", "Position A", 0, 1, 0.00895);
         pg.addDoubleSlider("logb_pos", "Position B", 0, 1, 0.0);
-        pg.addDoubleSlider("thresh","Thresh",0,1,0.025);
-        pg.addDoubleSlider("pointDistThresh","Maximum point distance in line", 0.1, 25.0, 3.0);
-        pg.addDoubleSlider("conThresh", "ConThresh", 0, 1, 0.5);
+        pg.addDoubleSlider("thresh","Thresh",0,1,0.01);
+        pg.addDoubleSlider("pointDistThresh","Maximum point distance in line", 0.1, 25.0, .5);
+        pg.addDoubleSlider("conThresh", "ConThresh", 0, 200, 1);
 
         loga = new Log(args[0], "r");
         logb = new Log(args[0], "r");
@@ -313,7 +313,6 @@ public class Task3 implements ParameterListener
 
 
 
-
         // draw right panel (laser scan b)
         VisWorld.Buffer vbb = vwb.getBuffer("points");
         vbb.addBack(new VisPoints(new VisVertexData(pointsb),
@@ -326,6 +325,19 @@ public class Task3 implements ParameterListener
         // fitterB.getLines();
 
         RBTRansac myRansac = new RBTRansac(pointsa, pointsb, vba, vbb, this.getSteps(), this.getThreshold(), this.getConThreshold());
+
+        VisWorld.Buffer cornerBufferA = vwa.getBuffer("corner-A");
+        cornerBufferA.addBack(new VisPoints(new VisVertexData(myRansac.getCornersA()),
+                                  new VisConstantColor(Color.green),
+                                  5));
+
+        cornerBufferA.swap();
+
+        VisWorld.Buffer cornerBufferB = vwb.getBuffer("corner-B");
+        cornerBufferB.addBack(new VisPoints(new VisVertexData(myRansac.getCornersB()),
+                                  new VisConstantColor(Color.green),
+                                  5));
+        cornerBufferB.swap();
 
         ArrayList<double[]> transPointsB = myRansac.doRansac();
 

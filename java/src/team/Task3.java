@@ -46,6 +46,7 @@ public class Task3 implements ParameterListener
 
     private static double threshold;
     private static double pointDistThresh;
+    private static double conThreshold;
     private static int numSteps = 1000;
 
     public static void main(String args[])
@@ -71,6 +72,9 @@ public class Task3 implements ParameterListener
             // pointDistThresh = pg.gd("pointDistThresh");
             Line.pointDistanceThreshold = pg.gd("pointDistThresh");
         }
+        if(name.equals("conThreshold")){
+            conThreshold = pg.gd("conThreshold");
+        }
         update();
     }
 
@@ -79,6 +83,10 @@ public class Task3 implements ParameterListener
 
     public static double getThreshold(){
         return threshold;
+    }
+
+    public static double getConThreshold(){
+        return conThreshold;
     }
 
     public static double getPointDistanceThreshold() {
@@ -95,6 +103,7 @@ public class Task3 implements ParameterListener
         pg.addDoubleSlider("logb_pos", "Position B", 0, 1, 0.0);
         pg.addDoubleSlider("thresh","Thresh",0,1,0.025);
         pg.addDoubleSlider("pointDistThresh","Maximum point distance in line", 0.1, 25.0, 3.0);
+        pg.addDoubleSlider("conThresh", "ConThresh", 0, 1, 0.5);
 
         loga = new Log(args[0], "r");
         logb = new Log(args[0], "r");
@@ -115,6 +124,7 @@ public class Task3 implements ParameterListener
         pg.notifyListeners("thresh");
         pg.notifyListeners("steps");
         pg.notifyListeners("pointDistThresh");
+        pg.notifyListeners("conThresh");
 
         jf = new JFrame(this.getClass().getName());
         jf.setLayout(new BorderLayout());
@@ -315,7 +325,7 @@ public class Task3 implements ParameterListener
         // AggloLineFit fitterB = new AggloLineFit(pointsb, lineBuffB, this.getSteps(), this.getThreshold());
         // fitterB.getLines();
 
-        RBTRansac myRansac = new RBTRansac(pointsa, pointsb, vba, vbb, this.getSteps(), this.getThreshold());
+        RBTRansac myRansac = new RBTRansac(pointsa, pointsb, vba, vbb, this.getSteps(), this.getThreshold(), this.getConThreshold());
 
         ArrayList<double[]> transPointsB = myRansac.doRansac();
 

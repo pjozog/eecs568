@@ -31,7 +31,7 @@ public class AggloLineFit {
 
     }
 
-    public ArrayList<Line> getLines() {
+    public ArrayList<Line> getLines(boolean plot) {
 
         //Populate this.lines
         this.init();
@@ -76,21 +76,23 @@ public class AggloLineFit {
             if (lowestMSE > MSEThreshold) {
 
                 //Draw the shits, for debugging
-                this.lineBuff.clear();
-
+                if(plot){
+                    this.lineBuff.clear();
+                }
                 for (Line l : Line.removeTwoPointLines(this.lines)) {
 
                     float r = rand.nextFloat();
                     float g = rand.nextFloat();
                     float b = rand.nextFloat();
-
-                    this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
-                                                       new VisConstantColor(Color.red),
-                                                       2, VisLines.TYPE.LINES));
+                    if(plot){
+                        this.lineBuff.addBack(new VisLines(new VisVertexData(l.getPointsForDisplay()),
+                                                           new VisConstantColor(Color.red),
+                                                           2, VisLines.TYPE.LINES));
+                    }
                 }
-
-                lineBuff.swap();
-
+                if(plot){
+                    lineBuff.swap();
+                }
                 double THIS_IS_FOR_BREAKPOINT = 1337;
 
                 return this.lines;

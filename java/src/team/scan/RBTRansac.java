@@ -22,7 +22,7 @@ public class RBTRansac {
 
     public RBTRansac(ArrayList<double[]> pointsA, ArrayList<double[]> pointsB,
                      VisWorld.Buffer lineBuffA, VisWorld.Buffer lineBuffB,
-                     int numIter, double threshold) {
+                     int numIter, double threshold, double conThreshold) {
 
 
         System.out.println("Num points " + pointsA.size() + " " + pointsB.size());
@@ -30,8 +30,8 @@ public class RBTRansac {
         AggloLineFit lineFitterB = new AggloLineFit(pointsB, lineBuffB, numIter, threshold);
 
         //get the lines
-        this.linesA = lineFitterA.getLines();
-        this.linesB = lineFitterB.getLines();
+        this.linesA = lineFitterA.getLines(false);
+        this.linesB = lineFitterB.getLines(false);
         System.out.println("Num lines " + linesA.size() + " " + linesB.size());
 
         //get the corners
@@ -42,7 +42,7 @@ public class RBTRansac {
         this.pointsA = pointsA;
         this.pointsB = pointsB;
 
-        this.consensusThresh = 3;
+        this.consensusThresh = conThreshold;
 
     }
 
@@ -137,9 +137,16 @@ public class RBTRansac {
         for (double[] point : points) {
 
             //Make the point homogeneous
-            double[] homoPoint   = new double[]{point[0], point[1], 1.0};
+            double[] homoPoint   = new double[]{point[0], point[1], 0, 1.0};
             double[][] RBTMatrix = LinAlg.xytToMatrix(RBT);
-
+            /*
+            for(int i = 0; i < RBTMatrix.length; i++){
+                for(int j = 0; j < RBTMatrix[0].length; j++){
+                    System.out.print(RBTMatrix[i][j] + " ");
+                }
+                System.out.println();
+            }
+            */
             double[] trannyHomoPoint = LinAlg.matrixAB(RBTMatrix, homoPoint);
             double[] trannyPoint = new double[]{trannyHomoPoint[0], trannyHomoPoint[1]};
 

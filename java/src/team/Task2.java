@@ -136,7 +136,7 @@ public class Task2 implements LCMSubscriber, ParameterListener
             VisWorld.Buffer lineBuff = vw.getBuffer("fitted-lines");
             AggloLineFit fitter = new AggloLineFit(laserToPoints(this.laser), lineBuff, 
                            this.getSteps(), this.getThreshold());
-            fitter.getLines();
+            fitter.getLines(true);
 
         }
 

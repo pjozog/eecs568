@@ -77,11 +77,11 @@ public class Corner{
                 double deltaTheta = Math.abs(l1.getTheta() - l2.getTheta());
                 
                 if(deltaTheta > minAngle && deltaTheta < maxAngle){
-                    System.out.println("Found corner with angle " + deltaTheta);
+                    //System.out.println("Found corner with angle " + deltaTheta);
                     corners.add(new Corner(l1, l2));
                 }
                 else{
-                    System.out.println("Ignoring corner with angle " + deltaTheta);
+                    //System.out.println("Ignoring corner with angle " + deltaTheta);
                 }
             }
         }

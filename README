@@ -4,12 +4,14 @@ Run the following commands to run the simulation using our Listener.
 Please follow these instructions because we use an alternate config
 file.
 
+Task 1:
 $ cd eecs568/java
-
 $ ant
-
 $ ./runsim 
 
-To add unknown data association, change knownDataAssoc in
-eecs568/config/sim.config to false and rerun `runsim'.  To add debug
-info during runtime, change debug to 1.
+Task 2:
+$ Make sure april.jar is in the CLASSPATH, and run java team.Task2
+
+Task 3:
+$ Ensure CLASSPATH, then run java team.Task3 on the lcm log (not included).
+

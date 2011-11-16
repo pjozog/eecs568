@@ -1,4 +1,4 @@
-package team;
+package team.common;
 
 import april.jmat.LinAlg;
 import april.jmat.Matrix;

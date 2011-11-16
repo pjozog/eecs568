@@ -1,8 +1,12 @@
-package team;
+package team.PS3;
+
+import team.common.*;
 
 import java.util.List;
 import java.util.ArrayList;
-import april.jmat.*;
+import april.jmat.LinAlg;
+import april.jmat.Matrix;
+import april.jmat.MathUtil;
 import java.util.Random;
 
 public class Particle {

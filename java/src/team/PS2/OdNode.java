@@ -6,7 +6,7 @@ Paul Ozog
 **/
 
 
-package team;
+package team.PS2;
 
 public class OdNode extends Node{
 

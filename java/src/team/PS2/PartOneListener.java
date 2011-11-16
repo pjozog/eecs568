@@ -6,7 +6,7 @@
 **/
 
 
-package team;
+package team.PS2;
 
 import java.awt.*;
 import java.util.*;
@@ -17,6 +17,8 @@ import april.jmat.*;
 import april.util.*;
 import april.config.*;
 import april.sim.*;
+
+import team.common.*;
 
 public class PartOneListener implements Simulator.Listener
 {

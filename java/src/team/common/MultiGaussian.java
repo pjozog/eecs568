@@ -1,4 +1,4 @@
-package team;
+package team.common;
 
 import javax.swing.*; // For JFrame
 import java.awt.*; // For BorderLayout
@@ -6,7 +6,9 @@ import java.util.*;
 
 import april.vis.*; // For VisCanvas etc
 import april.util.*; // For Parameter GUI
-import april.jmat.*;
+import april.jmat.LinAlg;
+import april.jmat.Matrix;
+import april.jmat.CholeskyDecomposition;
 
 
 /** Represents a multi-variate Gaussian distribution. This is a

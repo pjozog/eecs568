@@ -3,7 +3,7 @@ package team.scan;
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.Math;
-import team.ArrayUtil;
+import team.common.ArrayUtil;
 
 public class Line {
 

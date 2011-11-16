@@ -5,7 +5,7 @@ Patrick O'Keefe
 Paul Ozog
 **/
 
-package team;
+package team.PS2;
 
 import java.util.*;
 import april.config.*;

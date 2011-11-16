@@ -1,4 +1,6 @@
-package team;
+package team.PS3;
+
+import team.common.*;;
 
 import april.sim.*;
 import april.jmat.*;

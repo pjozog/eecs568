@@ -9,11 +9,12 @@ public class SixDofCoords {
     
     public static void main(String[] args) {
 
-        testOps();
+        test();
 
     }
 
-    private static void testOps() {
+    //Tested with PeRL van toolbox in matlab
+    private static void test() {
 
         Random rand = new Random(1337);
 
@@ -57,8 +58,27 @@ public class SixDofCoords {
         ArrayUtil.print1dArray(xjkEst);
         System.out.println();
 
+        double[][] J = headToTailJacob(xij, xjk);
+        System.out.println("Head to Tail Jacobian:");
+        ArrayUtil.print2dArray(J);
+        System.out.println();
+
+        System.out.println("Inverse Jacobian:");
+        J = inverseJacob(xij);
+        ArrayUtil.print2dArray(J);
+        System.out.println();
+
+        System.out.println("Tail to Tail Jacobian:");
+        J = tailToTailJacob(xij, xik);
+        ArrayUtil.print2dArray(J);
+        System.out.println();
+
+
     }
 
+    /**
+     * xik = xij \oplus xjk
+     */
     public static double[] headToTail(double[] xij, double[] xjk) {
         
         Matrix Hij = new Matrix(LinAlg.xyzrpyToMatrix(xij));
@@ -73,6 +93,9 @@ public class SixDofCoords {
 
     }
 
+    /**
+     * xji = \ominus xij
+     */
     public static double[] inverse(double[] xij) {
         
         Matrix Hij = new Matrix(LinAlg.xyzrpyToMatrix(xij));
@@ -104,10 +127,152 @@ public class SixDofCoords {
 
     }
 
+    /**
+     * xjk = \ominus xij \oplus xik
+     */
     public static double[] tailToTail(double[] xij, double[] xik) {
         
         return headToTail(inverse(xij), xik);
 
     }
 
+    /**
+     * Numerically compute jacobian for headToTail
+     */
+    public static double[][] headToTailJacob(double[] xij, double[] xjk) {
+        
+        double eps = 1e-6;
+
+        Matrix J = new Matrix(6, 12);
+
+        //Differentiate with respect to xij
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                double[] xijPert = new double[xij.length];
+                for (int k = 0; k < xij.length; k++)
+                    xijPert[k] = xij[k];
+
+                xijPert[i] += eps;
+
+                double[] y = headToTail(xij, xjk);
+                double[] yPert = headToTail(xijPert, xjk);
+
+                double finiteDiff = (yPert[j] - y[j]) / eps;
+
+                J.set(j, i, finiteDiff);
+                
+            }
+        }
+
+        //Now for xjk
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                double[] xjkPert = new double[xjk.length];
+                for (int k = 0; k < xjk.length; k++)
+                    xjkPert[k] = xjk[k];
+
+                xjkPert[i] += eps;
+
+                double[] y = headToTail(xij, xjk);
+                double[] yPert = headToTail(xij, xjkPert);
+
+                double finiteDiff = (yPert[j] - y[j]) / eps;
+
+                J.set(j, i+6, finiteDiff);
+                
+            }
+        }
+
+        return J.copyArray();
+
+    }
+
+    /**
+     * Numerically compute jacobian for tailToTail
+     */
+    public static double[][] tailToTailJacob(double[] xij, double[] xik) {
+        
+        double eps = 1e-6;
+
+        Matrix J = new Matrix(6, 12);
+
+        //Differentiate with respect to xij
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                double[] xijPert = new double[xij.length];
+                for (int k = 0; k < xij.length; k++)
+                    xijPert[k] = xij[k];
+
+                xijPert[i] += eps;
+
+                double[] y = tailToTail(xij, xik);
+                double[] yPert = tailToTail(xijPert, xik);
+
+                double finiteDiff = (yPert[j] - y[j]) / eps;
+
+                J.set(j, i, finiteDiff);
+                
+            }
+        }
+
+        //Now for xik
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                double[] xikPert = new double[xik.length];
+                for (int k = 0; k < xik.length; k++)
+                    xikPert[k] = xik[k];
+
+                xikPert[i] += eps;
+
+                double[] y = tailToTail(xij, xik);
+                double[] yPert = tailToTail(xij, xikPert);
+
+                double finiteDiff = (yPert[j] - y[j]) / eps;
+
+                J.set(j, i+6, finiteDiff);
+                
+            }
+        }
+
+        return J.copyArray();
+
+    }
+
+    /**
+     * Numerically compute jacobian for inverse
+     */
+    public static double[][] inverseJacob(double[] xij) {
+        
+        double eps = 1e-6;
+
+        Matrix J = new Matrix(6, 6);
+
+        //Differentiate with respect to xij
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                double[] xijPert = new double[xij.length];
+                for (int k = 0; k < xij.length; k++)
+                    xijPert[k] = xij[k];
+
+                xijPert[i] += eps;
+
+                double[] y = inverse(xij);
+                double[] yPert = inverse(xijPert);
+
+                double finiteDiff = (yPert[j] - y[j]) / eps;
+
+                J.set(j, i, finiteDiff);
+                
+            }
+        }
+
+        return J.copyArray();
+
+    }
+    
 }

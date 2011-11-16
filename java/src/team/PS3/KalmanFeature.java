@@ -1,6 +1,9 @@
-package team;
+package team.PS3;
 
-import april.jmat.*;
+import team.common.*;
+import april.jmat.LinAlg;
+import april.jmat.Matrix;
+import april.jmat.MathUtil;
 
 public class KalmanFeature {
 

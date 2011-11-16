@@ -1,12 +1,12 @@
 /** EECS 568 Homework 2, SLAM
-Steve Chaves
-Schuyler Cohen
-Patrick O'Keefe
-Paul Ozog
+    Steve Chaves
+    Schuyler Cohen
+    Patrick O'Keefe
+    Paul Ozog
 **/
 
 
-package team;
+package team.PS2;
 
 import java.util.*;
 import april.jmat.*;

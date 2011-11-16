@@ -6,7 +6,7 @@ Paul Ozog
 **/
 
 
-package team;
+package team.PS2;
 
 import april.jmat.*;
 import java.util.*;

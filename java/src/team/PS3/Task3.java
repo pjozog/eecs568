@@ -1,6 +1,7 @@
-package team;
+package team.PS3;
 
 import team.scan.*;
+import team.common.*;
 
 import lcm.logging.*;
 

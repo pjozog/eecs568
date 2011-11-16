@@ -7,7 +7,7 @@
  * Paul Ozog
  */
 
-package team;
+package team.PS3;
 
 import java.awt.*;
 import java.util.*;

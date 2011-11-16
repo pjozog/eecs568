@@ -4,7 +4,7 @@ import team.*;
 import april.vis.*;
 import java.util.*;
 import april.jmat.*;
-import team.ArrayUtil;
+import team.common.ArrayUtil;
 
 public class RBTRansac {
 

@@ -6,7 +6,7 @@ Paul Ozog
 **/
 
 
-package team;
+package team.common;
 
 import java.util.*;
 

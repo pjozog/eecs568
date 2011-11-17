@@ -20,9 +20,19 @@ public class Quiver {
 
     }
 
-    public VisLines getQuiverAt(double[] xyzrpy, double scale) {
+    private int rgbToBgr(int color) {
+        return 0xFF000000 | (color & 0x000000FF) << 16 | 
+            (color & 0x0000FF00) | 
+            (color & 0x00FF0000) >> 16;
+    }
+
+    public VisLines getQuiverAt(double[] xyzrpy, double scale, Color xColor, Color yColor, Color zColor) {
         
         assert(xyzrpy.length == 6);
+
+        int xColorInt = rgbToBgr(xColor.getRGB());
+        int yColorInt = rgbToBgr(yColor.getRGB());
+        int zColorInt = rgbToBgr(zColor.getRGB());
 
         Matrix transform = new Matrix(LinAlg.xyzrpyToMatrix(xyzrpy));
 
@@ -39,16 +49,22 @@ public class Quiver {
         quiverPnts.add(transform.times(zAxisPnt));
 
         VisColorData vcd = new VisColorData();
-        vcd.add(0xff0000ff);
-        vcd.add(0xff0000ff);
-        vcd.add(0xff00ff00);
-        vcd.add(0xff00ff00);
-        vcd.add(0xffff0000);
-        vcd.add(0xffff0000);
+        vcd.add(xColorInt);
+        vcd.add(xColorInt);
+        vcd.add(yColorInt);
+        vcd.add(yColorInt);
+        vcd.add(zColorInt);
+        vcd.add(zColorInt);
 
         VisLines quiver = new VisLines(new VisVertexData(quiverPnts), vcd, 3, VisLines.TYPE.LINES);
         
         return quiver;
+
+    }
+
+    public VisLines getQuiverAt(double[] xyzrpy, double scale) {
+        
+        return getQuiverAt(xyzrpy, scale, Color.red, Color.green, Color.blue);
 
     }
 

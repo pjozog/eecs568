@@ -30,9 +30,9 @@ public class QuiverPlot {
         VisCanvas vc = new VisCanvas(vl);
 
         ParameterGUI pg = new ParameterGUI();
-        pg.addDoubleSlider("tranX","X Translationx",-10,10,0);
-        pg.addDoubleSlider("tranY","Y Translationx",-10,10,0);
-        pg.addDoubleSlider("tranZ","Z Translationx",-10,10,0);
+        pg.addDoubleSlider("tranX","X Translation",-10,10,0);
+        pg.addDoubleSlider("tranY","Y Translation",-10,10,0);
+        pg.addDoubleSlider("tranZ","Z Translation",-10,10,0);
         pg.addDoubleSlider("rotX","X Rotation",-Math.PI,Math.PI,0);
         pg.addDoubleSlider("rotY","Y Rotation",-Math.PI,Math.PI,0);
         pg.addDoubleSlider("rotZ","Z Rotation",-Math.PI,Math.PI,0);
@@ -41,7 +41,6 @@ public class QuiverPlot {
         jf.setLayout(new BorderLayout());
         jf.add(vc,BorderLayout.CENTER);
         jf.add(pg,BorderLayout.SOUTH);
-
 
         jf.setVisible(true);
         
@@ -96,6 +95,12 @@ public class QuiverPlot {
         Quiver quiv = new Quiver();
         vb.addBack(quiv.getQuiverAt(relPose));
         vb.swap();
+
+        VisWorld.Buffer vbOrigin = vw.getBuffer("origin");
+        Quiver origin = new Quiver();
+        vbOrigin.addBack(origin.getQuiverAt(new double[]{0,0,0,0,0,0}, 1, 
+                                            Color.yellow, Color.yellow, Color.yellow));
+        vbOrigin.swap();
 
     }
 }

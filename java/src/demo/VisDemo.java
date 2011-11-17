@@ -86,7 +86,7 @@ public class VisDemo
                         for (int i = 0; i < 100; i++) {
 
                             double pt[] = new double[]{r.nextGaussian()*pg.gd("sig"),
-                                                    r.nextGaussian()*pg.gd("sig"),
+                                                       r.nextGaussian()*pg.gd("sig"),
                                                        r.nextGaussian()*pg.gd("sig")};
 
 
@@ -149,7 +149,7 @@ public class VisDemo
 
 
             VisLines vline = new VisLines(new VisVertexData(points),
-                                       new VisConstantColor(Color.blue), 3, VisLines.TYPE.LINE_LOOP);
+                                          new VisConstantColor(Color.blue), 3, VisLines.TYPE.LINE_LOOP);
 
             VisWorld.Buffer vb = vw.getBuffer("box");
 
@@ -181,15 +181,3 @@ public class VisDemo
         // System.out.println("Hello World");
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

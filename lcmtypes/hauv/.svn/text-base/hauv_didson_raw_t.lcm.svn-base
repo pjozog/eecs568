@@ -1,8 +1,0 @@
-package hauv;
-
-struct didson_raw_t
-{
-        int64_t time_received;
-        int32_t length;
-        byte data[length];
-}

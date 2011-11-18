@@ -1,8 +1,0 @@
-package capture;
-
-struct string_t {
-  int64_t utime;
-
-  string message;
-}
-

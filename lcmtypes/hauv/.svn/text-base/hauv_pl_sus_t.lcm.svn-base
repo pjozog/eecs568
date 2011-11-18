@@ -1,6 +1,0 @@
-package hauv;
-
-struct pl_sus_t
-{
-        int64_t time;
-}

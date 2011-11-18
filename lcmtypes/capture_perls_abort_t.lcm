@@ -1,0 +1,14 @@
+package capture;
+
+struct perls_abort_t
+{
+    int64_t utime;
+
+    int32_t dest;
+
+    // abort code
+    const int32_t ABORT_FALSE = 0,
+        ABORT_HARD = 1,
+        ABORT_DRIVE_TO_SURFACE = 2;
+    int32_t abort;
+}

@@ -1,0 +1,6 @@
+package perllcm;
+
+struct auv_os_conduit_ojw_t
+{
+    int32_t waypoint; // 0 -999
+}

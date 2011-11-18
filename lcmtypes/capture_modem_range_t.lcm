@@ -1,0 +1,25 @@
+package capture;
+
+struct modem_range_t {
+  int64_t utime;
+    
+  int8_t src;
+  int8_t dest;
+
+  int32_t nowtt;
+  double owtt[nowtt];
+
+  const int8_t RANGING_TWO_WAY_PING = 1,
+    RANGING_ONE_WAY_SYNCHRONOUS = 2,
+    RANGING_REMUS_LBL = 3,
+    RANGING_NB_LBL = 4;
+  int8_t ranging_type;
+
+  const int8_t     NO_SYNC_TO_PPS_AND_CCCLK_BAD = 0,
+    NO_SYNC_TO_PPS_AND_CCCLK_GOOD = 1,
+    SYNC_TO_PPS_AND_CCCLK_BAD = 2,
+    SYNC_TO_PPS_AND_CCCLK_GOOD = 3,
+    UNKNOWN = 4;
+  int8_t sender_clk_mode;
+  int8_t receiver_clk_mode;
+}

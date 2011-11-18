@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/libbot2/!svn/ver/174/bot2-core/lcmtypes
+END
+bot_core_pose_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/libbot2/!svn/ver/95/bot2-core/lcmtypes/bot_core_pose_t.lcm
+END
+bot_core_planar_lidar_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/libbot2/!svn/ver/95/bot2-core/lcmtypes/bot_core_planar_lidar_t.lcm
+END
+bot_core_raw_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/libbot2/!svn/ver/95/bot2-core/lcmtypes/bot_core_raw_t.lcm
+END
+bot_core_rigid_transform_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/libbot2/!svn/ver/174/bot2-core/lcmtypes/bot_core_rigid_transform_t.lcm
+END
+bot_core_image_sync_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/libbot2/!svn/ver/95/bot2-core/lcmtypes/bot_core_image_sync_t.lcm
+END
+bot_core_image_metadata_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/libbot2/!svn/ver/95/bot2-core/lcmtypes/bot_core_image_metadata_t.lcm
+END
+bot_core_image_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/libbot2/!svn/ver/95/bot2-core/lcmtypes/bot_core_image_t.lcm
+END

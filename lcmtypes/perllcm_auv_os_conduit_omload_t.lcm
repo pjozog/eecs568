@@ -1,0 +1,7 @@
+package perllcm;
+
+struct auv_os_conduit_omload_t 
+{
+    string directory_name;
+    int32_t msg_flag;       // 0:Null
+}

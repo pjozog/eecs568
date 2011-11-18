@@ -1,0 +1,12 @@
+package capture;
+
+struct chunk_t {
+  int64_t utime;
+
+  int8_t xmit_second;
+  int8_t resource_origin;
+  int32_t resource_id;
+  int16_t chunk_id;
+  byte data[58];
+}
+

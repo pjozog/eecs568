@@ -1,0 +1,13 @@
+package capture;
+
+struct topside_t {
+  int64_t utime;
+  boolean autonomous_mode;
+
+  // If not in autonomous mode, these identify the desired resource.
+  int8_t resource_origin;
+  int32_t resource_id;
+
+  int8_t route_length;
+  int8_t route[route_length];
+}

@@ -1,0 +1,12 @@
+package senlcm;
+
+struct acomms_ping_t 
+{
+    int64_t utime;
+    
+    int32_t src;
+    int32_t dest;
+    
+    double travel_time;
+    double range;
+}

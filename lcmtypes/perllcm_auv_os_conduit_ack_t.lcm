@@ -1,0 +1,21 @@
+package perllcm;
+
+struct auv_os_conduit_ack_t
+{
+    int64_t utime;
+
+    const int32_t ACK_OMSTOP = 1, ACK_OMLOAD = 2, ACK_OMSTART = 3, ACK_OLOGD = 4, 
+          ACK_OLOGL = 5, ACK_OPOS = 6, ACK_OJW = 7, ACK_OSD = 8, ACK_OMS = 9, 
+          ACK_OMP = 10, ACK_OPK = 11, ACK_ORWSET = 12, ACK_SRP = 13, 
+          ACK_SENS_MAL = 14, ACK_ODVL = 15; 
+    int32_t msg_type;  // message type
+
+    const int32_t ACK_NO_ERROR = 0, ACK_ERROR = 1;
+    int32_t status;    // 0 = no error, 1 = error
+
+    int32_t err_num;   // err number
+
+    string usrset;
+    int32_t usrnum;   // range: 0 to 3
+    string usrval;    // not clear what values usrval takes
+}

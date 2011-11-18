@@ -1,0 +1,20 @@
+package senlcm;
+
+struct acomms_owtt_t
+{
+    int64_t utime;
+
+    int32_t src;
+    int32_t dest;
+
+    double owtt;
+    double range;
+
+    const int32_t CLK_MODE_NO_SYNC_TO_PPS_AND_CCCLK_BAD = 0,
+        CLK_MODE_NO_SYNC_TO_PPS_AND_CCCLK_GOOD = 1,
+        CLK_MODE_SYNC_TO_PPS_AND_CCCLK_BAD = 2,
+        CLK_MODE_SYNC_TO_PPS_AND_CCCLK_GOOD = 3,
+        CLK_MODE_UNKNOWN = 4;
+    int32_t receiver_clk_mode;
+    int32_t sender_clk_mode;
+}

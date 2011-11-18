@@ -1,0 +1,10 @@
+package capture;
+
+struct perls_mini_t {
+  int64_t utime;
+
+  int8_t src;
+  int8_t dest;
+
+  int32_t user;
+}

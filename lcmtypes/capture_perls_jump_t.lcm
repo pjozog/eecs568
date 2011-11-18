@@ -1,0 +1,10 @@
+package capture;
+
+struct perls_jump_t
+{
+    int64_t utime;
+
+    int32_t dest;
+
+    int32_t next_wypnt;
+}

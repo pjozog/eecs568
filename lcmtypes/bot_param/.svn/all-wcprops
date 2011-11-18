@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/libbot2/!svn/ver/95/bot2-param/lcmtypes
+END
+bot_param_update_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/libbot2/!svn/ver/95/bot2-param/lcmtypes/bot_param_update_t.lcm
+END
+bot_param_request_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/libbot2/!svn/ver/95/bot2-param/lcmtypes/bot_param_request_t.lcm
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/libbot2/!svn/ver/95/bot2-param/lcmtypes/README.txt
+END
+bot_param_set_t.lcm
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/libbot2/!svn/ver/95/bot2-param/lcmtypes/bot_param_set_t.lcm
+END

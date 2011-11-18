@@ -1,0 +1,23 @@
+package capture;
+
+struct goal_t {
+  int64_t timestamp;
+  
+  int32_t goal_id;
+
+  double xpos1;          // meters
+  double ypos1;          // meters
+  double zpos1;          // meters (depth)
+  double xpos2;          // meters
+  double ypos2;          // meters
+  double zpos2;          // meters (depth)
+  double heading;        // degrees
+  double xy_vel;         // m/s
+  double z_vel;          // m/s
+  double cmd_timeout;    // unix time
+  double mission_timeout; // unix time
+  double max_depth;      // meters
+  double min_alt;        // meters
+}
+
+  

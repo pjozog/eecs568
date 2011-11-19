@@ -31,7 +31,7 @@ import april.tag.Tag36h11;
 
 import april.config.*;
 
-public class TagQuiver {
+public class TagDemo {
 
     Config config;
     ImageSource is;
@@ -74,14 +74,14 @@ public class TagQuiver {
                 tf = (TagFamily) ReflectUtil.createObject(args[1]);
             }
 
-            TagQuiver tt = new TagQuiver(is, tf, new ConfigFile(args[0]));
+            TagDemo tt = new TagDemo(is, tf, new ConfigFile(args[0]));
 
         } catch (IOException ex) {
             System.out.println("Ex: "+ex);
         }
     }
 
-    public TagQuiver(ImageSource is, TagFamily tf, Config _config) {
+    public TagDemo(ImageSource is, TagFamily tf, Config _config) {
 
         config = _config;
 

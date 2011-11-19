@@ -12,3 +12,7 @@ gltest
 BeansAttempt/*
 *.orig
 *.DS_Store
+java/src/april/lcmtypes
+april_jcam_ImageSourceNative.h
+april_vis_GL.h
+april_jserial_JSerial.h

@@ -31,9 +31,14 @@ import april.tag.Tag36h11;
 
 import april.config.*;
 
+import lcm.lcm.*;
+
+import perllcm.pose3d_t;
+
 public class TagDemo {
 
     Config config;
+    LCM lcm;
     ImageSource is;
     TagFamily tf;
     TagDetector detector;
@@ -82,6 +87,12 @@ public class TagDemo {
     }
 
     public TagDemo(ImageSource is, TagFamily tf, Config _config) {
+
+        try {
+            lcm = new LCM();
+        } catch (IOException ex) {
+            System.out.println("Ex: "+ex);
+        }
 
         config = _config;
 
@@ -185,6 +196,14 @@ public class TagDemo {
                                                                                          poseTagToHzCam[3],
                                                                                          poseTagToHzCam[4],
                                                                                          poseTagToHzCam[5]))));
+
+                    pose3d_t msg = new pose3d_t();
+
+                    msg.utime = System.nanoTime();
+
+                    msg.mu = poseTagToHzCam;
+                    msg.Sigma = Matrix.identity(6,6).copyAsVector();
+                    lcm.publish("CAM_TO_TAG", msg);
 
                     vb.addBack(cam.getQuiverAt(poseTagToHzCam));
                     vb.swap();

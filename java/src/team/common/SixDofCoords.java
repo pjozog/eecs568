@@ -7,6 +7,8 @@ import java.util.*;
 
 public class SixDofCoords {
     
+    public static final double[] xOpenGlToHz = new double[]{0,0,0,Math.PI,0,0};
+
     public static void main(String[] args) {
 
         test();

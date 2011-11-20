@@ -48,8 +48,6 @@ public class TagDemo {
     VisCanvas vc      = new VisCanvas(vl);
     ParameterGUI pg   = new ParameterGUI();
 
-    static final double[] xOpenGlToHz = new double[]{0,0,0,Math.PI,0,0};
-
     public static void main(String args[]) {
 
         if (args.length != 1) {
@@ -185,7 +183,7 @@ public class TagDemo {
                     //x right, y down)
                     double[] poseOpenGlCamToTag = LinAlg.matrixToXyzrpy(M);
                     double[] poseTagToOpenGlCam = SixDofCoords.inverse(LinAlg.matrixToXyzrpy(M));
-                    double[] poseTagToHzCam     = SixDofCoords.headToTail(poseTagToOpenGlCam, xOpenGlToHz);
+                    double[] poseTagToHzCam     = SixDofCoords.headToTail(poseTagToOpenGlCam, SixDofCoords.xOpenGlToHz);
 
                     poseDisplay.addBack(new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
                                                                 new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
@@ -200,10 +198,9 @@ public class TagDemo {
                     pose3d_t msg = new pose3d_t();
 
                     msg.utime = System.nanoTime();
-
-                    msg.mu = poseTagToHzCam;
+                    msg.mu    = poseTagToHzCam;
                     msg.Sigma = Matrix.identity(6,6).copyAsVector();
-                    lcm.publish("CAM_TO_TAG", msg);
+                    lcm.publish("ARDRONE_CAM_TO_TAG", msg);
 
                     vb.addBack(cam.getQuiverAt(poseTagToHzCam));
                     vb.swap();

@@ -268,6 +268,12 @@ public class ImageConvert
         for (int i = 0; i < height; i++) {
 
             for (int j = 0; j < width / 2; j++) {
+
+                //Bug?
+                if ((i*sstride + 4*j+3) >= yuyv.length) {
+                    return im;
+                }
+
                 int y1 = yuyv[i*sstride + 4*j+0]&0xff;
                 int u  = yuyv[i*sstride + 4*j+1]&0xff;
                 int y2 = yuyv[i*sstride + 4*j+2]&0xff;

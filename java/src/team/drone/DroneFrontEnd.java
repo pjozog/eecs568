@@ -2,7 +2,7 @@ package team.drone;
 
 import team.slam.*;
 
-public class DroneFrontEnd implements FrontEnd{
+public class DroneFrontEnd{
     
 
 }

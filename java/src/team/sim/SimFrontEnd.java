@@ -1,9 +1,22 @@
 package team.sim;
 
 import team.slam.*;
+import team.common.*;
 
-public class SimFrontEnd implements FrontEnd{
+import java.awt.*;
+import java.util.*;
+import java.io.*;
+
+import april.vis.*;
+import april.jmat.*;
+import april.util.*;
+import april.config.*;
+import april.sim.*;
+
+
+
+public class SimFrontEnd{
     
-    public double [] getOdom();
-    public Landmark getLandmark();
+  
+    
 } 

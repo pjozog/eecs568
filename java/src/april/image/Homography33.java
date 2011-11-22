@@ -1,6 +1,7 @@
 package april.image;
 
 import april.jmat.*;
+import java.util.*;
 
 import team.common.ArrayUtil;
 
@@ -30,12 +31,36 @@ public class Homography33
 
     double cx, cy;
 
-    double[][] worldxy;
+    ArrayList<Double> worldx;
+    ArrayList<Double> worldy;
+    ArrayList<Double> imagex;
+    ArrayList<Double> imagey;
+    SingularValueDecomposition svd;
 
+    
     public Homography33(double cx, double cy)
     {
         this.cx = cx;
         this.cy = cy;
+        this.worldx = new ArrayList<Double>();
+        this.imagex = new ArrayList<Double>();
+        this.worldy = new ArrayList<Double>();
+        this.imagey = new ArrayList<Double>();
+    }
+
+    public void clearImageXy() {
+        this.imagex.clear();
+        this.imagey.clear();
+    }
+
+    public void clearWorldXy() {
+        this.worldx.clear();
+        this.worldy.clear();
+    }
+
+    public void clearXy() {
+        clearImageXy();
+        clearWorldXy();
     }
 
     /** Note that the returned H matrix does not reflect cx, cy. **/
@@ -50,17 +75,23 @@ public class Homography33
         return new double[] {cx, cy};
     }
 
-    public void addCorrespondences(double worldxy[][], double imagexy[][])
+    public void addCorrespondences(double _worldxy[][], double _imagexy[][])
     {
-        this.worldxy = worldxy;
-        for (int i = 0; i < worldxy.length; i++)
-            addCorrespondence(worldxy[i][0], worldxy[i][1], imagexy[i][0], imagexy[i][1]);
+        clearXy();
+        for (int i = 0; i < _worldxy.length; i++)
+            addCorrespondence(_worldxy[i][0], _worldxy[i][1], _imagexy[i][0], _imagexy[i][1]);
     }
 
     public void addCorrespondence(double worldx, double worldy, double imagex, double imagey)
     {
+        this.worldx.add(worldx);
+        this.worldy.add(worldy);
+        this.imagex.add(imagex);
+        this.imagey.add(imagey);
+
         imagex -= cx;
         imagey -= cy;
+
 
         /** Here are the rows of matrix A.  We will compute A'*A
             A[3*i+0][3] = -worldxyh[i][0]*imagexy[i][2];
@@ -189,73 +220,113 @@ public class Homography33
         H = new double[3][3];
 
         // compute using singular value decomposition
-        SingularValueDecomposition svd = new SingularValueDecomposition(new Matrix(A));
+        this.svd = new SingularValueDecomposition(new Matrix(A));
 
         Matrix V = svd.getV();
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
                 H[i][j] = V.get(i*3+j, V.getColumnDimension()-1);
 
-        //ArrayUtil.print2dArray(computeCov(1, svd));
-
         return H;
     }
 
-    //From
-    //http://www.robots.ox.ac.uk/~vgg/presentations/bmvc97/criminispaper/node5.html
-    public double[][] computeCov(double sigmaFeat, SingularValueDecomposition svd) {
+    public double[] compute2() {
+        double[][] H = compute();
+        Matrix HMat = new Matrix(H);
+        return HMat.getColumnPackedCopy();
+    }
 
-        Matrix V = svd.getV();
-        Matrix J = new Matrix(V.getColumn(0).size(), V.getColumn(0).size());
+    public double[][] homogJacob() {
+        
+        double eps = .1;
 
-        //April's svd starts with smallest singular values first, so
-        //sum over *first* 8 singular valuues, not the last 8 that the
-        //source says
-        for (int k = 0; k < 8; k++) {
-            Matrix uk = Matrix.columnMatrix(V.getColumn(k).copyArray());
-            double scale = 1.0/(svd.getSingularValues()[k]);
-            Matrix outerProd = uk.times(uk.transpose());
-            outerProd.timesEquals(scale);
-            J.plusEquals(outerProd);
+        Matrix J = new Matrix(9, 9);
+
+        //Differentiate with respect to image x's
+        for (int i = 0; i < this.imagex.size(); i++) {
+            for (int j = 0; j < 9; j++) {
+
+                double[] xXPert = new double[this.imagex.size()];
+                double[] xX = new double[this.imagex.size()];
+                double[] xY = new double[this.imagey.size()];
+
+                for (int k = 0; k < this.imagex.size(); k++) {
+                    xXPert[k] = new Double(this.imagex.get(k));
+                    xX[k]     = new Double(this.imagex.get(k));
+                }
+
+                xXPert[i] += eps;
+
+                for (int k = 0; k < this.imagex.size(); k++) {
+                    xY[k]     = new Double(this.imagey.get(k));
+                }
+
+                double[][] xyPert = ArrayUtil.cat(xXPert, xY);
+                double[][] xy = ArrayUtil.cat(xX, xY);
+                double[][] worldxyArray = new double[worldx.size()][2];
+                for (int k = 0; k < this.worldx.size(); k++) {
+                    worldxyArray[k][0] = worldx.get(k);
+                    worldxyArray[k][1] = worldy.get(k);
+                }
+
+                double[] y = compute2();
+                addCorrespondences(worldxyArray, xyPert);
+                double[] yPert = compute2();
+                addCorrespondences(worldxyArray, xy);
+
+                double finiteDiff = (yPert[j] - y[j]) / eps;
+
+                J.set(j, 2*i, finiteDiff);
+                
+            }
         }
 
-        J.timesEquals(-1.0);
+        //Differentiate with respect to image x's
+        for (int i = 0; i < this.imagey.size(); i++) {
+            for (int j = 0; j < 9; j++) {
 
-        Matrix S = new Matrix(9,9);
-        Matrix AMat = new Matrix(A);
-        Vec h = svd.getV().getColumn(V.getColumnDimension()-1);
+                double[] xYPert = new double[this.imagey.size()];
+                double[] xX = new double[this.imagex.size()];
+                double[] xY = new double[this.imagey.size()];
 
-        double h1 = h.get(0);
-        double h2 = h.get(1);
-        double h3 = h.get(2);
-        double h4 = h.get(3);
-        double h5 = h.get(4);
-        double h6 = h.get(5);
-        double h7 = h.get(6);
-        double h8 = h.get(7);
-        double h9 = h.get(8);
+                for (int k = 0; k < this.imagex.size(); k++) {
+                    xYPert[k] = new Double(this.imagey.get(k));
+                    xY[k]     = new Double(this.imagey.get(k));
+                }
 
-        for (int i = 0; i < this.worldxy.length; i++) {
+                xYPert[i] += eps;
 
-            Matrix a_2iMinus1 = Matrix.rowMatrix(AMat.getRow(2*i).copyArray());
-            Matrix a_2i = Matrix.rowMatrix(AMat.getRow(2*i+1).copyArray());
+                for (int k = 0; k < this.imagex.size(); k++) {
+                    xX[k]     = new Double(this.imagex.get(k));
+                }
 
-            double Xi = this.worldxy[i][0];
-            double Yi = this.worldxy[i][1];
+                double[][] xyPert = ArrayUtil.cat(xX, xYPert);
+                double[][] xy = ArrayUtil.cat(xX, xY);
+                double[][] worldxyArray = new double[worldx.size()][2];
+                for (int k = 0; k < this.worldx.size(); k++) {
+                    worldxyArray[k][0] = worldx.get(k);
+                    worldxyArray[k][1] = worldy.get(k);
+                }
 
-            double fio = sq(sigmaFeat) * (sq(h1) + sq(h2) - 2*Xi*(h1*h7 + h2*h8)) + (sq(sigmaFeat)*sq(Xi))*sq(h7) + (sq(sigmaFeat)*sq(Xi))*sq(h8);
-            double fie = sq(sigmaFeat) * (sq(h4) + sq(h5) - 2*Yi*(h4*h7 + h5*h8)) + (sq(sigmaFeat)*sq(Yi))*sq(h7) + (sq(sigmaFeat)*sq(Yi))*sq(h8);
-            double fioe = sq(sigmaFeat)* ((h1 - Xi*h7)*(h4 - Yi*h7) + (h2 - Xi*h8)*(h5 - Yi*h8));
+                double[] y = compute2();
+                addCorrespondences(worldxyArray, xyPert);
+                double[] yPert = compute2();
+                addCorrespondences(worldxyArray, xy);
 
-            S.plusEquals(a_2iMinus1.transpose().times(a_2iMinus1).times(fio));
-            S.plusEquals(a_2i.transpose().times(a_2i).times(fie));
-            S.plusEquals(a_2iMinus1.transpose().times(a_2i).times(fioe));
-            S.plusEquals(a_2i.transpose().times(a_2iMinus1).times(fioe));
+                double finiteDiff = (yPert[j] - y[j]) / eps;
 
+                J.set(j, 2*i+1, finiteDiff);
+                
+            }
         }
 
-        return J.times(S).times(J.transpose()).copyArray();
+        return J.copyArray();
 
+    }
+
+    public double[][] getCov() {
+        Matrix J = new Matrix(homogJacob());
+        return J.times(J.transpose()).copyArray();
     }
 
     public static double sq(double x) {
@@ -298,5 +369,6 @@ public class Homography33
             double xyw[] = homography.project(worldxy[j][0], worldxy[j][1]);
             System.out.printf("                                -> %15f %15f\n", xyw[0], xyw[1]);
         }
+        
     }
 }

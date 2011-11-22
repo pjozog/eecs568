@@ -196,7 +196,7 @@ public class Homography33
             for (int j = 0; j < 3; j++)
                 H[i][j] = V.get(i*3+j, V.getColumnDimension()-1);
 
-        ArrayUtil.print2dArray(computeCov(1, svd));
+        //ArrayUtil.print2dArray(computeCov(1, svd));
 
         return H;
     }

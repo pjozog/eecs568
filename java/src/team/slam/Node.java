@@ -1,9 +1,9 @@
 package team.slam;
 
 public abstract class Node{
- 
+
     private double [] state;
-    
+
     private int dof;
 
     public int getDOF(){

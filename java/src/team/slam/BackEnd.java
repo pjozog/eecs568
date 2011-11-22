@@ -49,6 +49,16 @@ public class BackEnd{
      */
     public void addEdge(Edge edge) {
 
+        // Fills in connected nodes appropriately
+        edge.initialize();
+
+        edges.add(edge);
+
+        edgeDimension += edge.getDOF();
+
+        numNewRows += edge.getDOF();
+        numNewMeasurements++;
+
     }
 
     /**

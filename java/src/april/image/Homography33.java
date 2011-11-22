@@ -2,6 +2,8 @@ package april.image;
 
 import april.jmat.*;
 
+import team.common.ArrayUtil;
+
 /** Compute 3x3 homography using Direct Linear Transform
 
     y = Hx (y = image coordinates in homogeneous coordinates, H = 3x3
@@ -28,6 +30,8 @@ public class Homography33
 
     double cx, cy;
 
+    double[][] worldxy;
+
     public Homography33(double cx, double cy)
     {
         this.cx = cx;
@@ -48,6 +52,7 @@ public class Homography33
 
     public void addCorrespondences(double worldxy[][], double imagexy[][])
     {
+        this.worldxy = worldxy;
         for (int i = 0; i < worldxy.length; i++)
             addCorrespondence(worldxy[i][0], worldxy[i][1], imagexy[i][0], imagexy[i][1]);
     }
@@ -191,7 +196,70 @@ public class Homography33
             for (int j = 0; j < 3; j++)
                 H[i][j] = V.get(i*3+j, V.getColumnDimension()-1);
 
+        ArrayUtil.print2dArray(computeCov(1, svd));
+
         return H;
+    }
+
+    //From
+    //http://www.robots.ox.ac.uk/~vgg/presentations/bmvc97/criminispaper/node5.html
+    public double[][] computeCov(double sigmaFeat, SingularValueDecomposition svd) {
+
+        Matrix V = svd.getV();
+        Matrix J = new Matrix(V.getColumn(0).size(), V.getColumn(0).size());
+
+        //April's svd starts with smallest singular values first, so
+        //sum over *first* 8 singular valuues, not the last 8 that the
+        //source says
+        for (int k = 0; k < 8; k++) {
+            Matrix uk = Matrix.columnMatrix(V.getColumn(k).copyArray());
+            double scale = 1.0/(svd.getSingularValues()[k]);
+            Matrix outerProd = uk.times(uk.transpose());
+            outerProd.timesEquals(scale);
+            J.plusEquals(outerProd);
+        }
+
+        J.timesEquals(-1.0);
+
+        Matrix S = new Matrix(9,9);
+        Matrix AMat = new Matrix(A);
+        Vec h = svd.getV().getColumn(V.getColumnDimension()-1);
+
+        double h1 = h.get(0);
+        double h2 = h.get(1);
+        double h3 = h.get(2);
+        double h4 = h.get(3);
+        double h5 = h.get(4);
+        double h6 = h.get(5);
+        double h7 = h.get(6);
+        double h8 = h.get(7);
+        double h9 = h.get(8);
+
+        for (int i = 0; i < this.worldxy.length; i++) {
+
+            Matrix a_2iMinus1 = Matrix.rowMatrix(AMat.getRow(2*i).copyArray());
+            Matrix a_2i = Matrix.rowMatrix(AMat.getRow(2*i+1).copyArray());
+
+            double Xi = this.worldxy[i][0];
+            double Yi = this.worldxy[i][1];
+
+            double fio = sq(sigmaFeat) * (sq(h1) + sq(h2) - 2*Xi*(h1*h7 + h2*h8)) + (sq(sigmaFeat)*sq(Xi))*sq(h7) + (sq(sigmaFeat)*sq(Xi))*sq(h8);
+            double fie = sq(sigmaFeat) * (sq(h4) + sq(h5) - 2*Yi*(h4*h7 + h5*h8)) + (sq(sigmaFeat)*sq(Yi))*sq(h7) + (sq(sigmaFeat)*sq(Yi))*sq(h8);
+            double fioe = sq(sigmaFeat)* ((h1 - Xi*h7)*(h4 - Yi*h7) + (h2 - Xi*h8)*(h5 - Yi*h8));
+
+            S.plusEquals(a_2iMinus1.transpose().times(a_2iMinus1).times(fio));
+            S.plusEquals(a_2i.transpose().times(a_2i).times(fie));
+            S.plusEquals(a_2iMinus1.transpose().times(a_2i).times(fioe));
+            S.plusEquals(a_2i.transpose().times(a_2iMinus1).times(fioe));
+
+        }
+
+        return J.times(S).times(J.transpose()).copyArray();
+
+    }
+
+    public static double sq(double x) {
+        return x*x;
     }
 
     public double[] project(double worldx, double worldy)

@@ -60,6 +60,10 @@ public class SixDofCoords {
         ArrayUtil.print1dArray(xjkEst);
         System.out.println();
 
+        System.out.println("xjkEst Position:");
+        ArrayUtil.print1dArray(getPosition(xjkEst));
+        System.out.println();
+
         double[][] J = headToTailJacob(xij, xjk);
         System.out.println("Head to Tail Jacobian:");
         ArrayUtil.print2dArray(J);
@@ -75,6 +79,12 @@ public class SixDofCoords {
         ArrayUtil.print2dArray(J);
         System.out.println();
 
+        System.out.println("Positional Covariance Example:");
+        J = headToTailJacob(xij, xik);
+        //Compute a 6x6 covariance projection, assuming isotropic, univariate noise
+        double[][] sigma = getPositionCov(LinAlg.matrixAB(J, LinAlg.transpose(J)));
+        ArrayUtil.print2dArray(sigma);
+        System.out.println();
 
     }
 
@@ -136,6 +146,40 @@ public class SixDofCoords {
         
         return headToTail(inverse(xij), xik);
 
+    }
+
+    /**
+     * Get the position for a pose (useful for landmark constraints)
+     */
+    public static double[] getPosition(double[] relPose) {
+        double[] pos = new double[3];
+        for (int i = 0; i < 3; i++) {
+            pos[i] = new Double(relPose[i]);
+        }
+        return pos;
+    }
+
+    /**
+     * Compute positional uncertainty by marginalizing out orientation
+     * uncertainty.  Useful for getting the covariance of a landmark
+     * constraint
+     */
+    public static double[][] getPositionCov(double[][] sigmaFull) {
+
+        assert((sigmaFull.length == 6 && sigmaFull[0].length == 6));
+
+        double[][] sigmaPosition = new double[3][3];
+        
+        for (int row = 0; row < 3; row++)
+            for (int col = 0; col < 3; col++)
+                sigmaPosition[row][col] = sigmaFull[row][col];
+
+        return sigmaPosition;
+
+    }
+
+    public static double[][] getPositionCov(Matrix sigmaFull) {
+        return getPositionCov(sigmaFull.copyArray());
     }
 
     /**

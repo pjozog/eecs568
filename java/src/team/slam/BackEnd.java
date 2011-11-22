@@ -28,8 +28,6 @@ public class BackEnd{
         numNewRows         = 0;
         numNewMeasurements = 0;
 
-
-
     }
 
     /**

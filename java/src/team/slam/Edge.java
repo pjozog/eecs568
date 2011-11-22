@@ -8,18 +8,22 @@ public abstract class Edge {
      */
     protected List<Node> nodes;
 
+    /**
+     * The uncertainty of the edge.
+     */
+    protected Matrix cov;
 
     /**
      * Degrees of Freedom in the Edge.
      */
-    abstract int getDOF();
+    abstract public int getDOF();
 
 
     /**
      * Will give the connected nodes appropriate values and also inform them of itself.
      * Consfusing? I agree.
      */
-    abstract void initialize();
+    abstract public void initialize();
 
 
 }

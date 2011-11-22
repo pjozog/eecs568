@@ -3,15 +3,12 @@ package team.slam;
 public abstract class Node{
 
     private double [] state;
+    protected boolean isInitialized;
 
-    private int dof;
+    abstract public int getDOF();
 
-    public int getDOF(){
-        return dof;
+    public boolean initialized() {
+        return isInitialized;
     }
 
-    public Node(int inDof){
-        dof = inDof;
-        state = new double[dof];
-    }
 }

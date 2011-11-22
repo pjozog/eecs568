@@ -1,8 +1,12 @@
 package team.slam;
 
-public class Point3DNode extends Node{
-    
+public class Point3DNode extends Node {
+
     public Point3DNode(){
-        super(3);
+
+    }
+
+    public int getDOF() {
+        return 3;
     }
 }

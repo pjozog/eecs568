@@ -1,10 +1,14 @@
 package team.slam;
 
 
-public class Pose3DNode extends Node{
-    
+public class Pose3DNode extends Node {
+
     public Pose3DNode(){
-        super(6);
+
+    }
+
+    public int getDOF() {
+        return 6;
     }
 
 }

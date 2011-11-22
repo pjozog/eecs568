@@ -725,6 +725,7 @@ public class TagDetector
                     detections.add(d);
                     d.cxy = quad.interpolate01(.5, .5);
                     d.observedPerimeter = quad.observedPerimeter;
+                    d.covariance = quad.homography.getCov();
                 }
             }
         }

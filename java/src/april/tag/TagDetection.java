@@ -43,6 +43,11 @@ public class TagDetection
      * reflects the orientation of the target. **/
     public double homography[][];
 
+    /**
+     * The covariance of the 9x1 homography
+     */
+    public double covariance[][];
+
     /** The homography is relative to image center, whose coordinates
      * are below.
      **/

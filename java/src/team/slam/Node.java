@@ -6,10 +6,9 @@ public abstract class Node {
 
     abstract public int getDOF();
 
-    // Sory Bjarne
-    // abstract public void init(Object aPrediction);
-
     abstract public double[] getLinearizationState();
+
+    abstract public double[] getStateArray();
 
     public boolean isInitialized() {
         return initialized;

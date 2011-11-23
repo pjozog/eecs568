@@ -17,6 +17,10 @@ public class Point3DNode extends Node {
         return currState;
     }
 
+    public double[] getStateArray() {
+        return currState.getArray();
+    }
+
     public double[] getLinearizationState() {
         return linState.getArray();
     }

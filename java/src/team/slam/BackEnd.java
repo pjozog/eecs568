@@ -90,4 +90,25 @@ public class BackEnd{
 
     // }
 
+    public double[] getStateEstimate() {
+
+        int index = 0;
+
+        double[] estimate = new double[nodeDimension];
+
+        // Every node contributes to the state estimate
+        for (Node aNode : nodes) {
+
+            double[] nodeState = aNode.getStateArray();
+            for (int i=0; i < aNode.getDOF(); i++) {
+                estimate[index+i] = nodeState[i];
+            }
+
+            index += aNode.getDOF();
+
+        }
+
+        return estimate;
+    }
+
 }

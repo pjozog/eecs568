@@ -1,5 +1,7 @@
 package team.slam;
 
+import java.util.List;
+import java.util.ArrayList;
 import april.jmat.Matrix;
 
 /**
@@ -12,7 +14,7 @@ public class Pose3DEdge extends Edge{
 
     public Pose3DEdge(Pose3DNode n1, Pose3D position, Matrix cov){
 
-        nodes = new ArrayList<Pose>();
+        nodes = new ArrayList<Node>();
         nodes.add(n1);
 
         this.position = position;
@@ -25,12 +27,10 @@ public class Pose3DEdge extends Edge{
     }
 
     public void initialize() {
-
         Pose3DNode aNode = (Pose3DNode)nodes.get(0);
-        if (!aNode.initialized()) {
-
+        if (!aNode.isInitialized()) {
+            aNode.init(position);
         }
-
     }
 
 }

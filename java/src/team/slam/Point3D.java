@@ -6,6 +6,11 @@ public class Point3D {
     private double y;
     private double z;
 
+    public Point3D() {
+        x = 0.0;
+        y = 0.0;
+        z = 0.0;
+    }
 
     public Point3D(double x, double y, double z) {
         this.x = x;

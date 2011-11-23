@@ -8,6 +8,12 @@ public class Rot3D {
     private double pitch;
     private double yaw;
 
+    public Rot3D() {
+        roll = 0.0;
+        pitch = 0.0;
+        yaw = 0.0;
+    }
+
     public Rot3D(double roll, double pitch, double yaw) {
         this.roll = roll;
         this.pitch = pitch;

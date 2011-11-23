@@ -2,11 +2,12 @@ package team.common;
 
 import april.jmat.LinAlg;
 import april.jmat.Matrix;
+import team.slam.Pose3D;
 
 import java.util.*;
 
 public class SixDofCoords {
-    
+
     public static final double[] xOpenGlToHz = new double[]{0,0,0,Math.PI,0,0};
 
     public static void main(String[] args) {
@@ -92,11 +93,11 @@ public class SixDofCoords {
      * xik = xij \oplus xjk
      */
     public static double[] headToTail(double[] xij, double[] xjk) {
-        
+
         Matrix Hij = new Matrix(LinAlg.xyzrpyToMatrix(xij));
         Matrix Hjk = new Matrix(LinAlg.xyzrpyToMatrix(xjk));
         Matrix Hik = new Matrix(4,4);
-        
+
         Hik = Hij.times(Hjk);
 
         double[] xik = LinAlg.matrixToXyzrpy(Hik.copyArray());
@@ -109,13 +110,13 @@ public class SixDofCoords {
      * xji = \ominus xij
      */
     public static double[] inverse(double[] xij) {
-        
+
         Matrix Hij = new Matrix(LinAlg.xyzrpyToMatrix(xij));
-        
+
         //Get the 3x3 rotation matrix
         Matrix Rji = new Matrix(Hij.copyArray(0, 0, 3, 3));
         Matrix tij = new Matrix(Hij.copyArray(0, 3, 3, 1));
-        
+
         //Convert to inverse coordinate transform
         Matrix Rij = Rji.transpose();
         Matrix tji = Rij.times(tij).times(-1.0);
@@ -123,9 +124,9 @@ public class SixDofCoords {
         Matrix Hji = new Matrix(4, 4);
 
         //Set 3x3 rotation matrix in Hji
-        Hji.set(0, 0, Rij.get(0, 0)); Hji.set(0, 1, Rij.get(0, 1)); Hji.set(0, 2, Rij.get(0, 2)); 
-        Hji.set(1, 0, Rij.get(1, 0)); Hji.set(1, 1, Rij.get(1, 1)); Hji.set(1, 2, Rij.get(1, 2)); 
-        Hji.set(2, 0, Rij.get(2, 0)); Hji.set(2, 1, Rij.get(2, 1)); Hji.set(2, 2, Rij.get(2, 2)); 
+        Hji.set(0, 0, Rij.get(0, 0)); Hji.set(0, 1, Rij.get(0, 1)); Hji.set(0, 2, Rij.get(0, 2));
+        Hji.set(1, 0, Rij.get(1, 0)); Hji.set(1, 1, Rij.get(1, 1)); Hji.set(1, 2, Rij.get(1, 2));
+        Hji.set(2, 0, Rij.get(2, 0)); Hji.set(2, 1, Rij.get(2, 1)); Hji.set(2, 2, Rij.get(2, 2));
 
         //Set 3x1 translation matrix in Hji
         Hji.set(0, 3, tji.get(0));
@@ -143,10 +144,35 @@ public class SixDofCoords {
      * xjk = \ominus xij \oplus xik
      */
     public static double[] tailToTail(double[] xij, double[] xik) {
-        
+
         return headToTail(inverse(xij), xik);
 
     }
+
+    // /**
+    //  * Utility transformation. Mostly so we don't have to change the functions that are
+    //  * already in here.
+    //  */
+    // public static Pose3D doubleArrayToPose3D(double[] values) {
+
+    //     if (values.length != 6) {
+    //         System.out.println("Error! Wrong length vector to transform into Pose3D");
+    //     }
+
+    //     return new Pose3D(values);
+
+    // }
+
+    // /**
+    //  * Utility transformation. Mostly so we don't have to change the functions that are
+    //  * already in here.
+    //  */
+    // public static double[] pose3DToDoubleArray(Pose3D aPose) {
+
+    //     return aPose.getArray();
+
+    // }
+
 
     /**
      * Get the position for a pose (useful for landmark constraints)
@@ -169,7 +195,7 @@ public class SixDofCoords {
         assert((sigmaFull.length == 6 && sigmaFull[0].length == 6));
 
         double[][] sigmaPosition = new double[3][3];
-        
+
         for (int row = 0; row < 3; row++)
             for (int col = 0; col < 3; col++)
                 sigmaPosition[row][col] = sigmaFull[row][col];
@@ -186,7 +212,7 @@ public class SixDofCoords {
      * Numerically compute jacobian for headToTail
      */
     public static double[][] headToTailJacob(double[] xij, double[] xjk) {
-        
+
         double eps = 1e-6;
 
         Matrix J = new Matrix(6, 12);
@@ -207,7 +233,7 @@ public class SixDofCoords {
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
                 J.set(j, i, finiteDiff);
-                
+
             }
         }
 
@@ -227,7 +253,7 @@ public class SixDofCoords {
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
                 J.set(j, i+6, finiteDiff);
-                
+
             }
         }
 
@@ -239,7 +265,7 @@ public class SixDofCoords {
      * Numerically compute jacobian for tailToTail
      */
     public static double[][] tailToTailJacob(double[] xij, double[] xik) {
-        
+
         double eps = 1e-6;
 
         Matrix J = new Matrix(6, 12);
@@ -260,7 +286,7 @@ public class SixDofCoords {
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
                 J.set(j, i, finiteDiff);
-                
+
             }
         }
 
@@ -280,7 +306,7 @@ public class SixDofCoords {
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
                 J.set(j, i+6, finiteDiff);
-                
+
             }
         }
 
@@ -292,7 +318,7 @@ public class SixDofCoords {
      * Numerically compute jacobian for inverse
      */
     public static double[][] inverseJacob(double[] xij) {
-        
+
         double eps = 1e-6;
 
         Matrix J = new Matrix(6, 6);
@@ -313,12 +339,12 @@ public class SixDofCoords {
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
                 J.set(j, i, finiteDiff);
-                
+
             }
         }
 
         return J.copyArray();
 
     }
-    
+
 }

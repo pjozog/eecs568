@@ -3,12 +3,14 @@ package team.slam;
 public abstract class Node{
 
     private double [] state;
-    protected boolean isInitialized;
+    protected boolean initialized = false;
 
     abstract public int getDOF();
+    abstract public void init();
 
-    public boolean initialized() {
-        return isInitialized;
+
+    public boolean isInitialized() {
+        return initialized;
     }
 
 }

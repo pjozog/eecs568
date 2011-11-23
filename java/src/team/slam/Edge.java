@@ -1,5 +1,8 @@
 package team.slam;
 
+import java.util.List;
+import april.jmat.Matrix;
+
 public abstract class Edge {
 
     /**

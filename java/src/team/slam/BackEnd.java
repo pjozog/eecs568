@@ -46,7 +46,7 @@ public class BackEnd{
         edgeDimension      = 0;
         numNewRows         = 0;
         numNewMeasurements = 0;
-        
+
     }
 
     /**
@@ -272,5 +272,12 @@ public class BackEnd{
     }
 
 
+    public List<Node> getNodes() {
+        return nodes;
+    }
+
+    public List<Edge> getEdges() {
+        return edges;
+    }
 
 }

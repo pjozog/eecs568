@@ -30,6 +30,10 @@ public class Listener implements OldSimulator.Listener {
     Pose3DNode prevPose;
 
 
+    // Drawing
+    List<VzLines> trajectory = new ArrayList<VzLines>();
+    List<VzPoints> landmarks = new ArrayList<VzPoints>();
+
     public void init(Config _config, VisWorld _vw) {
 
         config  = _config;
@@ -63,7 +67,7 @@ public class Listener implements OldSimulator.Listener {
         // Create Pose3DEdge
         Pose3DNode p3dn = new Pose3DNode();
         Pose3DEdge p3de = new Pose3DEdge(p3dn, p3d, cov);
-        
+
         prevPose = p3dn;
 
         slam.addNode(p3dn);
@@ -73,31 +77,30 @@ public class Listener implements OldSimulator.Listener {
 
     public void update(OldSimulator.odometry_t odom, ArrayList<OldSimulator.landmark_t> dets) {
 
-        
+
         DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
         double x = ticksXYT.get(0);
         double y = ticksXYT.get(1);
         double t = ticksXYT.get(2);
 
-        //Turn into Pose3D
+        //Turn XYT into Pose3D
         Pose3D deltaMotion = new Pose3D(x, y, 0, 0, 0, t);
-        
+
         Pose3DNode p3dn = new Pose3DNode();
-        
+
         Matrix cov = Matrix.identity(6, 6);
         cov.times(100);
 
-        Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(prevPose, p3dn, deltaMotion, cov);
         //Create Pose3DtoPose3DEdge with prevPose
+        Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(prevPose, p3dn, deltaMotion, cov);
 
         prevPose = p3dn;
 
         slam.addNode(p3dn);
-        slam.addEdge(poseToPose); 
-        // slam.addNode(node)
-        // slam.addEdge(edge)
+        slam.addEdge(poseToPose);
 
+        //Turn landmarks into Point3D's
         for(OldSimulator.landmark_t landmark : dets){
             double rLand = landmark.obs[0];
             double tLand = landmark.obs[1];
@@ -118,17 +121,72 @@ public class Listener implements OldSimulator.Listener {
             slam.addNode(pointNode);
             slam.addEdge(poseToPoint);
         }
-        //Turn landmarks into Point3D's
-        //Create Pose3DToPoint3DEdge
-        // slam.addNode(node)
-        // slam.addEdge(edge)
-        
 
-
-        drawDummy(dets);
+        drawSetup();
+        drawScene(dets);
     }
 
-    public void drawDummy(ArrayList<OldSimulator.landmark_t> landmarks) {
+    private void drawSetup() {
+
+        trajectory.clear();
+        landmarks.clear();
+
+        List<Node> allNodes = slam.getNodes();
+
+        for (Node aNode : allNodes) {
+
+            if (aNode instanceof Pose3DNode) {
+
+                trajectory.add(Quiver.getQuiverAt(aNode.getStateArray()));
+
+            } else if (aNode instanceof Point3DNode) {
+
+                VzPoint posGuess = new VzPoints(new VisVertexData(aNode.getStateArray()),
+                                                new VisConstantColor(Color.cyan),
+                                                10.0);
+                landmarks.add(posGuess);
+
+            } else {
+
+                System.out.println("Goodness! What kind of node do we have here?");
+
+            }
+
+        }
+
+
+    }
+
+    public void drawScene(ArrayList<OldSimulator.landmark_t> landmarks) {
+
+        // Draw trajectory -- the red robot path -- our least squares "best guess"
+        {
+            VisWorld.Buffer vb = vw.getBuffer("trajectory");
+
+            for (VzLines oneQuiver : trajectory) {
+
+                vb.addBack(oneQuiver);
+
+            }
+
+            vb.swap();
+        }
+
+
+        // Draw our least squares best guess of the landmark positions
+        {
+            VisWorld.Buffer vb = vw.getBuffer("landmarks");
+
+            for (VzPoints aPoint : landmarks) {
+
+                vb.addBack(aPoint);
+
+            }
+
+            vb.swap();
+
+        }
+
 
     }
 

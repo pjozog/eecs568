@@ -3,6 +3,7 @@ package team.slam;
 import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
+import april.jmat.LinAlg;
 import team.common.SixDofCoords;
 
 public class Pose3DToPoint3DEdge extends Edge {
@@ -64,14 +65,24 @@ public class Pose3DToPoint3DEdge extends Edge {
 
     }
 
+    protected Matrix getJacobian() {
 
-    protected Matrix getJacobian(List<double[]> linPoints) {
+        return new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
+                                                       nodes.get(1).getStateArray()));
 
-        return new Matrix(2,2);
     }
 
+    //Must be 3x1 vector (xyz)
     protected double[] getResidual() {
-        return new double[] {0.0};
+
+        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+                                                   nodes.get(1).getStateArray());
+
+        double[] predictedXyz = SixDofCoords.getPosition(relPose);
+        double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
+
+        return residual;
+
     }
 
 }

@@ -31,16 +31,19 @@ public abstract class Edge {
 
 
     /**
-     * Returns a matrix containing the jacobian blocks for the nodes. The points to
-     * evaluate at for each node are passed in.
+     * Returns a matrix containing the jacobian of the measurement
+     * model for the nodes. It will be evaluated at the current state
+     * vector
      */
-    abstract protected Matrix getJacobian(List<double[]> linPoints);
+    abstract protected Matrix getJacobian();
 
 
     /**
      * Get the residual
      *
-     * TODO: I haven't thought about this yet.
+     * Returns the (observation) - (predicted observation).  The
+     * predicted observation is from the measurement model.  This is
+     * the function we take the jacobian of in getJacobian()
      */
     abstract protected double[] getResidual();
 
@@ -55,13 +58,7 @@ public abstract class Edge {
 
         Linearization result = new Linearization();
 
-        // Accumulate the places to linearize our shtuff
-        List<double[]> linearizationPoints = new ArrayList<double[]>();
-        for (Node aNode : nodes) {
-            linearizationPoints.add(aNode.getLinearizationState());
-        }
-
-        Matrix jacobians = getJacobian(linearizationPoints);
+        Matrix jacobians = getJacobian();
 
         // Split up the jacob into appropriate blocks
         int col = 0;

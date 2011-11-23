@@ -72,11 +72,16 @@ public class BackEnd{
      * evaluate it at the best state vector estimate, assemble JtSigmaJ, compute the
      * residual, and find the new optimal stuff.
      */
-    public boolean solve() {
+    public void solve() {
 
-        // yay!
-        return true;
+        gaussNewton();
+
+
     }
+
+
+    //TODO: Accessors to get solution. Depends on how we want to draw things.
+
 
     private double[] gaussNewton() {
 
@@ -86,10 +91,11 @@ public class BackEnd{
 
         double maxChange = 0;
 
+        Matrix sigmaInv = assembleInvCov();
+
         do {
 
             Matrix J = assembleJacobian();
-            Matrix sigmaInv = assembleInvCov();
             double[] residuals = assembleResiduals();
 
             Matrix jtSig = J.transpose().times(sigmaInv);
@@ -120,30 +126,29 @@ public class BackEnd{
 
     }
 
-    private double[] assembleResiduals() {
-        return new double[1];
-    }
 
-    private void updateNodesWithNewState(double[] x) {
+    private double[] assembleResiduals() {
+
+        double[] theResiduals = new double[edgeDimension];
 
         int count = 0;
-        for (Node aNode : nodes) {
+        for (Edge anEdge : edges) {
 
-            int nodeDim = aNode.getDOF();
+            double[] edgeResid = anEdge.getResidual();
 
-            double[] newState = new double[nodeDim];
-            for (int i = 0; i < nodeDim; i++) {
-                newState[i] = x[count + i];
+            for (int i = 0; i < anEdge.getDOF(); i++) {
+                theResiduals[count+i] = edgeResid[i];
             }
 
-            aNode.setStateArray(newState);
+            count += anEdge.getDOF();
 
-            count += nodeDim;
         }
+
+        return theResiduals;
 
     }
 
-    //TODO: Accessors to get solution. Depends on how we want to draw things.
+
 
 
     private Matrix assembleJacobian() {
@@ -185,6 +190,27 @@ public class BackEnd{
 
     }
 
+
+    /*Takes all the cov blocks from the edges and assembles the large inverse matrix*/
+    private Matrix assembleInvCov(){
+
+        int curIndex = 0;
+
+        /*edgeDimension is the total DOF of all edges*/
+        Matrix cov = new Matrix(edgeDimension, edgeDimension, Matrix.SPARSE);
+        for(Edge edge : edges){
+
+            double[][] covInv = edge.getCov().inverse().copyArray();
+
+            cov.set(curIndex, curIndex, covInv);
+
+            curIndex += edge.getDOF();
+        }
+        return cov;
+
+    }
+
+
     private double[] getStateEstimate() {
 
         int index = 0;
@@ -206,6 +232,27 @@ public class BackEnd{
         return estimate;
     }
 
+
+    private void updateNodesWithNewState(double[] x) {
+
+        int count = 0;
+        for (Node aNode : nodes) {
+
+            int nodeDim = aNode.getDOF();
+
+            double[] newState = new double[nodeDim];
+            for (int i = 0; i < nodeDim; i++) {
+                newState[i] = x[count + i];
+            }
+
+            aNode.setStateArray(newState);
+
+            count += nodeDim;
+        }
+
+    }
+
+
     private void updateNodeIndices(){
         int curIndex = 0;
         for(Node node : nodes){
@@ -214,23 +261,6 @@ public class BackEnd{
         }
     }
 
-    /*Takes all the cov blocks from the edges and assembles the large inverse matrix*/
-    private Matrix assembleInvCov(){
 
-        int curIndex = 0;
-
-        /*edgeDimension is the total DOF of all edges*/
-        Matrix cov = new Matrix(edgeDimension, edgeDimension, Matrix.SPARSE);
-        for(Edge edge : edges){
-
-            double[][] covInv = edge.getCov().inverse().copyArray();
-
-            cov.set(curIndex, curIndex, covInv);
-
-            curIndex += edge.getDOF();
-        }
-        return cov;
-
-    }
 
 }

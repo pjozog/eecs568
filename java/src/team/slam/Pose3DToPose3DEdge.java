@@ -64,13 +64,13 @@ public class Pose3DToPose3DEdge extends Edge {
 
     }
 
-    protected double[] getResidual() {
+    public double[] getResidual() {
 
         double[] predictedOdom = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
                                                          nodes.get(1).getStateArray());
 
         double[] residual = LinAlg.subtract(deltaMotion.getArray(), predictedOdom);
-        
+
         return residual;
 
     }

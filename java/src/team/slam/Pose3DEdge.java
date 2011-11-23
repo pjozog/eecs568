@@ -41,7 +41,7 @@ public class Pose3DEdge extends Edge{
 
     }
 
-    protected double[] getResidual() {
+    public double[] getResidual() {
 
         double[] predicted = nodes.get(0).getStateArray();
         double[] residual = LinAlg.subtract(position.getArray(), predicted);

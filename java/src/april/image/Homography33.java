@@ -238,7 +238,7 @@ public class Homography33
 
     public double[][] homogJacob() {
         
-        double eps = .1;
+        double eps = 1;
 
         Matrix J = new Matrix(9, 9);
 
@@ -265,14 +265,20 @@ public class Homography33
                 double[][] xy = ArrayUtil.cat(xX, xY);
                 double[][] worldxyArray = new double[worldx.size()][2];
                 for (int k = 0; k < this.worldx.size(); k++) {
-                    worldxyArray[k][0] = worldx.get(k);
-                    worldxyArray[k][1] = worldy.get(k);
+                    worldxyArray[k][0] = new Double(worldx.get(k));
+                    worldxyArray[k][1] = new Double(worldy.get(k));
                 }
 
                 double[] y = compute2();
                 addCorrespondences(worldxyArray, xyPert);
                 double[] yPert = compute2();
                 addCorrespondences(worldxyArray, xy);
+
+                if ((yPert[0] < 0 && y[0] > 0 ) ||
+                    (yPert[0] > 0 && y[0] < 0)) {
+                    for (int k = 0; k < yPert.length; k++)
+                        yPert[k] *= -1;
+                }
 
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
@@ -281,7 +287,7 @@ public class Homography33
             }
         }
 
-        //Differentiate with respect to image x's
+        //Differentiate with respect to image y's
         for (int i = 0; i < this.imagey.size(); i++) {
             for (int j = 0; j < 9; j++) {
 
@@ -304,14 +310,20 @@ public class Homography33
                 double[][] xy = ArrayUtil.cat(xX, xY);
                 double[][] worldxyArray = new double[worldx.size()][2];
                 for (int k = 0; k < this.worldx.size(); k++) {
-                    worldxyArray[k][0] = worldx.get(k);
-                    worldxyArray[k][1] = worldy.get(k);
+                    worldxyArray[k][0] = new Double(worldx.get(k));
+                    worldxyArray[k][1] = new Double(worldy.get(k));
                 }
 
                 double[] y = compute2();
                 addCorrespondences(worldxyArray, xyPert);
                 double[] yPert = compute2();
                 addCorrespondences(worldxyArray, xy);
+
+                if ((yPert[0] < 0 && y[0] > 0 ) ||
+                    (yPert[0] > 0 && y[0] < 0)) {
+                    for (int k = 0; k < yPert.length; k++)
+                        yPert[k] *= -1;
+                }
 
                 double finiteDiff = (yPert[j] - y[j]) / eps;
 
@@ -325,8 +337,9 @@ public class Homography33
     }
 
     public double[][] getCov() {
+        double sigma = 2;
         Matrix J = new Matrix(homogJacob());
-        return J.times(J.transpose()).copyArray();
+        return J.times(J.transpose().times(sigma)).copyArray();
     }
 
     public static double sq(double x) {

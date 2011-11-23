@@ -177,12 +177,6 @@ public class TagDemo {
 
                     Matrix Sigma = J.times(new Matrix(d.covariance)).times(J.transpose());
 
-                    // System.out.println("--------------------------------------------------");
-                    // ArrayUtil.print2dArray(getPoseJacob(d.homography));
-                    // System.out.println();
-                    // ArrayUtil.print2dArray(Sigma.copyArray());
-                    // System.out.println("--------------------------------------------------");
-
                     poseDisplay.addBack(new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
                                                                 new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
                                                                            String.format("<<cyan>>[%.2f %.2f %.2f %.2f %.2f %.2f]", 
@@ -198,7 +192,7 @@ public class TagDemo {
 
                     msg.utime = System.nanoTime();
                     msg.mu    = poseTagToHzCam;
-                    msg.Sigma = Matrix.identity(6,6).copyAsVector();
+                    msg.Sigma = Sigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", msg);
 
                     vb.addBack(cam.getQuiverAt(poseTagToHzCam));
@@ -236,7 +230,7 @@ public class TagDemo {
             Matrix HMat = new Matrix(H);
             double[] h = HMat.getColumnPackedCopy();
 
-            double eps = 1e-6;
+            double eps = .01;
 
             Matrix J = new Matrix(6, 9);
 
@@ -265,15 +259,7 @@ public class TagDemo {
         }
 
         public double[][] hVecToMat(double[] h) {
-            assert(h.length == 9);
-
-            double[][] H = new double[3][3];
-
-            for (int i = 0; i < 3; i++)
-                for (int j = 0; j < 3; j++)
-                    H[i][j] = h[i*3+j];
-
-            return H;
+            return Matrix.columnPackedMatrix(h, 3, 3).copyArray();
         }
 
     }

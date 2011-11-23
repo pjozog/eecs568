@@ -90,7 +90,7 @@ public class Pose3D {
         r.setYaw(yaw);
     }
 
-    public void setArray(double[] values) {
+    public void setStateArray(double[] values) {
         if (values.length != 6) {
             System.out.println("Error! Wrong length vector for Pose3D");
         } else {

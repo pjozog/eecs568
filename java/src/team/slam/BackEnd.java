@@ -3,6 +3,7 @@ package team.slam;
 import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
+import april.jmat.LinAlg;
 
 public class BackEnd{
 
@@ -71,10 +72,71 @@ public class BackEnd{
         return true;
     }
 
+    private double[] gaussNewton() {
+
+        int numIter = 0;
+
+        double[] x = getStateEstimate();
+
+        do {
+
+            Matrix J = assembleJacobian();
+            Matrix sigmaInv = assembleInvCov();
+            double[] residuals = assembleResiduals();
+
+            Matrix jtSig = J.transpose().times(sigmaInv);
+
+            Matrix A = jtSig.times(J);
+
+            Matrix b = jtSig.times(Matrix.columnMatrix(residuals));
+
+            // Tikhanoff regulaization
+            A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
+            assert(A.isSparse());
+
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
+
+            double[] deltaX = myDecomp.solve(b).copyAsVector();
+
+            double maxChange = LinAlg.max(LinAlg.abs(deltaX));
+
+            x = LinAlg.add(x, deltaX);
+
+            updateNodesWithNewState(x);
+
+            numIter++;
+
+        } while (numIter < maxIter && maxChange > epsilon);
+
+        return x;
+
+    }
+
+    private void updateNodesWithNewState(double[] x) {
+
+        int count = 0;
+        for (Node aNode : nodes) {
+
+            int nodeDim = aNode.getDOF();
+
+            double[] newState = new double[nodeDim];
+            for (int i = 0; i < nodeDim; i++) {
+                newState[i] = x[count + i];
+            }
+
+            aNode.setStateArray(newState);
+
+            count += nodeDim;
+        }
+
+    }
+
     //TODO: Accessors to get solution. Depends on how we want to draw things.
 
 
-    public Matrix assembleJacobian(){
+    private Matrix assembleJacobian() {
+
+        updateNodeIndices();
 
         if (edgeDimension < nodeDimension) {
             System.out.println("How dare you work with an underconstrained system...");            

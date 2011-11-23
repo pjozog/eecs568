@@ -95,14 +95,17 @@ public class BackEnd{
             // For every jacobian block associated with the edge...
             for (int j = 0; i < edgeLin.J.size(); j++) {
 
-
-                bigJ.set(rowIndex, colInd, jBlock);
+                // The starting column index is the state vector index of the associated node
+                int colIndex =  anEdge.getNodes().get(j).getIndex();
+                bigJ.set(rowIndex, colIndex, jBlock);
 
             }
 
             rowIndex += anEdge.getDOF();
 
         }
+
+        return bigJ;
 
     }
 

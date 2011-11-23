@@ -17,7 +17,7 @@ public abstract class Node {
     public boolean isInitialized() {
         return initialized;
     }
-    
+
     public void setIndex(int index){
         stateIndex = index;
     }

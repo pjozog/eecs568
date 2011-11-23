@@ -73,4 +73,8 @@ public abstract class Edge {
         return result;
     }
 
+    public List<Node> getNodes() {
+        return nodes;
+    }
+
 }

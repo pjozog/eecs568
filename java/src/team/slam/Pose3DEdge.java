@@ -3,6 +3,7 @@ package team.slam;
 import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
+import april.jmat.LinAlg;
 
 /**
  * Used as a prior so we don't have an underconstrained system. Could be used anywhere if
@@ -34,13 +35,19 @@ public class Pose3DEdge extends Edge{
     }
 
 
-    protected Matrix getJacobian(List<double[]> linPoints) {
+    protected Matrix getJacobian() {
 
-        return new Matrix(2,2);
+        return Matrix.identity(3,3);
+
     }
 
     protected double[] getResidual() {
-        return new double[] {0.0};
+
+        double[] predicted = nodes.get(0).getStateArray();
+        double[] residual = LinAlg.subtract(position.getArray(), predicted);
+
+        return residual;
+
     }
 
 }

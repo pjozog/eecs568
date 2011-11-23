@@ -1,8 +1,7 @@
 package team.slam;
 
-public abstract class Node{
+public abstract class Node {
 
-    private double [] state;
     protected boolean initialized = false;
 
     abstract public int getDOF();
@@ -10,6 +9,7 @@ public abstract class Node{
     // Sory Bjarne
     // abstract public void init(Object aPrediction);
 
+    abstract public double[] getLinearizationState();
 
     public boolean isInitialized() {
         return initialized;

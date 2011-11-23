@@ -3,7 +3,7 @@ package team.slam;
 
 public class Pose3DNode extends Node {
 
-    Pose3D origState;
+    Pose3D linState;
     Pose3D currState;
 
     public Pose3DNode(){
@@ -18,7 +18,7 @@ public class Pose3DNode extends Node {
 
         initialized = true;
 
-        origState = new Pose3D(aPrediction);
+        linState = new Pose3D(aPrediction);
         currState = new Pose3D(aPrediction);
 
     }
@@ -27,8 +27,8 @@ public class Pose3DNode extends Node {
         return currState;
     }
 
-    public Pose3D getOrigState() {
-        return origState;
+    public double[] getLinearizationState() {
+        return linState.getArray();
     }
 
 }

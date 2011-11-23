@@ -2,6 +2,7 @@ package team.slam;
 
 import java.util.List;
 import java.util.ArrayList;
+import april.jmat.Matrix;
 
 public class BackEnd{
 
@@ -73,5 +74,20 @@ public class BackEnd{
     //TODO: Accessors to get solution. Depends on how we want to draw things.
 
 
+    // public Matrix assembleJacobian() {
+
+    //     if (edgeDimension < nodeDimension) {
+    //         System.out.println("How dare you work with an underconstrained system...");
+    //     }
+
+
+    //     // Loop over all the edges
+    //     for (int i = 0; i < edges.size(); i++) {
+
+    //         // Get the jacobian blocks for the edge (numerically or symbolically)
+
+    //     }
+
+    // }
 
 }

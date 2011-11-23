@@ -47,6 +47,11 @@ public class Point3D {
         return z;
     }
 
+    public double[] getArray() {
+        return new double[] {x, y, z};
+    }
+
+
     public void setX(double x) {
         this.x = x;
     }

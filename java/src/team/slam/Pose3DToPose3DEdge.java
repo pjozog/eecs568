@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
 import team.common.SixDofCoords;
+import team.slam.Linearization;
 
 public class Pose3DToPose3DEdge extends Edge {
 
@@ -53,5 +54,18 @@ public class Pose3DToPose3DEdge extends Edge {
         }
 
     }
+
+    protected Matrix getJacobian(List<double[]> linPoints) {
+
+        return new Matrix(SixDofCoords.headToTailJacob(linPoints.get(0), linPoints.get(1)));
+
+    }
+
+    protected double[] getResidual() {
+        return new double[] {0.0};
+    }
+
+
+
 
 }

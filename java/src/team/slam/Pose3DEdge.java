@@ -33,4 +33,14 @@ public class Pose3DEdge extends Edge{
         }
     }
 
+
+    protected Matrix getJacobian(List<double[]> linPoints) {
+
+        return new Matrix(2,2);
+    }
+
+    protected double[] getResidual() {
+        return new double[] {0.0};
+    }
+
 }

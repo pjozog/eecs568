@@ -2,7 +2,7 @@ package team.slam;
 
 public class Point3DNode extends Node {
 
-    Point3D origState;
+    Point3D linState;
     Point3D currState;
 
     public Point3DNode(){
@@ -17,12 +17,12 @@ public class Point3DNode extends Node {
         return currState;
     }
 
-    public Point3D getOrigState() {
-        return origState;
+    public double[] getLinearizationState() {
+        return linState.getArray();
     }
 
     public void init(Point3D aPrediction) {
-        origState = new Point3D(aPrediction);
+        linState = new Point3D(aPrediction);
         currState = new Point3D(aPrediction);
     }
 

@@ -28,7 +28,10 @@ public class Point3DNode extends Node {
     }
 
     public void init(Point3D aPrediction) {
+
+        initialized = true;
         currState = new Point3D(aPrediction);
+
     }
 
 }

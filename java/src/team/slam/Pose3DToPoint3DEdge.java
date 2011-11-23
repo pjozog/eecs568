@@ -73,7 +73,7 @@ public class Pose3DToPoint3DEdge extends Edge {
     }
 
     //Must be 3x1 vector (xyz)
-    protected double[] getResidual() {
+    public double[] getResidual() {
 
         double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
                                                    nodes.get(1).getStateArray());

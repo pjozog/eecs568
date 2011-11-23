@@ -45,7 +45,7 @@ public abstract class Edge {
      * predicted observation is from the measurement model.  This is
      * the function we take the jacobian of in getJacobian()
      */
-    abstract protected double[] getResidual();
+    abstract public double[] getResidual();
 
     public Matrix getCov(){
         return cov;
@@ -68,7 +68,7 @@ public abstract class Edge {
             result.J.add(nodeJBlock);
         }
 
-        result.residual = getResidual();
+        // result.residual = getResidual();
 
         return result;
     }

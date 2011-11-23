@@ -111,4 +111,12 @@ public class BackEnd{
         return estimate;
     }
 
+    private void updateStarts(){
+        int curIndex = 0;
+        for(Node node : nodes){
+            node.setIndex(curIndex);
+            curIndex += node.getDOF();
+        }
+    }
+
 }

@@ -12,6 +12,8 @@ public abstract class Node {
 
     abstract public double[] getStateArray();
 
+    abstract public void setStateArray(double[] values);
+
 
 
     public boolean isInitialized() {

@@ -64,5 +64,14 @@ public class Point3D {
         this.z = z;
     }
 
+    public void setStateArray(double[] values) {
+        if (values.length != 3) {
+            System.out.println("Error! Wrong length vector for Pose3D");
+        } else {
+            setX(values[0]);
+            setY(values[1]);
+            setZ(values[2]);
+        }
+    }
 
 }

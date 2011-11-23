@@ -41,6 +41,7 @@ public class Pose3DToPoint3DEdge extends Edge {
 
         if (!n1.isInitialized()) {
             System.out.println("Good God! Trying to initialize a 3d point without a pose estimate?!?");
+            assert(false);
         }
 
         if (!n2.isInitialized()) {

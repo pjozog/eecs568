@@ -51,6 +51,7 @@ public class Pose3DToPose3DEdge extends Edge {
 
         } else {
             System.out.println("One of the nodes has to have a value to make a prediction!");
+            assert(false);
         }
 
     }

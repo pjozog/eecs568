@@ -74,10 +74,11 @@ public class BackEnd{
     //TODO: Accessors to get solution. Depends on how we want to draw things.
 
 
-    public Matrix assembleJacobian() {
+    public Matrix assembleJacobian(){
 
         if (edgeDimension < nodeDimension) {
-            System.out.println("How dare you work with an underconstrained system...");
+            System.out.println("How dare you work with an underconstrained system...");            
+            assert(false);
         }
 
         Matrix bigJ = new Matrix(edgeDimension, nodeDimension, Matrix.SPARSE);
@@ -90,13 +91,14 @@ public class BackEnd{
             Edge anEdge = edges.get(i);
 
             // Get the jacobian blocks for the edge (numerically or symbolically)
-            Linearization edgeLin = getLinearization();
+            Linearization edgeLin = anEdge.getLinearization();
 
             // For every jacobian block associated with the edge...
             for (int j = 0; i < edgeLin.J.size(); j++) {
 
                 // The starting column index is the state vector index of the associated node
                 int colIndex =  anEdge.getNodes().get(j).getIndex();
+                double [][] jBlock = edgeLin.J.get(j);
                 bigJ.set(rowIndex, colIndex, jBlock);
 
             }

@@ -19,6 +19,7 @@ public class Pose3D {
 
         if (values.length != 6) {
             System.out.println("Error! Wrong length vector for Pose3D");
+            assert(false);
         } else {
             t = new Point3D(values[0], values[1], values[2]);
             r = new Rot3D(values[3], values[4], values[5]);

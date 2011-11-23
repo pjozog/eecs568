@@ -28,6 +28,7 @@ public class Point3D {
     public Point3D(double[] values) {
         if (values.length != 3) {
             System.out.println("Error! Wrong length vector for Point3D");
+            assert(false);
         } else {
             x = values[0];
             y = values[1];

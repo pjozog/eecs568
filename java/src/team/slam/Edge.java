@@ -34,7 +34,7 @@ public abstract class Edge {
      * Returns a matrix containing the jacobian blocks for the nodes. The points to
      * evaluate at for each node are passed in.
      */
-    abstract prote Matrix getJacobian(List<double[]> linPoints);
+    abstract protected Matrix getJacobian(List<double[]> linPoints);
 
 
     /**

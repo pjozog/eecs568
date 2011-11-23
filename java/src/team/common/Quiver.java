@@ -7,26 +7,20 @@ import april.jmat.*;
 
 public class Quiver {
     
-    private VzLines vline;
-
-    private double[] origPnt  = new double[]{0,0,0,1};
-    private double[] xAxisPnt = new double[]{1,0,0,1};
-    private double[] yAxisPnt = new double[]{0,1,0,1};
-    private double[] zAxisPnt = new double[]{0,0,1,1};
+    private static double[] origPnt  = new double[]{0,0,0,1};
+    private static double[] xAxisPnt = new double[]{1,0,0,1};
+    private static double[] yAxisPnt = new double[]{0,1,0,1};
+    private static double[] zAxisPnt = new double[]{0,0,1,1};
     
-    public ArrayList<double[]> points;
+    public static ArrayList<double[]> points;
 
-    public Quiver() {
-
-    }
-
-    private int rgbToBgr(int color) {
+    private static int rgbToBgr(int color) {
         return 0xFF000000 | (color & 0x000000FF) << 16 | 
             (color & 0x0000FF00) | 
             (color & 0x00FF0000) >> 16;
     }
 
-    public VzLines getQuiverAt(double[] xyzrpy, double scale, Color xColor, Color yColor, Color zColor) {
+    public static VzLines getQuiverAt(double[] xyzrpy, double scale, Color xColor, Color yColor, Color zColor) {
         
         assert(xyzrpy.length == 6);
 
@@ -62,13 +56,13 @@ public class Quiver {
 
     }
 
-    public VzLines getQuiverAt(double[] xyzrpy, double scale) {
+    public static VzLines getQuiverAt(double[] xyzrpy, double scale) {
         
         return getQuiverAt(xyzrpy, scale, Color.red, Color.green, Color.blue);
 
     }
 
-    public VzLines getQuiverAt(double[] xyzrpy) {
+    public static VzLines getQuiverAt(double[] xyzrpy) {
 
         return getQuiverAt(xyzrpy, 1.0);
 

@@ -148,11 +148,9 @@ public class TagDemo {
             VisWorld.Buffer vb = vw.getBuffer("quiver");
             VisWorld.Buffer vbOrigin = vw.getBuffer("origin");
 
-            Quiver origin = new Quiver();
-            Quiver cam = new Quiver();
             VisWorld.Buffer poseDisplay = vw.getBuffer("Pose Display");
 
-            vbOrigin.addBack(origin.getQuiverAt(new double[]{0,0,0,0,0,0}, 1, 
+            vbOrigin.addBack(Quiver.getQuiverAt(new double[]{0,0,0,0,0,0}, 1, 
                                                 Color.yellow, Color.yellow, Color.yellow));
             vbOrigin.swap();
 
@@ -195,7 +193,7 @@ public class TagDemo {
                     msg.Sigma = Sigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", msg);
 
-                    vb.addBack(cam.getQuiverAt(poseTagToHzCam));
+                    vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));
                     vb.swap();
                     poseDisplay.swap();
                 }

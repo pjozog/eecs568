@@ -111,12 +111,31 @@ public class BackEnd{
         return estimate;
     }
 
-    private void updateStarts(){
+    private void updateNodeIndices(){
         int curIndex = 0;
         for(Node node : nodes){
             node.setIndex(curIndex);
             curIndex += node.getDOF();
         }
+    }
+
+    /*Takes all the cov blocks from the edges and assembles the large inverse matrix*/
+    private Matrix assembleInvCov(){
+        
+        int curIndex = 0;
+
+        /*edgeDimension is the total DOF of all edges*/
+        Matrix cov = new Matrix(edgeDimension, edgeDimension, Matrix.SPARSE);
+        for(Edge edge : edges){
+            
+            double[][] covInv = edge.getCov().inverse().copyArray();
+            
+            cov.set(curIndex, curIndex, covInv);
+            
+            curIndex += edge.getDOF();
+        }
+        return cov;
+
     }
 
 }

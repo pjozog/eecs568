@@ -44,6 +44,9 @@ public abstract class Edge {
      */
     abstract protected double[] getResidual();
 
+    public Matrix getCov(){
+        return cov;
+    }
 
     /**
      * Get all the fun stuff about this edge like jacobian blocks and the residual.

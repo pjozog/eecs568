@@ -18,6 +18,23 @@ public class Point3D {
         this.z = z;
     }
 
+    public Point3D(Point3D aPoint) {
+        //TODO: I think this copy is fine since they are primitives. Check with Schuyler
+        x = aPoint.getX();
+        y = aPoint.getY();
+        z = aPoint.getZ();
+    }
+
+    public Point3D(double[] values) {
+        if (values.length != 3) {
+            System.out.println("Error! Wrong length vector for Point3D");
+        } else {
+            x = values[0];
+            y = values[1];
+            z = values[2];
+        }
+    }
+
     public double getX() {
         return x;
     }

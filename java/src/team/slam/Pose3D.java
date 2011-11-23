@@ -27,9 +27,11 @@ public class Pose3D {
 
     // Copy constructor
     public Pose3D(Pose3D aPose) {
+
         //TODO: I think this copy is fine since they are primitives. Check with Schuyler
         t = new Point3D(aPose.getX(), aPose.getY(), aPose.getZ());
         r = new Rot3D(aPose.getRoll(), aPose.getPitch(), aPose.getYaw());
+
     }
 
     // Getters
@@ -58,7 +60,7 @@ public class Pose3D {
     }
 
     public double[] getArray() {
-        return new double[] {x, y, z, roll, pitch, yaw};
+        return new double[] {getX(), getY(), getZ(), getRoll(), getPitch(), getYaw()};
     }
 
 

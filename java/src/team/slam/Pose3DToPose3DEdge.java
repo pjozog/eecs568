@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import april.jmat.Matrix;
 import team.common.SixDofCoords;
 
-public class Pose3DToPose3DEdge extends Edge{
+public class Pose3DToPose3DEdge extends Edge {
 
     private Pose3D deltaMotion;
 
@@ -25,6 +25,11 @@ public class Pose3DToPose3DEdge extends Edge{
         return 6;
     }
 
+    /**
+     * Takes the deltaMotion and the node that is already initialized (one must be) and
+     * makes a prediction about the global position of the other node. This is moving from
+     * delta motion to global motion...which is now nicely separated.
+     */
     public void initialize() {
 
         Pose3DNode n1 = (Pose3DNode)nodes.get(0);
@@ -39,13 +44,13 @@ public class Pose3DToPose3DEdge extends Edge{
         } else if (!n1.isInitialized() && n2.isInitialized()) {
 
             Pose3D n2State = n2.getState();
-            double[] prediction = SixDofCoords.headToTail(n2State.getArray(), inverse(measure.getArray()));
+            double[] prediction = SixDofCoords.headToTail(n2State.getArray(),
+                                                          SixDofCoords.inverse(deltaMotion.getArray()));
             n1.init(new Pose3D(prediction));
 
         } else {
             System.out.println("One of the nodes has to have a value to make a prediction!");
         }
-
 
     }
 

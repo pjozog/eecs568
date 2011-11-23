@@ -14,12 +14,12 @@ public class Pose3DNode extends Node {
         return 6;
     }
 
-    public void init(Pose3D aPose) {
+    public void init(Pose3D aPrediction) {
 
         initialized = true;
 
-        origState = new Pose3D(aPose);
-        currState = new Pose3D(aPose);
+        origState = new Pose3D(aPrediction);
+        currState = new Pose3D(aPrediction);
 
     }
 

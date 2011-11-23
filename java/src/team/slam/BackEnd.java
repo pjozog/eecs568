@@ -66,6 +66,8 @@ public class BackEnd{
      */
     public boolean solve() {
 
+        // yay!
+        return true;
     }
 
     //TODO: Accessors to get solution. Depends on how we want to draw things.

@@ -6,7 +6,9 @@ public abstract class Node{
     protected boolean initialized = false;
 
     abstract public int getDOF();
-    abstract public void init();
+
+    // Sory Bjarne
+    // abstract public void init(Object aPrediction);
 
 
     public boolean isInitialized() {

@@ -29,4 +29,7 @@ public abstract class Edge {
     abstract public void initialize();
 
 
+    //TODO: Function to compute residual?
+
+
 }

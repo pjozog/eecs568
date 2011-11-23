@@ -27,6 +27,17 @@ public class BackEnd{
      * Default constructor. Just ivar initializations.
      */
     public BackEnd() {
+        init();
+    }
+
+    public BackEnd(int numIter, double l, double e){
+        init();
+        maxIter = numIter;
+        epsilon = e;
+        lambda = l;
+    }
+
+    private void init(){
 
         nodes = new ArrayList<Node>();
         edges = new ArrayList<Edge>();
@@ -35,7 +46,7 @@ public class BackEnd{
         edgeDimension      = 0;
         numNewRows         = 0;
         numNewMeasurements = 0;
-
+        
     }
 
     /**

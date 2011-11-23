@@ -4,11 +4,17 @@ import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
+import april.jmat.CholeskyDecomposition;
 
 public class BackEnd{
 
     private List<Node> nodes;
     private List<Edge> edges;
+
+    // Tunable parameters
+    double lambda = 1.0;
+    double epsilon = .0001;
+    double maxIter = 10;
 
 
     // Book-keeping
@@ -78,6 +84,8 @@ public class BackEnd{
 
         double[] x = getStateEstimate();
 
+        double maxChange = 0;
+
         do {
 
             Matrix J = assembleJacobian();
@@ -98,7 +106,7 @@ public class BackEnd{
 
             double[] deltaX = myDecomp.solve(b).copyAsVector();
 
-            double maxChange = LinAlg.max(LinAlg.abs(deltaX));
+            maxChange = LinAlg.max(LinAlg.abs(deltaX));
 
             x = LinAlg.add(x, deltaX);
 
@@ -110,6 +118,10 @@ public class BackEnd{
 
         return x;
 
+    }
+
+    private double[] assembleResiduals() {
+        return new double[1];
     }
 
     private void updateNodesWithNewState(double[] x) {
@@ -139,7 +151,7 @@ public class BackEnd{
         updateNodeIndices();
 
         if (edgeDimension < nodeDimension) {
-            System.out.println("How dare you work with an underconstrained system...");            
+            System.out.println("How dare you work with an underconstrained system...");
             assert(false);
         }
 
@@ -204,17 +216,17 @@ public class BackEnd{
 
     /*Takes all the cov blocks from the edges and assembles the large inverse matrix*/
     private Matrix assembleInvCov(){
-        
+
         int curIndex = 0;
 
         /*edgeDimension is the total DOF of all edges*/
         Matrix cov = new Matrix(edgeDimension, edgeDimension, Matrix.SPARSE);
         for(Edge edge : edges){
-            
+
             double[][] covInv = edge.getCov().inverse().copyArray();
-            
+
             cov.set(curIndex, curIndex, covInv);
-            
+
             curIndex += edge.getDOF();
         }
         return cov;

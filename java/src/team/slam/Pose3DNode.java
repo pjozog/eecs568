@@ -31,7 +31,7 @@ public class Pose3DNode extends Node {
     public void setStateArray(double[] values) {
         assert(values.length == 6);
 
-        values.setStateArray(values);
+        currState.setStateArray(values);
 
     }
 

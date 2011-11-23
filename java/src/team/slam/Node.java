@@ -8,8 +8,6 @@ public abstract class Node {
 
     abstract public int getDOF();
 
-    abstract public double[] getLinearizationState();
-
     abstract public double[] getStateArray();
 
     abstract public void setStateArray(double[] values);

@@ -74,23 +74,39 @@ public class BackEnd{
     //TODO: Accessors to get solution. Depends on how we want to draw things.
 
 
-    // public Matrix assembleJacobian() {
+    public Matrix assembleJacobian() {
 
-    //     if (edgeDimension < nodeDimension) {
-    //         System.out.println("How dare you work with an underconstrained system...");
-    //     }
+        if (edgeDimension < nodeDimension) {
+            System.out.println("How dare you work with an underconstrained system...");
+        }
+
+        Matrix bigJ = new Matrix(edgeDimension, nodeDimension, Matrix.SPARSE);
+
+        int rowIndex = 0;
+
+        // Loop over all the edges
+        for (int i = 0; i < edges.size(); i++) {
+
+            Edge anEdge = edges.get(i);
+
+            // Get the jacobian blocks for the edge (numerically or symbolically)
+            Linearization edgeLin = getLinearization();
+
+            // For every jacobian block associated with the edge...
+            for (int j = 0; i < edgeLin.J.size(); j++) {
 
 
-    //     // Loop over all the edges
-    //     for (int i = 0; i < edges.size(); i++) {
+                bigJ.set(rowIndex, colInd, jBlock);
 
-    //         // Get the jacobian blocks for the edge (numerically or symbolically)
+            }
 
-    //     }
+            rowIndex += anEdge.getDOF();
 
-    // }
+        }
 
-    public double[] getStateEstimate() {
+    }
+
+    private double[] getStateEstimate() {
 
         int index = 0;
 

@@ -76,7 +76,6 @@ public class BackEnd{
 
         gaussNewton();
 
-
     }
 
 
@@ -173,7 +172,7 @@ public class BackEnd{
             Linearization edgeLin = anEdge.getLinearization();
 
             // For every jacobian block associated with the edge...
-            for (int j = 0; i < edgeLin.J.size(); j++) {
+            for (int j = 0; j < edgeLin.J.size(); j++) {
 
                 // The starting column index is the state vector index of the associated node
                 int colIndex =  anEdge.getNodes().get(j).getIndex();

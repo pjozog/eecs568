@@ -37,7 +37,7 @@ public class Pose3DEdge extends Edge{
 
     protected Matrix getJacobian() {
 
-        return Matrix.identity(3,3);
+        return Matrix.identity(6,6);
 
     }
 

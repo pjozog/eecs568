@@ -6,6 +6,11 @@ import april.jmat.Matrix;
 import april.jmat.LinAlg;
 import april.jmat.CholeskyDecomposition;
 
+
+// Experimental
+import april.jmat.ordering.*;
+import team.common.*;
+
 public class BackEnd{
 
     private List<Node> nodes;
@@ -87,6 +92,8 @@ public class BackEnd{
 
         // gaussNewton();
         fasterGaussNewton();
+        // experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
+        // experimentalFactoringGausssNewton(new SimpleDegreeOrdering());
 
     }
 
@@ -362,5 +369,210 @@ public class BackEnd{
     public List<Edge> getEdges() {
         return edges;
     }
+
+
+    //////////////////////////////
+    ////// EXPERIMENTAL
+    ////// This code is barely intelligible
+    //////////////////////////////
+
+    public int experimentalNodeArrayIndex(Node aNode) {
+
+        int curIndex = 0;
+        for(Node node : nodes){
+            if (node == aNode) {
+                return curIndex;
+            }
+            curIndex++;
+        }
+
+        return -1;
+
+    }
+
+    public Matrix experiemenalMakeSymbolicA()
+    {
+        Matrix A = new Matrix(nodes.size(), nodes.size(), Matrix.SPARSE);
+
+        for (Edge anEdge : edges) {
+
+            List<Node> theNodes = anEdge.getNodes();
+
+            for (int i = 0; i < theNodes.size(); i++) {
+                for (int j = 0; j < theNodes.size(); j++) {
+                    int indexOne = experimentalNodeArrayIndex(theNodes.get(i));
+                    int indexTwo = experimentalNodeArrayIndex(theNodes.get(j));
+
+                    if (indexOne == -1 || indexTwo == -1) {
+                        System.out.println("EXPERIMENTAL ERROR: Node not found in node array!");
+                    }
+
+                    A.set(indexOne, indexTwo, 1);
+                }
+            }
+        }
+
+        return A;
+    }
+
+    private double[] experimentalFactoringGausssNewton(Ordering ordering) {
+
+        updateNodeIndices();
+
+        int numIter = 0;
+
+        double[] x = getStateEstimate();
+
+        double maxChange = 0;
+
+        do {
+
+            Matrix A = new Matrix(nodeDimension, nodeDimension, Matrix.SPARSE);
+            Matrix b = new Matrix(nodeDimension, 1);
+
+
+            // Loop over all the edges to add their contributions to A and b
+            for (Edge anEdge : edges) {
+
+                // Get the jacobian blocks for the edge (numerically or symbolically)
+                Linearization edgeLin = anEdge.getLinearization();
+
+                // For every node associated with the edge
+                for (int i = 0; i < anEdge.getNodes().size(); i++) {
+
+                    // getIndex() represents the state vector index of the associated node
+                    int aIndex = anEdge.getNodes().get(i).getIndex();
+
+                    double[][] JatW = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.cov);
+
+                    // For every node associated with the edge (again)
+                    for (int j = 0; j < anEdge.getNodes().size(); j++) {
+
+                        int bIndex =  anEdge.getNodes().get(j).getIndex();
+
+                        double[][] JatWJb = LinAlg.matrixAB(JatW, edgeLin.J.get(j));
+
+                        // Add the contribution of node j and i to A
+                        A.plusEquals(aIndex, bIndex, JatWJb);
+                    }
+
+                    double[] JatWr = LinAlg.matrixAB(JatW, edgeLin.residual);
+                    b.plusEqualsColumnVector(aIndex, 0, JatWr);
+
+                }
+
+            }
+
+
+            // Tikhanoff regulaization
+            A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
+            assert(A.isSparse());
+
+
+            Matrix SA = experiemenalMakeSymbolicA();
+
+            int saPerm[] = ordering.getPermutation(SA);
+
+            int perm[] = new int[nodeDimension];
+            int pos = 0;
+
+            // updateNodeIndices();
+            // System.out.println("Node state index info");
+            // for (Node aNode : nodes) {
+            //     System.out.println(aNode.getIndex());
+            // }
+
+
+            // System.out.println("saPerm info "+ saPerm.length);
+            // ArrayUtil.print1dArray(saPerm);
+
+            for (int saidx = 0; saidx < saPerm.length; saidx++) {
+                int gnidx = saPerm[saidx];
+                Node gn = nodes.get(gnidx);
+                int gnpos = gn.getIndex();
+
+                // System.out.println("ASDF Info "+gnidx+ " "+gnpos+" "+gn.getDOF());
+
+                for (int i = 0; i < gn.getDOF(); i++)
+                    perm[pos++] = gnpos + i;
+            }
+
+            Matrix PAP = A.copyPermuteRowsAndColumns(perm);
+            Matrix PB = b.copy();
+            PB.permuteRows(perm);
+
+
+            double acc = 0;
+            int count = 0;
+            boolean underconstrained = false;
+
+            for (int i = 0; i < PAP.getRowDimension(); i++) {
+                if (PAP.get(i,i) == 0) {
+                    underconstrained = true;
+                } else {
+                    acc += PAP.get(i,i);
+                    count ++;
+                }
+            }
+
+            if (underconstrained) {
+                System.out.println("CholeskySolver: underconstrained graph. Trying to fix it (hack!)");
+
+                if (count == 0) {
+                    acc = 1;
+                    count = 1;
+                }
+
+
+                // Tikhanoff regulaization
+                // PAP = PAP.plus(Matrix.identity(PAP.getRowDimension(), PAP.getColumnDimension()).times(lambda));
+                // assert(A.isSparse());
+
+                for (int i = 0; i < PAP.getRowDimension(); i++) {
+                    if (PAP.get(i,i) == 0) {
+                        PAP.set(i,i, acc / count);
+                    }
+
+                    assert(PAP.get(i,i) > 0); //System.out.printf("%10d %15f\n", i, PAP.get(i,i));
+                }
+            }
+
+            CholeskyDecomposition cd = new CholeskyDecomposition(PAP);
+            // L = cd.getL();
+            Matrix deltaX = cd.solve(PB);
+            // System.out.println("perm info "+ perm.length);
+            // ArrayUtil.print1dArray(perm);
+
+
+
+            // double[] deltaXVecBefore = deltaX.copyAsVector();
+            deltaX.inversePermuteRows(perm);
+            // System.out.println("SA dim "+ SA.getRowDimension() +" "+ SA.getColumnDimension());
+            // System.out.println("deltaX dim "+ deltaX.getRowDimension() +" "+ deltaX.getColumnDimension());
+
+            double[] deltaXVec = deltaX.copyAsVector();
+
+            maxChange = LinAlg.max(LinAlg.abs(deltaXVec));
+
+            // System.out.println("Max change from guass newton is" + maxChange);
+
+            x = LinAlg.add(x, deltaXVec);
+
+            updateNodesWithNewState(x);
+
+            numIter++;
+
+            // System.out.println("Node state index info");
+            // for (Node aNode : nodes) {
+            //     System.out.println(aNode.getIndex());
+            // }
+
+
+        } while (numIter < maxIter && maxChange > epsilon);
+
+        return x;
+
+    }
+
 
 }

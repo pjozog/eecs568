@@ -122,11 +122,16 @@ public class Listener implements OldSimulator.Listener {
 
             Point3DNode pointNode = dataAssociation(landmark.id);
 
+            if (pointNode == null) {
+                pointNode = new Point3DNode(landmark.id);
+                slam.addNode(pointNode);
+            }
+
             Matrix landCov = Matrix.identity(3, 3);
 
             Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(p3dn, pointNode, obs, landCov);
 
-            slam.addNode(pointNode);
+
             slam.addEdge(poseToPoint);
         }
 
@@ -156,7 +161,7 @@ public class Listener implements OldSimulator.Listener {
 
         }
 
-        return new Point3DNode(idToLookFor);
+        return null;
 
     }
 

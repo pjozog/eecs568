@@ -85,12 +85,92 @@ public class BackEnd{
      */
     public void solve() {
 
-        gaussNewton();
+        // gaussNewton();
+        fasterGaussNewton();
 
     }
 
 
-    //TODO: Accessors to get solution. Depends on how we want to draw things.
+    /**
+     * Directly assemble A and b instead of assebling from J, and InvCov.
+     * I did this in PS2, but it was a total mess. Don't even look at it. With our
+     * massive refactoring and now knowing what what april.graph does, we can do this in a much
+     * more slick way. If you do go through this, it is now OK to look at PS2 and laugh
+     * yourself into a better mood.
+     */
+    private double[] fasterGaussNewton() {
+
+        updateNodeIndices();
+
+        int numIter = 0;
+
+        double[] x = getStateEstimate();
+
+        double maxChange = 0;
+
+
+        do {
+
+            Matrix A = new Matrix(nodeDimension, nodeDimension, Matrix.SPARSE);
+            Matrix b = new Matrix(nodeDimension, 1);
+
+
+            // Loop over all the edges to add their contributions to A and b
+            for (Edge anEdge : edges) {
+
+                // Get the jacobian blocks for the edge (numerically or symbolically)
+                Linearization edgeLin = anEdge.getLinearization();
+
+                // For every node associated with the edge
+                for (int i = 0; i < anEdge.getNodes().size(); i++) {
+
+                    // getIndex() represents the state vector index of the associated node
+                    int aIndex = anEdge.getNodes().get(i).getIndex();
+
+                    double[][] JatW = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.cov);
+
+                    // For every node associated with the edge (again)
+                    for (int j = 0; j < anEdge.getNodes().size(); j++) {
+
+                        int bIndex =  anEdge.getNodes().get(j).getIndex();
+
+                        double[][] JatWJb = LinAlg.matrixAB(JatW, edgeLin.J.get(j));
+
+                        // Add the contribution of node j and i to A
+                        A.plusEquals(aIndex, bIndex, JatWJb);
+                    }
+
+                    double[] JatWr = LinAlg.matrixAB(JatW, edgeLin.residual);
+                    b.plusEqualsColumnVector(aIndex, 0, JatWr);
+
+                }
+
+            }
+
+
+            // Tikhanoff regulaization
+            A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
+            assert(A.isSparse());
+
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
+
+            double[] deltaX = myDecomp.solve(b).copyAsVector();
+
+            maxChange = LinAlg.max(LinAlg.abs(deltaX));
+
+            // System.out.println("Max change from guass newton is" + maxChange);
+
+            x = LinAlg.add(x, deltaX);
+
+            updateNodesWithNewState(x);
+
+            numIter++;
+
+        } while (numIter < maxIter && maxChange > epsilon);
+
+        return x;
+
+    }
 
 
     private double[] gaussNewton() {

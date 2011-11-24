@@ -68,7 +68,9 @@ public abstract class Edge {
             result.J.add(nodeJBlock);
         }
 
-        // result.residual = getResidual();
+        result.residual = getResidual();
+
+        result.cov = cov.copyArray();
 
         return result;
     }

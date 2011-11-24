@@ -8,7 +8,8 @@ public class Linearization {
 
     // TODO: Make these private
     public List<double[][]> J = new ArrayList<double[][]>();
-    // public double[] residual;
+    public double[] residual;
+    public double[][] cov;
 
 
 }

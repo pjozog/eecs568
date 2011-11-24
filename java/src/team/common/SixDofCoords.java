@@ -217,23 +217,41 @@ public class SixDofCoords {
 
         Matrix J = new Matrix(6, 12);
 
+        //Blacklisted elements
+        /*
+          I M | R 0
+          0 K | 0 K
+         */
+
         //Differentiate with respect to xij
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
 
-                double[] xijPert = new double[xij.length];
-                for (int k = 0; k < xij.length; k++)
-                    xijPert[k] = xij[k];
+                if (i == 0 || i == 1 || i == 2) {
+                    if (j == 0 || j == 1 | j == 2) {
+                        if (j == i) {
+                            J.set(j, i, 1.0);
+                        } else {
+                            J.set(j, i, 0.0);
+                        }
+                    } else {
+                        J.set(j, i, 0.0);
+                    }
+                } else {
 
-                xijPert[i] += eps;
+                    double[] xijPert = new double[xij.length];
+                    for (int k = 0; k < xij.length; k++)
+                        xijPert[k] = xij[k];
 
-                double[] y = headToTail(xij, xjk);
-                double[] yPert = headToTail(xijPert, xjk);
+                    xijPert[i] += eps;
 
-                double finiteDiff = (yPert[j] - y[j]) / eps;
+                    double[] y = headToTail(xij, xjk);
+                    double[] yPert = headToTail(xijPert, xjk);
 
-                J.set(j, i, finiteDiff);
+                    double finiteDiff = (yPert[j] - y[j]) / eps;
 
+                    J.set(j, i, finiteDiff);
+                }
             }
         }
 
@@ -241,19 +259,27 @@ public class SixDofCoords {
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
 
-                double[] xjkPert = new double[xjk.length];
-                for (int k = 0; k < xjk.length; k++)
-                    xjkPert[k] = xjk[k];
+                if ((i == 0 || i == 1 || i == 2) &&
+                    (j == 4 || j == 5 || j == 6)) {
+                    J.set(j, i+6, 0.0);
+                } else if ((i == 4 || i == 5 || i == 6) &&
+                           (j == 0 || j == 1 || j == 2)) {
+                    J.set(j, i+6, 0.0);                    
+                } else {
 
-                xjkPert[i] += eps;
+                    double[] xjkPert = new double[xjk.length];
+                    for (int k = 0; k < xjk.length; k++)
+                        xjkPert[k] = xjk[k];
 
-                double[] y = headToTail(xij, xjk);
-                double[] yPert = headToTail(xij, xjkPert);
+                    xjkPert[i] += eps;
 
-                double finiteDiff = (yPert[j] - y[j]) / eps;
+                    double[] y = headToTail(xij, xjk);
+                    double[] yPert = headToTail(xij, xjkPert);
 
-                J.set(j, i+6, finiteDiff);
+                    double finiteDiff = (yPert[j] - y[j]) / eps;
 
+                    J.set(j, i+6, finiteDiff);
+                }
             }
         }
 
@@ -266,51 +292,22 @@ public class SixDofCoords {
      */
     public static double[][] tailToTailJacob(double[] xij, double[] xik) {
 
-        double eps = 1e-6;
+        Matrix h2tJacob = new Matrix(headToTailJacob(inverse(xij), xik));
+        double[][] invJacob = inverseJacob(xij);
+        Matrix otherMat = new Matrix(12, 12, Matrix.SPARSE);
 
-        Matrix J = new Matrix(6, 12);
+        for (int k = 6; k < 12; k++)
+            otherMat.set(k, k, 1.0);
 
-        //Differentiate with respect to xij
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-
-                double[] xijPert = new double[xij.length];
-                for (int k = 0; k < xij.length; k++)
-                    xijPert[k] = xij[k];
-
-                xijPert[i] += eps;
-
-                double[] y = tailToTail(xij, xik);
-                double[] yPert = tailToTail(xijPert, xik);
-
-                double finiteDiff = (yPert[j] - y[j]) / eps;
-
-                J.set(j, i, finiteDiff);
-
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 6; col++) {
+                otherMat.set(row, col, invJacob[row][col]);
             }
         }
 
-        //Now for xik
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
+        Matrix t2tJacob = h2tJacob.times(otherMat);
 
-                double[] xikPert = new double[xik.length];
-                for (int k = 0; k < xik.length; k++)
-                    xikPert[k] = xik[k];
-
-                xikPert[i] += eps;
-
-                double[] y = tailToTail(xij, xik);
-                double[] yPert = tailToTail(xij, xikPert);
-
-                double finiteDiff = (yPert[j] - y[j]) / eps;
-
-                J.set(j, i+6, finiteDiff);
-
-            }
-        }
-
-        return J.copyArray();
+        return t2tJacob.copyArray();
 
     }
 
@@ -327,19 +324,24 @@ public class SixDofCoords {
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
 
-                double[] xijPert = new double[xij.length];
-                for (int k = 0; k < xij.length; k++)
-                    xijPert[k] = xij[k];
+                if ((i == 0 || i == 1 || i == 2) &&
+                    (j == 3 || j == 4 || j == 5)) {
+                    J.set(i, j, 0.0);
+                } else {
 
-                xijPert[i] += eps;
+                    double[] xijPert = new double[xij.length];
+                    for (int k = 0; k < xij.length; k++)
+                        xijPert[k] = xij[k];
 
-                double[] y = inverse(xij);
-                double[] yPert = inverse(xijPert);
+                    xijPert[i] += eps;
 
-                double finiteDiff = (yPert[j] - y[j]) / eps;
+                    double[] y = inverse(xij);
+                    double[] yPert = inverse(xijPert);
 
-                J.set(j, i, finiteDiff);
+                    double finiteDiff = (yPert[j] - y[j]) / eps;
 
+                    J.set(j, i, finiteDiff);
+                }
             }
         }
 

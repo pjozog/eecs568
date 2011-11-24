@@ -91,7 +91,7 @@ public class Listener implements OldSimulator.Listener {
         double t = ticksXYT.get(2);
 
         //Turn XYT into Pose3D
-        Pose3D deltaMotion = new Pose3D(x, y, x, 0, 0, t);
+        Pose3D deltaMotion = new Pose3D(x, y, 0, 0, 0, t);
 
         Pose3DNode p3dn = new Pose3DNode();
 

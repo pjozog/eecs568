@@ -29,6 +29,9 @@ public class Listener implements OldSimulator.Listener {
 
     Pose3DNode prevPose;
 
+    // Profiling
+    private long startTime;
+    private int numUpdates = 0;
 
     // Drawing
     ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
@@ -47,6 +50,8 @@ public class Listener implements OldSimulator.Listener {
         numConverge = config.requireInt("simulator.numConverge");
 
         slam = new BackEnd(numConverge, lambda, epsilon);
+
+        startTime = System.nanoTime();
 
         addPrior();
     }
@@ -77,6 +82,7 @@ public class Listener implements OldSimulator.Listener {
 
     public void update(OldSimulator.odometry_t odom, ArrayList<OldSimulator.landmark_t> dets) {
 
+        numUpdates++;
 
         DenseVec ticksXYT = TicksUtil.ticksToXYT(odom, baseline);
 
@@ -123,6 +129,12 @@ public class Listener implements OldSimulator.Listener {
         }
 
         slam.solve();
+
+        if (numUpdates == 383) {
+            long endTime = System.nanoTime();
+            double elapsedTime = (endTime-startTime)/1000000000f;
+            System.out.printf("Total Simulation Time: %.4f\n", elapsedTime);
+        }
 
         drawSetup();
         drawScene(dets);

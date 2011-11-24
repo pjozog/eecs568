@@ -31,8 +31,8 @@ public class Listener implements OldSimulator.Listener {
 
 
     // Drawing
-    List<VzLines> trajectory = new ArrayList<VzLines>();
-    List<VzPoints> landmarks = new ArrayList<VzPoints>();
+    ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
+    ArrayList<VzPoints> landmarks = new ArrayList<VzPoints>();
 
     public void init(Config _config, VisWorld _vw) {
 
@@ -85,7 +85,7 @@ public class Listener implements OldSimulator.Listener {
         double t = ticksXYT.get(2);
 
         //Turn XYT into Pose3D
-        Pose3D deltaMotion = new Pose3D(x, y, 0, 0, 0, t);
+        Pose3D deltaMotion = new Pose3D(x, y, x, 0, 0, t);
 
         Pose3DNode p3dn = new Pose3DNode();
 
@@ -110,9 +110,9 @@ public class Listener implements OldSimulator.Listener {
             double xLand = pos[0];
             double yLand = pos[1];
 
-            Point3D obs = new Point3D(xLand, yLand, 0);
+            Point3D obs = new Point3D(xLand, yLand, 0.0);
 
-            Point3DNode pointNode = new Point3DNode();
+            Point3DNode pointNode = dataAssociation(landmark.id);
 
             Matrix landCov = Matrix.identity(3, 3);
 
@@ -122,8 +122,28 @@ public class Listener implements OldSimulator.Listener {
             slam.addEdge(poseToPoint);
         }
 
+        slam.solve();
+
         drawSetup();
         drawScene(dets);
+    }
+
+    private Point3DNode dataAssociation(int idToLookFor) {
+
+        java.util.List<Node> allNodes = slam.getNodes();
+
+        for (Node aNode : allNodes) {
+
+            if (aNode instanceof Point3DNode) {
+                if (((Point3DNode)aNode).getId() == idToLookFor) {
+                    return (Point3DNode)aNode;
+                }
+            }
+
+        }
+
+        return new Point3DNode(idToLookFor);
+
     }
 
     private void drawSetup() {
@@ -131,7 +151,7 @@ public class Listener implements OldSimulator.Listener {
         trajectory.clear();
         landmarks.clear();
 
-        List<Node> allNodes = slam.getNodes();
+        java.util.List<Node> allNodes = slam.getNodes();
 
         for (Node aNode : allNodes) {
 
@@ -141,9 +161,11 @@ public class Listener implements OldSimulator.Listener {
 
             } else if (aNode instanceof Point3DNode) {
 
-                VzPoint posGuess = new VzPoints(new VisVertexData(aNode.getStateArray()),
-                                                new VisConstantColor(Color.cyan),
-                                                10.0);
+                double[] landPos = aNode.getStateArray();
+
+                VzPoints posGuess = new VzPoints(new VisVertexData(landPos),
+                                                 new VisConstantColor(Color.cyan),
+                                                 10.0);
                 landmarks.add(posGuess);
 
             } else {
@@ -157,11 +179,11 @@ public class Listener implements OldSimulator.Listener {
 
     }
 
-    public void drawScene(ArrayList<OldSimulator.landmark_t> landmarks) {
+    public void drawScene(ArrayList<OldSimulator.landmark_t> landmarkObs) {
 
         // Draw trajectory -- the red robot path -- our least squares "best guess"
         {
-            VisWorld.Buffer vb = vw.getBuffer("trajectory");
+            VisWorld.Buffer vb = vw.getBuffer("trajectory-local");
 
             for (VzLines oneQuiver : trajectory) {
 
@@ -169,21 +191,23 @@ public class Listener implements OldSimulator.Listener {
 
             }
 
+            // vb.addBack(trajectory.get(trajectory.size()-1));
+
             vb.swap();
         }
 
 
         // Draw our least squares best guess of the landmark positions
         {
-            VisWorld.Buffer vb = vw.getBuffer("landmarks");
+            VisWorld.Buffer vbp = vw.getBuffer("landmarks-local");
 
             for (VzPoints aPoint : landmarks) {
 
-                vb.addBack(aPoint);
+                vbp.addBack(aPoint);
 
             }
 
-            vb.swap();
+            vbp.swap();
 
         }
 

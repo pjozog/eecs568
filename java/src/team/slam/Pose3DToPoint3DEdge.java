@@ -67,21 +67,42 @@ public class Pose3DToPoint3DEdge extends Edge {
 
     protected Matrix getJacobian() {
 
+        double[] pointEst = nodes.get(1).getStateArray();
+
+        double[] fakePose = new double[6];
+        fakePose[0] = pointEst[0];
+        fakePose[1] = pointEst[1];
+        fakePose[2] = pointEst[2];
+        fakePose[3] = 0.0;
+        fakePose[4] = 0.0;
+        fakePose[5] = 0.0;
+
+
         Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
-                                                               nodes.get(1).getStateArray()));
+                                                               fakePose));
 
         //We want the 3x9 jacobian that relates Pose3D's global 6DOF
         //vector and Point3D's global 3DOF vector to the x,y,z of the
         //point in the pose's frame.
         return new Matrix(JFull.copyArray(0, 0, 3, 9));
 
-     }
+    }
 
     //Must be 3x1 vector (xyz)
     public double[] getResidual() {
 
+        double[] pointEst = nodes.get(1).getStateArray();
+
+        double[] fakePose = new double[6];
+        fakePose[0] = pointEst[0];
+        fakePose[1] = pointEst[1];
+        fakePose[2] = pointEst[2];
+        fakePose[3] = 0.0;
+        fakePose[4] = 0.0;
+        fakePose[5] = 0.0;
+
         double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
-                                                   nodes.get(1).getStateArray());
+                                                   fakePose);
 
         double[] predictedXyz = SixDofCoords.getPosition(relPose);
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);

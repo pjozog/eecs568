@@ -2,10 +2,15 @@ package team.slam;
 
 public class Point3DNode extends Node {
 
-    Point3D currState;
+    private Point3D currState;
+    private int id;
 
     public Point3DNode(){
 
+    }
+
+    public Point3DNode(int id) {
+        this.id = id;
     }
 
     public int getDOF() {
@@ -32,6 +37,10 @@ public class Point3DNode extends Node {
         initialized = true;
         currState = new Point3D(aPrediction);
 
+    }
+
+    public int getId() {
+        return id;
     }
 
 }

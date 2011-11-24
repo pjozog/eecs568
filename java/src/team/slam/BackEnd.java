@@ -118,11 +118,14 @@ public class BackEnd{
             A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
             assert(A.isSparse());
 
+
             CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
 
             double[] deltaX = myDecomp.solve(b).copyAsVector();
 
             maxChange = LinAlg.max(LinAlg.abs(deltaX));
+
+            // System.out.println("Max change from guass newton is" + maxChange);
 
             x = LinAlg.add(x, deltaX);
 

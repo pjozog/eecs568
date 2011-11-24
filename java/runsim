@@ -7,8 +7,9 @@ CLASSPATH=${SCRIPTDIR}/april.jar:${SCRIPTDIR}/lcm.jar
 
 CONFIG_FILE=$SCRIPTDIR/../config/sim.config
 # LISTENER=team.PS3.FastSLAMListener
-LISTENER=team.PS2.PartOneListener
+# LISTENER=team.PS2.PartOneListener
 # LISTENER=april.sim.DummyListener
+LISTENER=team.sim.Listener
 
 JAVA='java -ea -server'
 CLASSPATH="${SCRIPTDIR}/april.jar:${SCRIPTDIR}/lcm.jar"

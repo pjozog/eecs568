@@ -1,6 +1,6 @@
 package team.sim;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.*;
 import java.io.*;
 
@@ -35,7 +35,9 @@ public class Listener implements OldSimulator.Listener {
 
     // Drawing
     ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
-    ArrayList<VzPoints> landmarks = new ArrayList<VzPoints>();
+    // ArrayList<VzPoints> landmarks = new ArrayList<VzPoints>();
+    ArrayList<double[]> landmarks = new ArrayList<double[]>();
+    ArrayList<double[]> allEdgeLinks = new ArrayList<double[]>();
 
     public void init(Config _config, VisWorld _vw) {
 
@@ -142,7 +144,7 @@ public class Listener implements OldSimulator.Listener {
 
     private Point3DNode dataAssociation(int idToLookFor) {
 
-        java.util.List<Node> allNodes = slam.getNodes();
+        List<Node> allNodes = slam.getNodes();
 
         for (Node aNode : allNodes) {
 
@@ -163,26 +165,54 @@ public class Listener implements OldSimulator.Listener {
         trajectory.clear();
         landmarks.clear();
 
-        java.util.List<Node> allNodes = slam.getNodes();
+        List<Node> allNodes = slam.getNodes();
+        List<Edge> allEdges = slam.getEdges();
 
+        Pose3DNode lastPose = null;
+
+        // Get all poses and landmarks
         for (Node aNode : allNodes) {
 
             if (aNode instanceof Pose3DNode) {
 
-                trajectory.add(Quiver.getQuiverAt(aNode.getStateArray()));
+                trajectory.add(Quiver.getQuiverAt(aNode.getStateArray(), 0.25));
+
+                lastPose = (Pose3DNode)aNode;
 
             } else if (aNode instanceof Point3DNode) {
 
                 double[] landPos = aNode.getStateArray();
 
-                VzPoints posGuess = new VzPoints(new VisVertexData(landPos),
-                                                 new VisConstantColor(Color.cyan),
-                                                 10.0);
-                landmarks.add(posGuess);
+                // VzPoints posGuess = new VzPoints(new VisVertexData(landPos),
+                //                                  new VisConstantColor(Color.cyan),
+                //                                  10.0);
+                // landmarks.add(posGuess);
+                landmarks.add(landPos);
 
             } else {
 
                 System.out.println("Goodness! What kind of node do we have here?");
+
+            }
+
+        }
+
+        // Make the last pose have a larger scale
+        trajectory.remove(trajectory.size()-1);
+        trajectory.add(Quiver.getQuiverAt(lastPose.getStateArray(), 1.0));
+
+
+        allEdgeLinks.clear();
+
+        // Get all links between nodes
+        for (Edge anEdge : allEdges) {
+
+            List<Node> theNodes = anEdge.getNodes();
+
+            if (theNodes.size() == 2) {
+
+                allEdgeLinks.add(LinAlg.resize(theNodes.get(0).getStateArray(), 3));
+                allEdgeLinks.add(LinAlg.resize(theNodes.get(1).getStateArray(), 3));
 
             }
 
@@ -203,25 +233,83 @@ public class Listener implements OldSimulator.Listener {
 
             }
 
-            // vb.addBack(trajectory.get(trajectory.size()-1));
-
             vb.swap();
         }
 
 
         // Draw our least squares best guess of the landmark positions
-        {
-            VisWorld.Buffer vbp = vw.getBuffer("landmarks-local");
+        // {
+        //     VisWorld.Buffer vb = vw.getBuffer("landmarks-local");
 
-            for (VzPoints aPoint : landmarks) {
+        //     for (VzPoints aPoint : landmarks) {
 
-                vbp.addBack(aPoint);
+        //         vb.addBack(aPoint);
 
-            }
+        //     }
 
-            vbp.swap();
+        //     vb.swap();
 
+        // }
+
+
+        // Get the vertext data for a star
+        ArrayList<double[]> star = new ArrayList<double[]>();
+        int n = 5;
+        double radskip = 2*(2*Math.PI/n);
+
+
+        for (int i = 0; i < 2*n; i++) {
+            double rad = i*radskip;
+            double pt[] = {Math.cos(rad),Math.sin(rad)};
+            star.add(pt);
         }
+
+        VisVertexData vdat = new VisVertexData(star);
+
+
+        // Draw the landmarks
+        {
+
+            VisWorld.Buffer vb = vw.getBuffer("landmarks-local");
+
+            for (double[] l : landmarks) {
+                vb.addBack(new VisChain(LinAlg.translate(l[0],l[1],l[2]),
+                                        LinAlg.scale(.25,.25,.25),
+                                        new VzLines(vdat, new VisConstantColor(Color.cyan),
+                                                    2, VzLines.TYPE.LINE_LOOP)));
+            }
+            vb.swap();
+        }
+
+
+        // Draw edge links
+        {
+            VisWorld.Buffer vb = vw.getBuffer("edges-local");
+
+
+
+            vb.addBack(new VzLines(new VisVertexData(allEdgeLinks),
+                                   new VisConstantColor(new Color(1.0f, 1.0f, 0.0f, 0.2f)),
+                                   1.0,
+                                   VzLines.TYPE.LINES));
+
+            vb.swap();
+        }
+
+
+
+
+        // Scene grid
+        {
+            VzGrid vg = new VzGrid(new Color(.5f,.5f,.5f,.2f),
+                                   new Color(1.0f,1.0f,1.0f,0.0f));
+
+            VisWorld.Buffer vb = vw.getBuffer("grid");
+            vb.setDrawOrder(-100);
+            vb.addBack(new VisDepthTest(false,vg));
+            vb.swap();
+        }
+
 
 
     }

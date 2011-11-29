@@ -16,17 +16,25 @@ public class BackEnd{
     private List<Node> nodes;
     private List<Edge> edges;
 
-    // Tunable parameters
-    double lambda = 1.0;
-    double epsilon = .0001;
-    double maxIter = 10;
+    private SparseFactorizationSystem sparseFactor;
 
+    // Tunable parameters
+    private double lambda = 1.0;
+    private double epsilon = .0001;
+    private double maxIter = 10;
+    private boolean verbose = false;
+
+    // Controls the frequency of update types. tunable.
+    private int updateEvery = 1;
+    private int solveEvery  = 1;
+    private int batchSolveEvery = 100;
 
     // Book-keeping
     private int nodeDimension;
     private int edgeDimension;
     private int numNewRows;
     private int numNewMeasurements;
+    private int numSteps = 0;
 
     /**
      * Default constructor. Just ivar initializations.
@@ -82,6 +90,71 @@ public class BackEnd{
         numNewMeasurements++;
 
     }
+
+    public void update() {
+
+        // Only actually update if we're supposed to do so
+        if (numSteps % updateEvery == 0) {
+
+            // Batch solve needs to take precedence (even at start)
+            if (numSteps % batchSolveEvery == 0) {
+
+                // We'll just change this to be our fastest overall method
+                solve();
+
+            } else {
+
+                // Add rows to the system
+                incrementalUpdate();
+
+                if (numSteps % solveEvery == 0) {
+                    // Solve via back substitution
+                    solveBackSubstitution();
+                }
+
+            }
+        }
+
+        numSteps++;
+    }
+
+
+    /**
+     * Add the new measurements to the system via givens rotations.
+     */
+    private void incrementalUpdate() {
+
+
+        // Add each new edge to the system (if there's anything to add!)
+        for (int i = edges.size()-numNewMeasurements; i < edges.size(); i++) {
+
+            Edge anEdge = edges.get(i);
+
+            //HACK: It is slightly less efficient to just pass nodeDimension here. In fact,
+            //with each addition, the system only grows (if at all) by the DOF of any new
+            //nodes in the edge. This seems like a book-keeping nightmare. Since the
+            //following function uses CSRVecs and since nodeDimension is the correct new
+            //column length after adding all of these edges, this should be fine.
+            sparseFactor.addEdgeViaGivensRotations(edges.get(i), nodeDimension);
+
+        }
+
+        numNewMeasurements = 0;
+
+        //TODO: Is this ever useful
+        numNewRows = 0;
+
+    }
+
+    /**
+     * Solve the SparseFactorizationSystem via back substiution and update our estimate of
+     * the state vector.
+     */
+    private void solveBackSubstitution() {
+
+    }
+
+
 
     /**
      * Find the least sqaures solution of the system. This will construct the Jacabian and

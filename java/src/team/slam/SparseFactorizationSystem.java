@@ -37,8 +37,58 @@ public class SparseFactorizationSystem {
         return rhs;
     }
 
+    public void addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
+
+        Linearization edgeLin = anEdge.getLinearization();
+
+        // Array of associated residuals
+        double[] newResiduals = edgeLin.residual;
+
+        List<Nodes> nodes = anEdge.getNodes();
+
+        // Construct a CSRVec for every row in the edge and add it to the system
+        for (int i = 0; i < anEdge.getDOF(); i++) {
+
+            CSRVec oneRow = new CSRVec(newColDimension);
+
+            // Add the parts of each node's jacobian to the new row
+            for (k = 0; k < nodes.size(); k++) {
+
+                int colStart = aNode.getIndex();
+
+                double[][] nodeJacob = edgeLin.J.get(k);
+
+                for (int j = 0; j < aNode.getDOF(); j++) {
+                    oneRow.set(colStart + j, nodeJacob[i][j])
+                }
+            }
+
+            addRowViaGivensRotation(oneRow, newResiduals[i]);
+        }
+    }
 
     public void addRowViaGivensRotation(CSRVec newRow, double newResidual) {
-        
+
+        // Extend the dimensions of the system and do initial placement
+        addRowToSystem(newRow, newResidual);
+
+        // Start applying givens rotations until we again arrive at a upper triangular
+        // system. This shouldn't take long if we do variable reordering ocassionally.
+        int rowIndex = getNumRows();
+        int colIndex = newRow.
+
+
+            }
+
+    private void givensRotation(int row, int col) {
+
+    }
+
+    private void addRowToSystem(CSRVec newRow, double newResidual) {
+
+    }
+
+    private int getNumRows() {
+        return R.getRowDimension();
     }
 }

@@ -37,6 +37,7 @@ public class Homography33
     ArrayList<Double> imagey;
     SingularValueDecomposition svd;
 
+    public static final double FEATURE_NOISE_VARIANCE = 20;
     
     public Homography33(double cx, double cy)
     {
@@ -238,7 +239,7 @@ public class Homography33
 
     public double[][] homogJacob() {
         
-        double eps = 1;
+        double eps = .1;
 
         Matrix J = new Matrix(9, 9);
 
@@ -337,9 +338,9 @@ public class Homography33
     }
 
     public double[][] getCov() {
-        double sigma = 2;
+        double variance = FEATURE_NOISE_VARIANCE; //in pixels squared
         Matrix J = new Matrix(homogJacob());
-        return J.times(J.transpose().times(sigma)).copyArray();
+        return J.times(J.transpose().times(variance)).copyArray();
     }
 
     public static double sq(double x) {

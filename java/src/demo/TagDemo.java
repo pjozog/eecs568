@@ -34,7 +34,7 @@ import april.config.*;
 
 import lcm.lcm.*;
 
-import perllcm.pose3d_t;
+import perllcm.tag_pose3d_t;
 
 public class TagDemo {
 
@@ -194,9 +194,10 @@ public class TagDemo {
                                                                                          poseTagToHzCam[5]))));
 
 
-                    pose3d_t msg = new pose3d_t();
+                    tag_pose3d_t msg = new tag_pose3d_t();
 
                     msg.utime = System.nanoTime();
+                    msg.id    = d.id;
                     msg.mu    = poseTagToHzCam;
                     msg.Sigma = Sigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", msg);

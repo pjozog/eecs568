@@ -18,7 +18,7 @@ import team.common.SixDofCoords;
 import team.common.TagUtil;
 
 import bot_core.image_t;
-import perllcm.pose3d_t;
+import perllcm.tag_pose3d_t;
 
 public class DroneTag implements LCMSubscriber {
     
@@ -105,8 +105,9 @@ public class DroneTag implements LCMSubscriber {
                     Matrix poseSigma = TagUtil.getPoseSigma(d.homography, d.covariance, tagsize, fx, fy);
                     double[] poseCamToTag = SixDofCoords.inverse(poseTagToCam);
 
-                    pose3d_t outMsg = new pose3d_t();
+                    tag_pose3d_t outMsg = new tag_pose3d_t();
                     outMsg.utime    = System.nanoTime();
+                    outMsg.id       = d.id;
                     outMsg.mu       = poseCamToTag;
                     outMsg.Sigma    = poseSigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", outMsg);

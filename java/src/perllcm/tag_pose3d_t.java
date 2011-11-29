@@ -3,43 +3,39 @@
  * DO NOT MODIFY BY HAND!!!!
  */
 
-package se;
+package perllcm;
  
 import java.io.*;
 import java.nio.*;
 import java.util.*;
 import lcm.lcm.*;
  
-public final class add_node_ack_t implements lcm.lcm.LCMEncodable
+public final class tag_pose3d_t implements lcm.lcm.LCMEncodable
 {
     public long utime;
-    public short node_type;
+    public int id;
     public double mu[];
-    public double cov[];
-    public int sensor_id;
+    public double Sigma[];
  
-    public add_node_ack_t()
+    public tag_pose3d_t()
     {
         mu = new double[6];
-        cov = new double[36];
+        Sigma = new double[36];
     }
  
     public static final long LCM_FINGERPRINT;
-    public static final long LCM_FINGERPRINT_BASE = 0xa79f981a8df46a1bL;
+    public static final long LCM_FINGERPRINT_BASE = 0x4701b4d54418393aL;
  
-    public static final short NODE_POSE2D = (short) 1;
-    public static final short NODE_POSE3D = (short) 2;
-
     static {
         LCM_FINGERPRINT = _hashRecursive(new ArrayList<Class>());
     }
  
     public static long _hashRecursive(ArrayList<Class> classes)
     {
-        if (classes.contains(se.add_node_ack_t.class))
+        if (classes.contains(perllcm.tag_pose3d_t.class))
             return 0L;
  
-        classes.add(se.add_node_ack_t.class);
+        classes.add(perllcm.tag_pose3d_t.class);
         long hash = LCM_FINGERPRINT_BASE
             ;
         classes.remove(classes.size() - 1);
@@ -56,26 +52,24 @@ public final class add_node_ack_t implements lcm.lcm.LCMEncodable
     {
         outs.writeLong(this.utime); 
  
-        outs.writeShort(this.node_type); 
+        outs.writeInt(this.id); 
  
         for (int a = 0; a < 6; a++) {
             outs.writeDouble(this.mu[a]); 
         }
  
         for (int a = 0; a < 36; a++) {
-            outs.writeDouble(this.cov[a]); 
+            outs.writeDouble(this.Sigma[a]); 
         }
- 
-        outs.writeInt(this.sensor_id); 
  
     }
  
-    public add_node_ack_t(byte[] data) throws IOException
+    public tag_pose3d_t(byte[] data) throws IOException
     {
         this(new LCMDataInputStream(data));
     }
  
-    public add_node_ack_t(DataInput ins) throws IOException
+    public tag_pose3d_t(DataInput ins) throws IOException
     {
         if (ins.readLong() != LCM_FINGERPRINT)
             throw new IOException("LCM Decode error: bad fingerprint");
@@ -83,9 +77,9 @@ public final class add_node_ack_t implements lcm.lcm.LCMEncodable
         _decodeRecursive(ins);
     }
  
-    public static se.add_node_ack_t _decodeRecursiveFactory(DataInput ins) throws IOException
+    public static perllcm.tag_pose3d_t _decodeRecursiveFactory(DataInput ins) throws IOException
     {
-        se.add_node_ack_t o = new se.add_node_ack_t();
+        perllcm.tag_pose3d_t o = new perllcm.tag_pose3d_t();
         o._decodeRecursive(ins);
         return o;
     }
@@ -94,35 +88,31 @@ public final class add_node_ack_t implements lcm.lcm.LCMEncodable
     {
         this.utime = ins.readLong();
  
-        this.node_type = ins.readShort();
+        this.id = ins.readInt();
  
         this.mu = new double[(int) 6];
         for (int a = 0; a < 6; a++) {
             this.mu[a] = ins.readDouble();
         }
  
-        this.cov = new double[(int) 36];
+        this.Sigma = new double[(int) 36];
         for (int a = 0; a < 36; a++) {
-            this.cov[a] = ins.readDouble();
+            this.Sigma[a] = ins.readDouble();
         }
- 
-        this.sensor_id = ins.readInt();
  
     }
  
-    public se.add_node_ack_t copy()
+    public perllcm.tag_pose3d_t copy()
     {
-        se.add_node_ack_t outobj = new se.add_node_ack_t();
+        perllcm.tag_pose3d_t outobj = new perllcm.tag_pose3d_t();
         outobj.utime = this.utime;
  
-        outobj.node_type = this.node_type;
+        outobj.id = this.id;
  
         outobj.mu = new double[(int) 6];
         System.arraycopy(this.mu, 0, outobj.mu, 0, 6); 
-        outobj.cov = new double[(int) 36];
-        System.arraycopy(this.cov, 0, outobj.cov, 0, 36); 
-        outobj.sensor_id = this.sensor_id;
- 
+        outobj.Sigma = new double[(int) 36];
+        System.arraycopy(this.Sigma, 0, outobj.Sigma, 0, 36); 
         return outobj;
     }
  

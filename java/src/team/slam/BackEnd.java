@@ -154,7 +154,7 @@ public class BackEnd{
 
         double[] x = getStateEstimate();
 
-        sparseFactor.solve();
+        double[] deltaX = sparseFactor.solve();
 
         x = LinAlg.add(x, deltaX);
         updateNodesWithNewState(x);

@@ -2,10 +2,7 @@ package team.slam;
 
 import java.util.List;
 import java.util.ArrayList;
-import april.jmat.Matrix;
-import april.jmat.LinAlg;
-import april.jmat.DenseVec;
-// import april.jmat.CholeskyDecomposition;
+import april.jmat.*;
 
 import team.common.*;
 
@@ -14,6 +11,7 @@ public class SparseFactorizationSystem {
     private Matrix R;
     private DenseVec rhs;
 
+    private double EPSILON = 1e-8;
 
     public SparseFactorizationSystem() {
 
@@ -53,7 +51,7 @@ public class SparseFactorizationSystem {
         // Array of associated residuals
         double[] newResiduals = edgeLin.residual;
 
-        List<Nodes> nodes = anEdge.getNodes();
+        List<Node> nodes = anEdge.getNodes();
 
         // Construct a CSRVec for every row in the edge and add it to the system
         for (int i = 0; i < anEdge.getDOF(); i++) {
@@ -63,7 +61,9 @@ public class SparseFactorizationSystem {
             int newColSize = getNumCols();
 
             // Add the parts of each node's jacobian to the new row
-            for (k = 0; k < nodes.size(); k++) {
+            for (int k = 0; k < nodes.size(); k++) {
+
+                Node aNode = nodes.get(k);
 
                 int colStart = aNode.getIndex();
 
@@ -74,7 +74,8 @@ public class SparseFactorizationSystem {
                 }
 
                 // We need the vector to be exactly the right size for this edge when we
-                // add it to R
+                // add it to R 
+                // TODO: Is the +1 correct here?
                 if (newColSize < colStart+aNode.getDOF()+1) {
                     newColSize = colStart+aNode.getDOF()+1;
                 }
@@ -91,7 +92,7 @@ public class SparseFactorizationSystem {
      *
      * @return deltaX
      */
-    private double[] solve() {
+    public double[] solve() {
 
         return new double[1];
     }
@@ -120,9 +121,9 @@ public class SparseFactorizationSystem {
         }
 
         // It's possible that the new row wasn't associated with a new node. The row could
-        // now totally be zeros. In that case, we remove it and it's assocated residual.
+        // now totally be zeros. In that case, we remove it and its assocated residual.
         // TODO: In our situation, I don't think this will ever happen?
-        if (R.getRow(rowIndex).nz == 0) {
+        if (R.getRow(rowIndex).getNz() == 0) {
             // This is for you Schuyler
             assert(false);
         }
@@ -131,6 +132,76 @@ public class SparseFactorizationSystem {
     }
 
     private void givensRotationForElement(int row, int col) {
+
+        assert((row >= 0) && (row < getNumRows()) && (col >=0 ) && (col < getNumCols()));
+        assert(col < row);
+
+        // Get the two rows that will be changed
+        CSRVec topRow = (CSRVec)R.getRow(col);
+        CSRVec botRow = (CSRVec)R.getRow(row);
+
+        // These two elements are the only two that matter to help us choose the rotation
+        // angle. Golub & Van Loan section 5.1.8.
+        double a = topRow.get(col);
+        double b = botRow.get(col);
+
+        //--------
+        // Compute rotations
+        //--------
+
+        double c, s;
+
+        // Algorithm 5.1.3 in Matrix Computations by Golub and Van Loan
+        if (b == 0) {
+            c = 1.0;
+            s = 0.0;
+        } else if (Math.abs(b) > Math.abs(a)) {
+            double tau = -a/b;
+            s = 1.0/Math.sqrt(1+tau*tau);
+            c = s*tau;
+        } else {
+            double tau = -b/a;
+            c = 1.0/Math.sqrt(1+tau*tau);
+            s = c*tau;
+        }
+
+
+        //--------
+        // Apply the Givens rotation to R
+        //--------
+
+        CSRVec newTopRow = new CSRVec(topRow.length);
+        CSRVec newBotRow = new CSRVec(topRow.length);
+
+        // From section 5.1.9 in Matrix Computations by Golub and Van Loan
+        for (int j = col; j < topRow.length; j++) {
+
+            double tauTop = topRow.get(j);
+            double tauBot = botRow.get(j);
+
+            newTopRow.set(j, c*tauTop - s*tauBot);
+            newBotRow.set(j, s*tauTop + c*tauBot);
+        }
+
+        // Remove any elements that should be zero...machine precision issues
+        newTopRow.filterZeros(EPSILON);
+        newBotRow.filterZeros(EPSILON);
+
+        // The whole point of this was to make this one element zero!
+        assert(newBotRow.get(col) == 0);
+
+        // Replace the rows in R with the new rows
+        R.setRow(col, newTopRow);
+        R.setRow(row, newBotRow);
+
+
+        //--------
+        // Apply same rotation to rhs
+        //--------
+        double r1 = rhs.get(col);
+        double r2 = rhs.get(row);
+        rhs.set(col, c*r1 - s*r2);
+        rhs.set(row, s*r1 + c*r2);
 
     }
 

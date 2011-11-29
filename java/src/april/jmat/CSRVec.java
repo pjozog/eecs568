@@ -43,6 +43,8 @@ public class CSRVec extends Vec
         if (indices.length > 0) {
             sort();
             return indices[indices.length-1];
+        } else {
+            return -1;
         }
     }
 
@@ -51,6 +53,8 @@ public class CSRVec extends Vec
         if (indices.length > 0) {
             sort();
             return indices[0];
+        } else {
+            return -1;
         }
     }
 

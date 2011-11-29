@@ -152,6 +152,13 @@ public class BackEnd{
      */
     private void solveBackSubstitution() {
 
+        double[] x = getStateEstimate();
+
+        sparseFactor.solve();
+
+        x = LinAlg.add(x, deltaX);
+        updateNodesWithNewState(x);
+
     }
 
 

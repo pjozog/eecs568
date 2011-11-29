@@ -37,6 +37,15 @@ public class SparseFactorizationSystem {
         return rhs;
     }
 
+    /**
+     * Add an entire edge to the sparse system. This almost belongs in the BackEnd instead
+     * of here, because it just assembles sparse rows from the edge's linearization and
+     * passes them off to addRowViaGivensRotation(). It lives here now because the BackEnd
+     * is getting huge.
+     *
+     * @param the new edge to add
+     * @param the column size that the sparse system should have after this addition
+     */
     public void addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
 
         Linearization edgeLin = anEdge.getLinearization();
@@ -49,7 +58,9 @@ public class SparseFactorizationSystem {
         // Construct a CSRVec for every row in the edge and add it to the system
         for (int i = 0; i < anEdge.getDOF(); i++) {
 
+
             CSRVec oneRow = new CSRVec(newColDimension);
+            int newColSize = getNumCols();
 
             // Add the parts of each node's jacobian to the new row
             for (k = 0; k < nodes.size(); k++) {
@@ -59,36 +70,97 @@ public class SparseFactorizationSystem {
                 double[][] nodeJacob = edgeLin.J.get(k);
 
                 for (int j = 0; j < aNode.getDOF(); j++) {
-                    oneRow.set(colStart + j, nodeJacob[i][j])
+                    oneRow.set(colStart + j, nodeJacob[i][j]);
+                }
+
+                // We need the vector to be exactly the right size for this edge when we
+                // add it to R
+                if (newColSize < colStart+aNode.getDOF()+1) {
+                    newColSize = colStart+aNode.getDOF()+1;
                 }
             }
 
+
+            oneRow.resize(newColSize);
             addRowViaGivensRotation(oneRow, newResiduals[i]);
         }
     }
 
-    public void addRowViaGivensRotation(CSRVec newRow, double newResidual) {
+    /**
+     * Solve system via back substitution.
+     *
+     * @return deltaX
+     */
+    private double[] solve() {
+
+        return new double[1];
+    }
+
+    /**
+     * Adds a row to the system and then applies givens rotations to maintain our upper
+     * triangular shape that is our factorization.
+     */
+    private void addRowViaGivensRotation(CSRVec newRow, double newResidual) {
 
         // Extend the dimensions of the system and do initial placement
         addRowToSystem(newRow, newResidual);
 
+        // This represents the last row and non-zero columns in the now modified (and
+        // non-upper-triangular) R
+        int rowIndex = getNumRows() - 1;
+        int colIndex = R.getRow(rowIndex).first();
+
         // Start applying givens rotations until we again arrive at a upper triangular
         // system. This shouldn't take long if we do variable reordering ocassionally.
-        int rowIndex = getNumRows();
-        int colIndex = newRow.
 
+        // Only perfrom this in elements before the diagonal
+        while ((colIndex >=0) && (colIndex < rowIndex)) {
+            givensRotationForElement(rowIndex, colIndex);
+            colIndex =  R.getRow(rowIndex).first();
+        }
 
-            }
+        // It's possible that the new row wasn't associated with a new node. The row could
+        // now totally be zeros. In that case, we remove it and it's assocated residual.
+        // TODO: In our situation, I don't think this will ever happen?
+        if (R.getRow(rowIndex).nz == 0) {
+            // This is for you Schuyler
+            assert(false);
+        }
 
-    private void givensRotation(int row, int col) {
 
     }
 
+    private void givensRotationForElement(int row, int col) {
+
+    }
+
+    /**
+     * Actually add the row into R and the new residual component into rhs
+     */
     private void addRowToSystem(CSRVec newRow, double newResidual) {
 
+        int newColSize = Math.max(newRow.length, getNumCols());
+        int newRowSize = getNumRows() + 1;
+
+        R.resize(newRowSize, newColSize);
+
+        // Using with extreme caution!!
+        // To add the row to R, the sizes need to match perfectly.
+        assert(newRow.length == getNumCols());
+        R.setRow(newRowSize-1, newRow);
+
+        rhs.resize(newRowSize);
+        rhs.set(getNumRows()-1, newResidual);
+
     }
+
+
 
     private int getNumRows() {
         return R.getRowDimension();
+    }
+
+    private int getNumCols() {
+        return R.getColumnDimension();
     }
 }

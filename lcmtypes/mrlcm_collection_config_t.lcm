@@ -1,8 +1,0 @@
-package mrlcm;
-
-struct collection_config_t {
-	int32_t collection_id;
-  int32_t n;
-  property_t properties[n];
-}
-

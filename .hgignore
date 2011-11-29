@@ -13,6 +13,11 @@ BeansAttempt/*
 *.orig
 *.DS_Store
 java/src/april/lcmtypes
+java/src/perllcm/
+java/src/bot_core/
+java/jni/jcam/istest
+java/MOVIE
+java/data.txt
 april_jcam_ImageSourceNative.h
 april_vis_GL.h
 april_jserial_JSerial.h

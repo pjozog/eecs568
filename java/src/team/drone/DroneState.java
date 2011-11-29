@@ -18,10 +18,14 @@ import team.common.SixDofCoords;
 
 import bot_core.image_t;
 import perllcm.pose3d_t;
+import perllcm.ardrone_state_t;
 
 public class DroneState implements LCMSubscriber {
     
     LCM lcm = new LCM();
+
+    ardrone_state_t oldState = null;
+
 
     public DroneState() throws IOException {
 
@@ -37,52 +41,75 @@ public class DroneState implements LCMSubscriber {
                 ardrone_state_t msg = new ardrone_state_t(ins);
 
 
-		    double time = msg.utime;
-		    double velx = msg.vx;
-		    double vely = msg.vy;
-		    double velz = msg.vz;
-		    double alt = msg.altitude;
-		    double r = msg.roll;
-		    double p = msg.pitch;
-		    double y = msg.yaw;
+                double time = msg.utime;
+                double velx = msg.vx;
+                double vely = msg.vy;
+                double velz = msg.vz;
+                double alt = msg.altitude;
+                double r = msg.roll;
+                double p = msg.pitch;
+                double y = msg.yaw;
 
-		    double[] currentPose = 
+                // double[] currentPose = 
+                
 
 
-
-                    pose3d_t outMsg = new pose3d_t();                    
-		    outMsg.utime    = System.nanoTime();
-                    outMsg.mu       = deltaPose;
-                    outMsg.Sigma    = Matrix.identity(6,6).copyAsVector();
-                    lcm.publish("ARDRONE_DELTA_POSE", outMsg);
-
+          
+                
+                if(oldState == null){
+                    oldState = msg;
                     return;
-
                 }
-            }
+                
+                
+                
+                
+                double delx = velx * (time - oldState.utime);
+                double dely = vely * (time - oldState.utime);
+                double delz = alt - oldState.altitude;
+                double delr = r - oldState.roll;
+                double delp = p - oldState.pitch;
+                double depy = y - oldState.yaw;
+                    
+                pose3d_t outMsg = new pose3d_t();                    
+                outMsg.utime    = System.nanoTime();
+                outMsg.Sigma    = Matrix.identity(6,6).copyAsVector();        
+                
+                double []deltaPose = new double[]{delx, dely, delz, delr, delp ,dely};
+                outMsg.mu = deltaPose;
+                
 
-        } catch (IOException ex) {
+                lcm.publish("ARDRONE_DELTA_POSE", outMsg);
+
+                return;
+
+            }
+            
+
+        }
+        catch (IOException ex) {
             System.out.println("Caught exception: "+ex);
         }
-
+        
     }
 
+    
     public static void main(String[] args) {
-
+        
         try {
-
+            
             DroneState ds = new DroneState();
-
+            
             while (true) {
                 Thread.sleep(1000);
             }
-
+            
         } catch (IOException ex) {
             System.out.println("Caught exception: "+ex);
         } catch (InterruptedException ex) { 
-        
+            
         }
-
+        
     }
 
 }

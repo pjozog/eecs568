@@ -1,8 +1,0 @@
-package se;
-
-struct pose_t
-{
-  double mu[6]; // x,y,z (in meters),yaw,pitch,roll (in radians)
-}
-
-

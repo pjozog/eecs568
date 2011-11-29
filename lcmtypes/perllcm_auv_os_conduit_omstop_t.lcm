@@ -1,6 +1,0 @@
-package perllcm;
-
-struct auv_os_conduit_omstop_t
-{
-    int32_t msg_flag;   // 0:NULL
-}

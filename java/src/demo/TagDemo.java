@@ -11,6 +11,7 @@ import april.jmat.*;
 import team.common.Quiver;
 import team.common.ArrayUtil;
 import team.common.SixDofCoords;
+import team.common.TagUtil;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -33,7 +34,7 @@ import april.config.*;
 
 import lcm.lcm.*;
 
-import perllcm.pose3d_t;
+import perllcm.tag_pose3d_t;
 
 public class TagDemo {
 
@@ -47,6 +48,10 @@ public class TagDemo {
     VisLayer vl       = new VisLayer(vw);
     VisCanvas vc      = new VisCanvas(vl);
     ParameterGUI pg   = new ParameterGUI();
+
+    double tagsize;
+    double fx;
+    double fy;
 
     public static void main(String args[]) {
 
@@ -92,10 +97,14 @@ public class TagDemo {
             System.out.println("Ex: "+ex);
         }
 
-        config = _config;
+        this.config = _config;
 
         this.is = is;
         this.tf = tf;
+
+        this.tagsize = this.config.requireDouble("target.width");
+        this.fx = this.config.requireDouble("camera.fx");
+        this.fy = this.config.requireDouble("camera.fy");
 
         detector = new TagDetector(tf);
 
@@ -155,11 +164,12 @@ public class TagDemo {
             vbOrigin.swap();
 
             while (true) {
+
                 byte buf[] = is.getFrame();
                 if (buf == null)
                     continue;
 
-                BufferedImage im = ImageConvert.convertToImage("BE_GRAY16", fmt.width, fmt.height, buf);
+                BufferedImage im = ImageConvert.convertToImage(fmt.format, fmt.width, fmt.height, buf);
 
                 Tic tic = new Tic();
                 ArrayList<TagDetection> detections = detector.process(im, new double[] {im.getWidth()/2.0, im.getHeight()/2.0});
@@ -170,10 +180,8 @@ public class TagDemo {
 
                 for (TagDetection d : detections) {
 
-                    double[] poseTagToHzCam = getPose(d.homography);
-                    Matrix J = new Matrix(getPoseJacob(d.homography));
-
-                    Matrix Sigma = J.times(new Matrix(d.covariance)).times(J.transpose());
+                    double[] poseTagToHzCam = TagUtil.getPose(d.homography, tagsize, fx, fy);
+                    Matrix Sigma = TagUtil.getPoseSigma(d.homography, d.covariance, tagsize, fx, fy);
 
                     poseDisplay.addBack(new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
                                                                 new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
@@ -186,9 +194,10 @@ public class TagDemo {
                                                                                          poseTagToHzCam[5]))));
 
 
-                    pose3d_t msg = new pose3d_t();
+                    tag_pose3d_t msg = new tag_pose3d_t();
 
                     msg.utime = System.nanoTime();
+                    msg.id    = d.id;
                     msg.mu    = poseTagToHzCam;
                     msg.Sigma = Sigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", msg);
@@ -200,64 +209,6 @@ public class TagDemo {
 
             }
 
-        }
-
-        public double[] getPose(double[][] H) {
-            
-            double tagsize = config.requireDouble("target.width");
-            double fx = config.requireDouble("camera.fx");
-            double fy = config.requireDouble("camera.fy");
-
-            double M[][] = CameraUtil.homographyToPose(fx, fy, tagsize, H);
-
-            //The CameraUtil gives us pose from camera to
-            //target.  Also, the camera is using the messed-up
-            //openGl-style camera frame.  So we need to get
-            //the pose from target to camera, then convert to
-            //Hartley-Zisserman camera convention (z forward,
-            //x right, y down)
-            double[] poseOpenGlCamToTag = LinAlg.matrixToXyzrpy(M);
-            double[] poseTagToOpenGlCam = SixDofCoords.inverse(LinAlg.matrixToXyzrpy(M));
-            double[] poseTagToHzCam     = SixDofCoords.headToTail(poseTagToOpenGlCam, SixDofCoords.xOpenGlToHz);
-            return poseTagToHzCam;
-
-        }
-
-        public double[][] getPoseJacob(double[][] H) {
-            
-            Matrix HMat = new Matrix(H);
-            double[] h = HMat.getColumnPackedCopy();
-
-            double eps = .01;
-
-            Matrix J = new Matrix(6, 9);
-
-            //Differentiate with respect to h
-            for (int i = 0; i < 9; i++) {
-                for (int j = 0; j < 6; j++) {
-
-                    double[] hPert = new double[h.length];
-                    for (int k = 0; k < h.length; k++)
-                        hPert[k] = h[k];
-
-                    hPert[i] += eps;
-
-                    double[] y = getPose(hVecToMat(h));
-                    double[] yPert = getPose(hVecToMat(hPert));
-
-                    double finiteDiff = (yPert[j] - y[j]) / eps;
-
-                    J.set(j, i, finiteDiff);
-                
-                }
-            }
-            
-            return J.copyArray();
-            
-        }
-
-        public double[][] hVecToMat(double[] h) {
-            return Matrix.columnPackedMatrix(h, 3, 3).copyArray();
         }
 
     }

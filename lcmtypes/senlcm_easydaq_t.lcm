@@ -1,8 +1,0 @@
-package senlcm;
-
-struct easydaq_t
-{
-    int64_t utime;
-    boolean self;
-    relay_t relay[8];
-}

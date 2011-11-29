@@ -91,8 +91,8 @@ public class BackEnd{
     public void solve() {
 
         // gaussNewton();
-        fasterGaussNewton();
-        // experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
+        // fasterGaussNewton();
+        experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
         // experimentalFactoringGausssNewton(new SimpleDegreeOrdering());
 
     }

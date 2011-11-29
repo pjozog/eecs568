@@ -50,11 +50,6 @@ public class DroneState implements LCMSubscriber {
                 double p = msg.pitch;
                 double y = msg.yaw;
 
-                // double[] currentPose = 
-                
-
-
-          
                 
                 if(oldState == null){
                     oldState = msg;
@@ -62,10 +57,8 @@ public class DroneState implements LCMSubscriber {
                 }
                 
                 
-                
-                
-                double delx = velx * (time - oldState.utime);
-                double dely = vely * (time - oldState.utime);
+                double delx = velx * (time - oldState.utime)/1e6;
+                double dely = vely * (time - oldState.utime)/1e6;
                 double delz = alt - oldState.altitude;
                 double delr = r - oldState.roll;
                 double delp = p - oldState.pitch;
@@ -80,6 +73,8 @@ public class DroneState implements LCMSubscriber {
                 
 
                 lcm.publish("ARDRONE_DELTA_POSE", outMsg);
+
+		oldState = msg;
 
                 return;
 

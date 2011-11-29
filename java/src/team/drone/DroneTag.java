@@ -15,6 +15,7 @@ import april.jmat.*;
 import april.config.*;
 
 import team.common.SixDofCoords;
+import team.common.TagUtil;
 
 import bot_core.image_t;
 import perllcm.pose3d_t;
@@ -100,16 +101,14 @@ public class DroneTag implements LCMSubscriber {
                     double fx = config.requireDouble("camera.fx");
                     double fy = config.requireDouble("camera.fy");
 
-                    double M[][] = CameraUtil.homographyToPose(fx, fy, tagsize, d.homography);
-
-                    double[] poseOpenGlCamToTag = LinAlg.matrixToXyzrpy(M);
-                    double[] poseTagToOpenGlCam = SixDofCoords.inverse(LinAlg.matrixToXyzrpy(M));
-                    double[] poseTagToHzCam     = SixDofCoords.headToTail(poseTagToOpenGlCam, SixDofCoords.xOpenGlToHz);
+                    double[] poseTagToCam = TagUtil.getPose(d.homography, tagsize, fx, fy);
+                    Matrix poseSigma = TagUtil.getPoseSigma(d.homography, d.covariance, tagsize, fx, fy);
+                    double[] poseCamToTag = SixDofCoords.inverse(poseTagToCam);
 
                     pose3d_t outMsg = new pose3d_t();
                     outMsg.utime    = System.nanoTime();
-                    outMsg.mu       = poseTagToHzCam;
-                    outMsg.Sigma    = Matrix.identity(6,6).copyAsVector();
+                    outMsg.mu       = poseCamToTag;
+                    outMsg.Sigma    = poseSigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", outMsg);
 
                     return;

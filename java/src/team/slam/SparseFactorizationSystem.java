@@ -15,7 +15,7 @@ public class SparseFactorizationSystem {
 
     private boolean verbose = false;
     private boolean patternVerbose = false;
-    private boolean valuesVerbose = true;
+    private boolean valuesVerbose = false;
 
     public SparseFactorizationSystem() {
 
@@ -193,15 +193,15 @@ public class SparseFactorizationSystem {
             // This is for you Schuyler
             // System.out.println("I wasn't ready for this...");
             // assert(false);
-            System.out.println("REMOVING ROW! Is this correct?");
+            // System.out.println("REMOVING ROW! Is this correct?");
             // assert(false);
 
             int originalNumRows = getNumRows();
             R.resize(originalNumRows - 1, getNumCols());
             rhs.resize(originalNumRows-1);
 
-            System.out.println("\tNew R size "+R.getRowDimension()+" "+R.getColumnDimension());
-            System.out.println("\tNew rhs length "+rhs.size());
+            // System.out.println("\tNew R size "+R.getRowDimension()+" "+R.getColumnDimension());
+            // System.out.println("\tNew rhs length "+rhs.size());
 
 
         }

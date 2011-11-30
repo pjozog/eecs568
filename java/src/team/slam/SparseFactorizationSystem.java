@@ -74,7 +74,7 @@ public class SparseFactorizationSystem {
                 }
 
                 // We need the vector to be exactly the right size for this edge when we
-                // add it to R 
+                // add it to R
                 // TODO: Is the +1 correct here?
                 if (newColSize < colStart+aNode.getDOF()+1) {
                     newColSize = colStart+aNode.getDOF()+1;
@@ -94,7 +94,33 @@ public class SparseFactorizationSystem {
      */
     public double[] solve() {
 
-        return new double[1];
+        assert(getNumRows() == getNumCols());
+
+        int numCols = getNumCols();
+
+        DenseVec result = new DenseVec(numCols);
+
+        for (int rowIndex = numCols-1; rowIndex >= 0; rowIndex--) {
+
+            CSRVec theRow = (CSRVec)R.getRow(rowIndex);
+            double elem = rhs.get(rowIndex);
+
+            for (int colIndex = theRow.first() ; colIndex < theRow.length; colIndex++) {
+
+                double v = theRow.get(colIndex);
+
+                if (rowIndex != colIndex) {
+                    elem = elem - result.get(colIndex)*v;
+                }
+            }
+
+            double diag = theRow.get(rowIndex);
+
+            result.set(rowIndex, elem/diag);
+
+        }
+
+        return result.copyArray();
     }
 
     /**
@@ -123,14 +149,21 @@ public class SparseFactorizationSystem {
         // It's possible that the new row wasn't associated with a new node. The row could
         // now totally be zeros. In that case, we remove it and its assocated residual.
         // TODO: In our situation, I don't think this will ever happen?
+        // FIXME: This will definitely happen!
         if (R.getRow(rowIndex).getNz() == 0) {
             // This is for you Schuyler
+            System.out.println("I wasn't ready for this...");
             assert(false);
         }
 
 
     }
 
+
+    /**
+     * Applies a givens rotation to one element in the system. It changes both R and rhs
+     * by the same rotation.
+     */
     private void givensRotationForElement(int row, int col) {
 
         assert((row >= 0) && (row < getNumRows()) && (col >=0 ) && (col < getNumCols()));
@@ -204,6 +237,8 @@ public class SparseFactorizationSystem {
         rhs.set(row, s*r1 + c*r2);
 
     }
+
+
 
     /**
      * Actually add the row into R and the new residual component into rhs

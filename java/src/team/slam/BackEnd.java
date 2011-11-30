@@ -27,7 +27,7 @@ public class BackEnd{
     // Controls the frequency of update types. tunable.
     private int updateEvery = 1;
     private int solveEvery  = 1;
-    private int batchSolveEvery = 100;
+    private int batchSolveEvery = 100000000;
 
     // Book-keeping
     private int nodeDimension;

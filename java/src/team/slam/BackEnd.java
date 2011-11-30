@@ -2,9 +2,7 @@ package team.slam;
 
 import java.util.List;
 import java.util.ArrayList;
-import april.jmat.Matrix;
-import april.jmat.LinAlg;
-import april.jmat.CholeskyDecomposition;
+import april.jmat.*;
 
 
 // Experimental
@@ -16,7 +14,7 @@ public class BackEnd{
     private List<Node> nodes;
     private List<Edge> edges;
 
-    private SparseFactorizationSystem sparseFactor;
+    private SparseFactorizationSystem sparseFactor = new SparseFactorizationSystem();
 
     // Tunable parameters
     private double lambda = 1.0;
@@ -99,10 +97,15 @@ public class BackEnd{
             // Batch solve needs to take precedence (even at start)
             if (numSteps % batchSolveEvery == 0) {
 
+                System.out.println("\nStep "+ numSteps);
+
                 // We'll just change this to be our fastest overall method
+                // HACK: Right now only fasterGaussNewton() works
                 solve();
 
             } else {
+
+                System.out.print(".");
 
                 // Add rows to the system
                 incrementalUpdate();
@@ -124,9 +127,12 @@ public class BackEnd{
      */
     private void incrementalUpdate() {
 
+        updateNodeIndices();
 
         // Add each new edge to the system (if there's anything to add!)
         for (int i = edges.size()-numNewMeasurements; i < edges.size(); i++) {
+
+            // System.out.println("Edge access "+ edges.size()+" "+ numNewMeasurements+" "+i);
 
             Edge anEdge = edges.get(i);
 
@@ -170,10 +176,14 @@ public class BackEnd{
      */
     public void solve() {
 
+
         // gaussNewton();
-        // fasterGaussNewton();
-        experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
+        fasterGaussNewton();
+        // experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
         // experimentalFactoringGausssNewton(new SimpleDegreeOrdering());
+
+        numNewMeasurements = 0;
+        numNewRows = 0;
 
     }
 
@@ -242,6 +252,12 @@ public class BackEnd{
             CholeskyDecomposition myDecomp = new CholeskyDecomposition(A);
 
             double[] deltaX = myDecomp.solve(b).copyAsVector();
+
+
+            // Hand this off to our SparseFactorizationSystem
+            Matrix L = myDecomp.getL();
+            sparseFactor.setR(L.transpose());
+            sparseFactor.setRHS(new DenseVec(b.copyAsVector()));
 
             maxChange = LinAlg.max(LinAlg.abs(deltaX));
 

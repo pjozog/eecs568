@@ -40,7 +40,7 @@ public class CSRVec extends Vec
 
 
     public int last() {
-        if (indices.length > 0) {
+        if (indices.length > 0 && nz > 0) {
             sort();
             return indices[indices.length-1];
         } else {
@@ -50,7 +50,7 @@ public class CSRVec extends Vec
 
 
     public int first() {
-        if (indices.length > 0) {
+        if (indices.length > 0 && nz > 0) {
             sort();
             return indices[0];
         } else {

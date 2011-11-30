@@ -13,6 +13,9 @@ public class SparseFactorizationSystem {
 
     private double EPSILON = 1e-8;
 
+    private boolean patternVerbose = true;
+
+
     public SparseFactorizationSystem() {
 
         R = new Matrix(1, 1, Matrix.SPARSE);
@@ -35,6 +38,27 @@ public class SparseFactorizationSystem {
         return rhs;
     }
 
+    public void setR(Matrix newR) {
+
+        if (patternVerbose) {
+            System.out.println("R updated with new dimensions "+newR.getRowDimension()+ " "+newR.getColumnDimension());
+            LinAlg.printPattern(newR.copyArray());
+        }
+
+        R = newR;
+
+    }
+
+    public void setRHS(DenseVec newRHS) {
+
+        if (patternVerbose) {
+            System.out.println("RHS updated with new dimension " + newRHS.size());
+        }
+
+        rhs = newRHS;
+    }
+
+
     /**
      * Add an entire edge to the sparse system. This almost belongs in the BackEnd instead
      * of here, because it just assembles sparse rows from the edge's linearization and
@@ -45,6 +69,7 @@ public class SparseFactorizationSystem {
      * @param the column size that the sparse system should have after this addition
      */
     public void addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
+
 
         Linearization edgeLin = anEdge.getLinearization();
 
@@ -76,52 +101,18 @@ public class SparseFactorizationSystem {
                 // We need the vector to be exactly the right size for this edge when we
                 // add it to R
                 // TODO: Is the +1 correct here?
-                if (newColSize < colStart+aNode.getDOF()+1) {
-                    newColSize = colStart+aNode.getDOF()+1;
+                if (newColSize < colStart+aNode.getDOF()) {
+                    newColSize = colStart+aNode.getDOF();
                 }
             }
 
-
+            // System.out.println("Adding a row to the sparse system");
+            // LinAlg.printTranspose(oneRow.copyArray());
             oneRow.resize(newColSize);
             addRowViaGivensRotation(oneRow, newResiduals[i]);
         }
     }
 
-    /**
-     * Solve system via back substitution.
-     *
-     * @return deltaX
-     */
-    public double[] solve() {
-
-        assert(getNumRows() == getNumCols());
-
-        int numCols = getNumCols();
-
-        DenseVec result = new DenseVec(numCols);
-
-        for (int rowIndex = numCols-1; rowIndex >= 0; rowIndex--) {
-
-            CSRVec theRow = (CSRVec)R.getRow(rowIndex);
-            double elem = rhs.get(rowIndex);
-
-            for (int colIndex = theRow.first() ; colIndex < theRow.length; colIndex++) {
-
-                double v = theRow.get(colIndex);
-
-                if (rowIndex != colIndex) {
-                    elem = elem - result.get(colIndex)*v;
-                }
-            }
-
-            double diag = theRow.get(rowIndex);
-
-            result.set(rowIndex, elem/diag);
-
-        }
-
-        return result.copyArray();
-    }
 
     /**
      * Adds a row to the system and then applies givens rotations to maintain our upper
@@ -129,21 +120,40 @@ public class SparseFactorizationSystem {
      */
     private void addRowViaGivensRotation(CSRVec newRow, double newResidual) {
 
+        System.out.println("addRowViaGivensRotation");
+        assert(R.isSparse());
+
         // Extend the dimensions of the system and do initial placement
         addRowToSystem(newRow, newResidual);
 
         // This represents the last row and non-zero columns in the now modified (and
         // non-upper-triangular) R
         int rowIndex = getNumRows() - 1;
-        int colIndex = R.getRow(rowIndex).first();
+        CSRVec lastRow = (CSRVec)R.getRow(rowIndex);
+        int colIndex = lastRow.first();
+
+        if (patternVerbose) {
+            System.out.println("\tSTART colindex "+ colIndex+" nnz "+lastRow.getNz());
+            LinAlg.printPattern(R.copyArray());
+        }
+
 
         // Start applying givens rotations until we again arrive at a upper triangular
         // system. This shouldn't take long if we do variable reordering ocassionally.
 
         // Only perfrom this in elements before the diagonal
         while ((colIndex >=0) && (colIndex < rowIndex)) {
+
             givensRotationForElement(rowIndex, colIndex);
-            colIndex =  R.getRow(rowIndex).first();
+
+            lastRow = (CSRVec)R.getRow(rowIndex);
+            colIndex = lastRow.first();
+
+            if (patternVerbose) {
+                System.out.println("\t iter colindex "+ colIndex+" nnz "+lastRow.getNz());
+                LinAlg.printPattern(R.copyArray());
+            }
+
         }
 
         // It's possible that the new row wasn't associated with a new node. The row could
@@ -168,6 +178,8 @@ public class SparseFactorizationSystem {
 
         assert((row >= 0) && (row < getNumRows()) && (col >=0 ) && (col < getNumCols()));
         assert(col < row);
+
+        System.out.println("givensRotationForElement row "+row+" col "+ col);
 
         // Get the two rows that will be changed
         CSRVec topRow = (CSRVec)R.getRow(col);
@@ -245,6 +257,8 @@ public class SparseFactorizationSystem {
      */
     private void addRowToSystem(CSRVec newRow, double newResidual) {
 
+        System.out.println("addRowToSystem");
+
         int newColSize = Math.max(newRow.length, getNumCols());
         int newRowSize = getNumRows() + 1;
 
@@ -260,6 +274,42 @@ public class SparseFactorizationSystem {
 
     }
 
+
+    /**
+     * Solve system via back substitution.
+     *
+     * @return deltaX
+     */
+    public double[] solve() {
+
+        assert(getNumRows() == getNumCols());
+
+        int numCols = getNumCols();
+
+        DenseVec result = new DenseVec(numCols);
+
+        for (int rowIndex = numCols-1; rowIndex >= 0; rowIndex--) {
+
+            CSRVec theRow = (CSRVec)R.getRow(rowIndex);
+            double elem = rhs.get(rowIndex);
+
+            for (int colIndex = theRow.first() ; colIndex < theRow.length; colIndex++) {
+
+                double v = theRow.get(colIndex);
+
+                if (rowIndex != colIndex) {
+                    elem = elem - result.get(colIndex)*v;
+                }
+            }
+
+            double diag = theRow.get(rowIndex);
+
+            result.set(rowIndex, elem/diag);
+
+        }
+
+        return result.copyArray();
+    }
 
 
     private int getNumRows() {

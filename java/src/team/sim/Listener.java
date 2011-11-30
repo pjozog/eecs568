@@ -135,7 +135,11 @@ public class Listener implements OldSimulator.Listener {
             slam.addEdge(poseToPoint);
         }
 
+        //-------------------
+        // CHOOSE YOUR WEAPON
+        //-------------------
         slam.solve();
+        // slam.update();
 
         if (numUpdates == 383) {
             long endTime = System.nanoTime();

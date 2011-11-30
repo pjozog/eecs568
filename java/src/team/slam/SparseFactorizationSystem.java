@@ -11,15 +11,16 @@ public class SparseFactorizationSystem {
     private Matrix R;
     private DenseVec rhs;
 
-    private double EPSILON = 1e-8;
+    private double EPSILON = 1e-20;
 
-    private boolean patternVerbose = true;
+    private boolean verbose = false;
+    private boolean patternVerbose = false;
 
 
     public SparseFactorizationSystem() {
 
-        R = new Matrix(1, 1, Matrix.SPARSE);
-        rhs = new DenseVec(1);
+        R = new Matrix(0, 0, Matrix.SPARSE);
+        rhs = new DenseVec(0);
 
     }
 
@@ -111,6 +112,9 @@ public class SparseFactorizationSystem {
             oneRow.resize(newColSize);
             addRowViaGivensRotation(oneRow, newResiduals[i]);
         }
+
+        // LinAlg.printPattern(R.copyArray());
+
     }
 
 
@@ -120,7 +124,10 @@ public class SparseFactorizationSystem {
      */
     private void addRowViaGivensRotation(CSRVec newRow, double newResidual) {
 
-        System.out.println("addRowViaGivensRotation");
+        if (verbose) {
+            System.out.println("addRowViaGivensRotation");
+        }
+
         assert(R.isSparse());
 
         // Extend the dimensions of the system and do initial placement
@@ -159,11 +166,22 @@ public class SparseFactorizationSystem {
         // It's possible that the new row wasn't associated with a new node. The row could
         // now totally be zeros. In that case, we remove it and its assocated residual.
         // TODO: In our situation, I don't think this will ever happen?
-        // FIXME: This will definitely happen!
+        // FIX: This will definitely happen!
         if (R.getRow(rowIndex).getNz() == 0) {
             // This is for you Schuyler
-            System.out.println("I wasn't ready for this...");
-            assert(false);
+            // System.out.println("I wasn't ready for this...");
+            // assert(false);
+            System.out.println("REMOVING ROW! Is this correct?");
+            // assert(false);
+
+            int originalNumRows = getNumRows();
+            R.resize(originalNumRows - 1, getNumCols());
+            rhs.resize(originalNumRows-1);
+
+            System.out.println("\tNew R size "+R.getRowDimension()+" "+R.getColumnDimension());
+            System.out.println("\tNew rhs length "+rhs.size());
+
+
         }
 
 
@@ -179,7 +197,9 @@ public class SparseFactorizationSystem {
         assert((row >= 0) && (row < getNumRows()) && (col >=0 ) && (col < getNumCols()));
         assert(col < row);
 
-        System.out.println("givensRotationForElement row "+row+" col "+ col);
+        if (verbose) {
+            System.out.println("givensRotationForElement row "+row+" col "+ col);
+        }
 
         // Get the two rows that will be changed
         CSRVec topRow = (CSRVec)R.getRow(col);
@@ -228,12 +248,19 @@ public class SparseFactorizationSystem {
             newBotRow.set(j, s*tauTop + c*tauBot);
         }
 
+        // if (row == 22 && col == 20) {
+        //     LinAlg.print(newBotRow.copyArray());
+        // }
         // Remove any elements that should be zero...machine precision issues
         newTopRow.filterZeros(EPSILON);
         newBotRow.filterZeros(EPSILON);
 
+        // if (row == 22 && col == 20) {
+        //     LinAlg.print(newBotRow.copyArray());
+        // }
         // The whole point of this was to make this one element zero!
-        assert(newBotRow.get(col) == 0);
+        // assert(newBotRow.get(col) == 0);
+        newBotRow.set(col, 0.0);
 
         // Replace the rows in R with the new rows
         R.setRow(col, newTopRow);
@@ -257,7 +284,9 @@ public class SparseFactorizationSystem {
      */
     private void addRowToSystem(CSRVec newRow, double newResidual) {
 
-        System.out.println("addRowToSystem");
+        if (verbose) {
+            System.out.println("addRowToSystem");
+        }
 
         int newColSize = Math.max(newRow.length, getNumCols());
         int newRowSize = getNumRows() + 1;
@@ -304,8 +333,13 @@ public class SparseFactorizationSystem {
 
             double diag = theRow.get(rowIndex);
 
-            result.set(rowIndex, elem/diag);
-
+            if (diag == 0.0) {
+                System.out.println("Matrix is not upper triangular!");
+                // assert(false);
+                result.set(rowIndex, elem);
+            } else {
+                result.set(rowIndex, elem/diag);
+            }
         }
 
         return result.copyArray();

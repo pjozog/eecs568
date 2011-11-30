@@ -1375,7 +1375,7 @@ public final class LinAlg
     public static void print(double v[])
     {
         for (int i = 0; i < v.length; i++)
-            System.out.printf("%15f\n", v[i]);
+            System.out.printf("%15.25f\n", v[i]);
         System.out.printf("\n");
     }
 

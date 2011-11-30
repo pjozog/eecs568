@@ -95,7 +95,7 @@ public class BackEnd{
         if (numSteps % updateEvery == 0) {
 
             // Batch solve needs to take precedence (even at start)
-            if (numSteps % batchSolveEvery == 0) {
+            if (numSteps % batchSolveEvery == -1) {
 
                 System.out.println("\nStep "+ numSteps);
 
@@ -210,7 +210,7 @@ public class BackEnd{
 
             Matrix A = new Matrix(nodeDimension, nodeDimension, Matrix.SPARSE);
             Matrix b = new Matrix(nodeDimension, 1);
-
+            Matrix r = new Matrix(nodeDimension, 1);
 
             // Loop over all the edges to add their contributions to A and b
             for (Edge anEdge : edges) {
@@ -239,6 +239,7 @@ public class BackEnd{
 
                     double[] JatWr = LinAlg.matrixAB(JatW, edgeLin.residual);
                     b.plusEqualsColumnVector(aIndex, 0, JatWr);
+                    r.plusEqualsColumnVector(aIndex, 0, edgeLin.residual);
 
                 }
 
@@ -257,7 +258,7 @@ public class BackEnd{
             // Hand this off to our SparseFactorizationSystem
             Matrix L = myDecomp.getL();
             sparseFactor.setR(L.transpose());
-            sparseFactor.setRHS(new DenseVec(b.copyAsVector()));
+            sparseFactor.setRHS(new DenseVec(r.copyAsVector()));
 
             maxChange = LinAlg.max(LinAlg.abs(deltaX));
 

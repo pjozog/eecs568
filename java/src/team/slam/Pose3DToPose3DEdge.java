@@ -60,18 +60,22 @@ public class Pose3DToPose3DEdge extends Edge {
 
     protected Matrix getJacobian() {
 
-        return new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
-                                                       nodes.get(1).getStateArray()));
+        // return new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
+        //                                                nodes.get(1).getStateArray()));
+        return new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getLinearizationState(),
+                                                       nodes.get(1).getLinearizationState()));
 
     }
 
     public double[] getResidual() {
 
-        double[] predictedOdom = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
-                                                         nodes.get(1).getStateArray());
+        // double[] predictedOdom = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+        //                                                  nodes.get(1).getStateArray());
+        double[] predictedOdom = SixDofCoords.tailToTail(nodes.get(0).getLinearizationState(),
+                                                         nodes.get(1).getLinearizationState());
 
         double[] residual = LinAlg.subtract(deltaMotion.getArray(), predictedOdom);
-        // double[] residual = LinAlg.subtract(predictedOdom, deltaMotion.getArray());
+
 
         residual[3] = MathUtil.mod2pi(residual[3]);
         residual[4] = MathUtil.mod2pi(residual[4]);

@@ -10,8 +10,11 @@ public abstract class Node {
 
     abstract public double[] getStateArray();
 
+    abstract public double[] getLinearizationState();
+
     abstract public void setStateArray(double[] values);
 
+    abstract public void updateLinearizationPoint();
 
 
     public boolean isInitialized() {

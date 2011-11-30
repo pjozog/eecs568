@@ -163,8 +163,8 @@ public class BackEnd{
         double[] deltaX = sparseFactor.solve();
 
         x = LinAlg.add(x, deltaX);
-        // x = LinAlg.subtract(x, deltaX);
-        // updateNodesWithNewState(x);
+
+        updateNodesWithNewState(x);
 
     }
 
@@ -431,6 +431,14 @@ public class BackEnd{
         return estimate;
     }
 
+
+    private void updateNodeLinearizationPoints() {
+        for (Node aNode : nodes) {
+
+            aNode.updateLinearizationPoint();
+
+        }
+    }
 
     private void updateNodesWithNewState(double[] x) {
 

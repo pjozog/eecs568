@@ -67,7 +67,8 @@ public class Pose3DToPoint3DEdge extends Edge {
 
     protected Matrix getJacobian() {
 
-        double[] pointEst = nodes.get(1).getStateArray();
+        // double[] pointEst = nodes.get(1).getStateArray();
+        double[] pointEst = nodes.get(1).getLinearizationState();
 
         double[] fakePose = new double[6];
         fakePose[0] = pointEst[0];
@@ -78,7 +79,9 @@ public class Pose3DToPoint3DEdge extends Edge {
         fakePose[5] = 0.0;
 
 
-        Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
+        // Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
+        //                                                        fakePose));
+        Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getLinearizationState(),
                                                                fakePose));
 
         //We want the 3x9 jacobian that relates Pose3D's global 6DOF
@@ -91,7 +94,8 @@ public class Pose3DToPoint3DEdge extends Edge {
     //Must be 3x1 vector (xyz)
     public double[] getResidual() {
 
-        double[] pointEst = nodes.get(1).getStateArray();
+        // double[] pointEst = nodes.get(1).getStateArray();
+        double[] pointEst = nodes.get(1).getLinearizationState();
 
         double[] fakePose = new double[6];
         fakePose[0] = pointEst[0];
@@ -101,12 +105,14 @@ public class Pose3DToPoint3DEdge extends Edge {
         fakePose[4] = 0.0;
         fakePose[5] = 0.0;
 
-        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+        // double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+                                                   // fakePose);
+        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getLinearizationState(),
                                                    fakePose);
 
         double[] predictedXyz = SixDofCoords.getPosition(relPose);
+
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
-        // double[] residual = LinAlg.subtract(predictedXyz, observation.getArray());
 
         return residual;
 

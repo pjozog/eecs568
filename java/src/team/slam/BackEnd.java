@@ -163,7 +163,8 @@ public class BackEnd{
         double[] deltaX = sparseFactor.solve();
 
         x = LinAlg.add(x, deltaX);
-        updateNodesWithNewState(x);
+        // x = LinAlg.subtract(x, deltaX);
+        // updateNodesWithNewState(x);
 
     }
 
@@ -210,7 +211,7 @@ public class BackEnd{
 
             Matrix A = new Matrix(nodeDimension, nodeDimension, Matrix.SPARSE);
             Matrix b = new Matrix(nodeDimension, 1);
-            Matrix r = new Matrix(nodeDimension, 1);
+            // Matrix r = new Matrix(nodeDimension, 1);
 
             // Loop over all the edges to add their contributions to A and b
             for (Edge anEdge : edges) {
@@ -239,7 +240,7 @@ public class BackEnd{
 
                     double[] JatWr = LinAlg.matrixAB(JatW, edgeLin.residual);
                     b.plusEqualsColumnVector(aIndex, 0, JatWr);
-                    r.plusEqualsColumnVector(aIndex, 0, edgeLin.residual);
+                    // r.plusEqualsColumnVector(aIndex, 0, edgeLin.residual);
 
                 }
 
@@ -258,7 +259,7 @@ public class BackEnd{
             // Hand this off to our SparseFactorizationSystem
             Matrix L = myDecomp.getL();
             sparseFactor.setR(L.transpose());
-            sparseFactor.setRHS(new DenseVec(r.copyAsVector()));
+            // sparseFactor.setRHS(new DenseVec(r.copyAsVector()));
 
             maxChange = LinAlg.max(LinAlg.abs(deltaX));
 
@@ -266,7 +267,8 @@ public class BackEnd{
 
             x = LinAlg.add(x, deltaX);
 
-            updateNodesWithNewState(x);
+            // FIX: This is ONLY off to compare values with the incremental update
+            // updateNodesWithNewState(x);
 
             numIter++;
 

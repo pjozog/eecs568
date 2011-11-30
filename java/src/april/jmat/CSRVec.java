@@ -136,6 +136,10 @@ public class CSRVec extends Vec
         }
     }
 
+    public void performSort() {
+        sort();
+    }
+
     final void sort()
     {
         // this is fairly inefficient if there are many changes (but

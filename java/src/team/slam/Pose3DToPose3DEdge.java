@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
+import april.jmat.MathUtil;
 import team.common.SixDofCoords;
 import team.slam.Linearization;
 
@@ -70,6 +71,11 @@ public class Pose3DToPose3DEdge extends Edge {
                                                          nodes.get(1).getStateArray());
 
         double[] residual = LinAlg.subtract(deltaMotion.getArray(), predictedOdom);
+        // double[] residual = LinAlg.subtract(predictedOdom, deltaMotion.getArray());
+
+        residual[3] = MathUtil.mod2pi(residual[3]);
+        residual[4] = MathUtil.mod2pi(residual[4]);
+        residual[5] = MathUtil.mod2pi(residual[5]);
 
         return residual;
 

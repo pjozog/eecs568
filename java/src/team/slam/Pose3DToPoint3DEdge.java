@@ -106,6 +106,7 @@ public class Pose3DToPoint3DEdge extends Edge {
 
         double[] predictedXyz = SixDofCoords.getPosition(relPose);
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
+        // double[] residual = LinAlg.subtract(predictedXyz, observation.getArray());
 
         return residual;
 

@@ -47,7 +47,6 @@ public class Listener implements OldSimulator.Listener {
 
         baseline    = config.requireDouble("robot.baseline_m");
         lambda      = config.requireDouble("simulator.lambda");
-        lambda = 0.0;
         epsilon     = config.requireDouble("simulator.epsilon");
 
         numConverge = config.requireInt("simulator.numConverge");
@@ -109,32 +108,32 @@ public class Listener implements OldSimulator.Listener {
         slam.addNode(p3dn);
         slam.addEdge(poseToPose);
 
-        // //Turn landmarks into Point3D's
-        // for(OldSimulator.landmark_t landmark : dets){
-        //     double rLand = landmark.obs[0];
-        //     double tLand = landmark.obs[1];
+        //Turn landmarks into Point3D's
+        for(OldSimulator.landmark_t landmark : dets){
+            double rLand = landmark.obs[0];
+            double tLand = landmark.obs[1];
 
-        //     double [] pos = LandUtil.rThetaToXY(rLand, tLand, x, y, t);
+            double [] pos = LandUtil.rThetaToXY(rLand, tLand, x, y, t);
 
-        //     double xLand = pos[0];
-        //     double yLand = pos[1];
+            double xLand = pos[0];
+            double yLand = pos[1];
 
-        //     Point3D obs = new Point3D(xLand, yLand, 0.0);
+            Point3D obs = new Point3D(xLand, yLand, 0.0);
 
-        //     Point3DNode pointNode = dataAssociation(landmark.id);
+            Point3DNode pointNode = dataAssociation(landmark.id);
 
-        //     if (pointNode == null) {
-        //         pointNode = new Point3DNode(landmark.id);
-        //         slam.addNode(pointNode);
-        //     }
+            if (pointNode == null) {
+                pointNode = new Point3DNode(landmark.id);
+                slam.addNode(pointNode);
+            }
 
-        //     Matrix landCov = Matrix.identity(3, 3);
+            Matrix landCov = Matrix.identity(3, 3);
 
-        //     Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(p3dn, pointNode, obs, landCov);
+            Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(p3dn, pointNode, obs, landCov);
 
 
-        //     slam.addEdge(poseToPoint);
-        // }
+            slam.addEdge(poseToPoint);
+        }
 
         //-------------------
         // CHOOSE YOUR WEAPON
@@ -145,7 +144,7 @@ public class Listener implements OldSimulator.Listener {
         if (numUpdates == 383) {
             long endTime = System.nanoTime();
             double elapsedTime = (endTime-startTime)/1000000000f;
-            System.out.printf("Total Simulation Time: %.4f\n", elapsedTime);
+            System.out.printf("\nTotal Simulation Time: %.4f\n", elapsedTime);
         }
 
         drawSetup();

@@ -15,7 +15,7 @@ public class SparseFactorizationSystem {
 
     private boolean verbose = false;
     private boolean patternVerbose = false;
-
+    private boolean valuesVerbose = true;
 
     public SparseFactorizationSystem() {
 
@@ -72,6 +72,13 @@ public class SparseFactorizationSystem {
     public void addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
 
 
+        if (verbose) {
+            System.out.println("ADDING AN EDGE TO THE SYSTEM with current size:");
+            System.out.println("\tNew R size "+R.getRowDimension()+" "+R.getColumnDimension());
+            System.out.println("\tNew rhs length "+rhs.size());
+        }
+
+
         Linearization edgeLin = anEdge.getLinearization();
 
         // Array of associated residuals
@@ -107,6 +114,9 @@ public class SparseFactorizationSystem {
                 }
             }
 
+            // FIX: Probably not necessary. There's a first() call below that sorts things.
+            oneRow.performSort();
+
             // System.out.println("Adding a row to the sparse system");
             // LinAlg.printTranspose(oneRow.copyArray());
             oneRow.resize(newColSize);
@@ -114,6 +124,13 @@ public class SparseFactorizationSystem {
         }
 
         // LinAlg.printPattern(R.copyArray());
+        if (valuesVerbose) {
+            System.out.println("R");
+            LinAlg.print(R.copyArray());
+            System.out.println("\nrhs");
+            LinAlg.print(rhs.copyArray());
+        }
+
 
     }
 
@@ -163,6 +180,11 @@ public class SparseFactorizationSystem {
 
         }
 
+        if (verbose) {
+            System.out.println("\t* New sytem sizes R: "+R.getRowDimension()+" "+R.getColumnDimension()+"  rhs: "+rhs.size());
+        }
+
+
         // It's possible that the new row wasn't associated with a new node. The row could
         // now totally be zeros. In that case, we remove it and its assocated residual.
         // TODO: In our situation, I don't think this will ever happen?
@@ -198,7 +220,7 @@ public class SparseFactorizationSystem {
         assert(col < row);
 
         if (verbose) {
-            System.out.println("givensRotationForElement row "+row+" col "+ col);
+            System.out.println("\tgivensRotationForElement row "+row+" col "+ col);
         }
 
         // Get the two rows that will be changed
@@ -245,22 +267,37 @@ public class SparseFactorizationSystem {
             double tauBot = botRow.get(j);
 
             newTopRow.set(j, c*tauTop - s*tauBot);
-            newBotRow.set(j, s*tauTop + c*tauBot);
+            if (j != col) {
+                newBotRow.set(j, s*tauTop + c*tauBot);
+            }
         }
 
         // if (row == 22 && col == 20) {
         //     LinAlg.print(newBotRow.copyArray());
         // }
-        // Remove any elements that should be zero...machine precision issues
-        newTopRow.filterZeros(EPSILON);
-        newBotRow.filterZeros(EPSILON);
+
+        // The whole point of this was to make this one element zero!
+        // assert(newBotRow.get(col) == 0);
+        newBotRow.set(col, 0);
+
+        int numNzBot = newBotRow.getNz();
+
+        // // Remove any elements that should be zero...machine precision issues
+        // // newTopRow.filterZeros(EPSILON);
+        // // newBotRow.filterZeros(EPSILON);
+
+        // newTopRow.filterZeros();
+        newBotRow.filterZeros();
+
+        if (numNzBot != newBotRow.getNz()) {
+            System.out.println("WARNING WARNING!!!!!!!! The machine precision filter removed an element! Sizes "+numNzBot+" " + newBotRow.getNz());
+            // assert(false);
+        }
+
 
         // if (row == 22 && col == 20) {
         //     LinAlg.print(newBotRow.copyArray());
         // }
-        // The whole point of this was to make this one element zero!
-        // assert(newBotRow.get(col) == 0);
-        newBotRow.set(col, 0.0);
 
         // Replace the rows in R with the new rows
         R.setRow(col, newTopRow);
@@ -296,10 +333,10 @@ public class SparseFactorizationSystem {
         // Using with extreme caution!!
         // To add the row to R, the sizes need to match perfectly.
         assert(newRow.length == getNumCols());
-        R.setRow(newRowSize-1, newRow);
+        R.setRow(newRowSize - 1, newRow);
 
         rhs.resize(newRowSize);
-        rhs.set(getNumRows()-1, newResidual);
+        rhs.set(newRowSize - 1, newResidual);
 
     }
 
@@ -335,11 +372,16 @@ public class SparseFactorizationSystem {
 
             if (diag == 0.0) {
                 System.out.println("Matrix is not upper triangular!");
-                // assert(false);
-                result.set(rowIndex, elem);
-            } else {
-                result.set(rowIndex, elem/diag);
+                assert(false);
             }
+
+            result.set(rowIndex, elem/diag);
+
+        }
+
+        if (valuesVerbose) {
+            System.out.println("Incremental X");
+            LinAlg.print(result.copyArray());
         }
 
         return result.copyArray();

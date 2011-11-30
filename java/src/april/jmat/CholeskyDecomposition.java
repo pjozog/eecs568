@@ -166,8 +166,17 @@ public class CholeskyDecomposition
             }
         }
 
+
         Matrix XT = new Matrix(B.getColumnDimension(), B.getRowDimension());
         Matrix LT = L.transpose();
+
+        // I believe YT is what our "residual" should be in incremental.
+        // LT is what our R should be in incremental
+        System.out.println("Cholesky LT");
+        LinAlg.print(LT.copyArray());
+        System.out.println("Cholesky YT");
+        LinAlg.print(YT.transpose().copyArray());
+
 
         // most of the time, Y will have one column.
         // Solve L'*X = Y
@@ -184,6 +193,10 @@ public class CholeskyDecomposition
 
         //	if (verbose)
         //	    System.out.println("backsolve time: "+tic.toc());
+
+        System.out.println("Cholesky XY");
+        LinAlg.print(XT.transpose().copyArray());
+
 
         return XT.transpose();
     }

@@ -2,46 +2,72 @@ package team.slam;
 
 import java.util.List;
 import java.util.ArrayList;
-import april.jmat.Matrix;
-import april.jmat.LinAlg;
-import april.jmat.CholeskyDecomposition;
-
+import april.config.*;
+import april.jmat.*;
+import team.common.*;
 
 // Experimental
 import april.jmat.ordering.*;
-import team.common.*;
+
 
 public class BackEnd{
 
     private List<Node> nodes;
     private List<Edge> edges;
 
-    // Tunable parameters
-    double lambda = 1.0;
-    double epsilon = .0001;
-    double maxIter = 10;
+    private SparseFactorizationSystem sparseFactor = new SparseFactorizationSystem();
 
+    // Tunable parameters
+    private double lambda = 1.0;
+    private double epsilon = .0001;
+    private double maxIter = 10;
+    private boolean verbose = false;
+    private boolean useIncremental = true;
+
+    // Controls the frequency of update types. tunable.
+    private int updateRate = 1;
+    private int solveRate  = 1;
+    private int batchSolveRate = 100000000;
 
     // Book-keeping
     private int nodeDimension;
     private int edgeDimension;
-    private int numNewRows;
     private int numNewMeasurements;
+    private int numSteps = 0;
 
     /**
-     * Default constructor. Just ivar initializations.
+     * Default constructor. Just ivar initializations. Uses the sensible defaults above
+     * for the tunable parameters.
      */
     public BackEnd() {
         init();
     }
 
-    public BackEnd(int numIter, double l, double e){
+
+    /**
+     * Constructor that reads tunable parameters from a config file. Usefuly so we don't
+     * have to recompile as much.
+     */
+    public BackEnd(Config config){
+
         init();
-        maxIter = numIter;
-        epsilon = e;
-        lambda = l;
+
+        lambda         = config.requireDouble("simulator.lambda");
+        epsilon        = config.requireDouble("simulator.epsilon");
+        maxIter        = config.requireInt("simulator.numConverge");
+
+        updateRate     = config.requireInt("simulator.updateRate");
+        solveRate      = config.requireInt("simulator.solveRate");
+        batchSolveRate = config.requireInt("simulator.batchSolveRate");
+
+        useIncremental = config.requireBoolean("simulator.useIncremental");
+
     }
 
+
+    /**
+     * Ivar initialization.
+     */
     private void init(){
 
         nodes = new ArrayList<Node>();
@@ -49,10 +75,10 @@ public class BackEnd{
 
         nodeDimension      = 0;
         edgeDimension      = 0;
-        numNewRows         = 0;
         numNewMeasurements = 0;
 
     }
+
 
     /**
      * Add the node to our list. This assumes that the front end will only call this
@@ -66,6 +92,7 @@ public class BackEnd{
 
     }
 
+
     /**
      * Add the edge to our list. Book-keeping and initialization?
      */
@@ -78,22 +105,105 @@ public class BackEnd{
 
         edgeDimension += edge.getDOF();
 
-        numNewRows += edge.getDOF();
         numNewMeasurements++;
 
     }
+
+
+    /**
+     * This will be called by the front end to do the linear algebra magic. It can run in
+     * only batch solve mode (if so specified in the config file), or update the
+     * information matrix decomposition incrementally via Givens rotations.
+     */
+    public void update() {
+
+        // Only actually update if we're supposed to do so
+        if (numSteps % updateRate == 0) {
+
+            // Batch solve needs to take precedence (even at start)
+            if (numSteps % batchSolveRate == 0 || !useIncremental) {
+
+                if (useIncremental) {
+                    System.out.println("\nUpdate "+ numSteps);
+                }
+
+                // We'll just change this to be our fastest overall method
+                // HACK: Right now only fasterGaussNewton() works
+                solve();
+
+            } else {
+
+                System.out.print(".");
+
+                // Add rows to the system
+                incrementalUpdate();
+
+                if (numSteps % solveRate == 0) {
+                    // Solve via back substitution
+                    solveBackSubstitution();
+                }
+
+            }
+        }
+
+        numSteps++;
+    }
+
+
+    /**
+     * Add the new measurements to the system via givens rotations.
+     */
+    private void incrementalUpdate() {
+
+        updateNodeIndices();
+
+        // Add each new edge to the system (if there's anything to add!)
+        for (int i = edges.size()-numNewMeasurements; i < edges.size(); i++) {
+
+            Edge anEdge = edges.get(i);
+
+            sparseFactor.addEdgeViaGivensRotations(edges.get(i), nodeDimension);
+
+        }
+
+        numNewMeasurements = 0;
+
+    }
+
+
+    /**
+     * Solve the SparseFactorizationSystem via back substiution and update our estimate of
+     * the state vector.
+     */
+    private void solveBackSubstitution() {
+
+        double[] x = getLinearizationEstimate();
+
+        double[] deltaX = sparseFactor.solve();
+
+        x = LinAlg.add(x, deltaX);
+        updateNodesWithNewState(x);
+
+    }
+
 
     /**
      * Find the least sqaures solution of the system. This will construct the Jacabian and
      * evaluate it at the best state vector estimate, assemble JtSigmaJ, compute the
      * residual, and find the new optimal stuff.
      */
-    public void solve() {
+    private void solve() {
+
+
+        //WARNING: Do not change it from fasterGaussNewton() right now because it's the
+        // only method that supports incremental updates.
 
         // gaussNewton();
         fasterGaussNewton();
         // experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
         // experimentalFactoringGausssNewton(new SimpleDegreeOrdering());
+
+        numNewMeasurements = 0;
 
     }
 
@@ -118,9 +228,10 @@ public class BackEnd{
 
         do {
 
+            updateNodeLinearizationPoints();
+
             Matrix A = new Matrix(nodeDimension, nodeDimension, Matrix.SPARSE);
             Matrix b = new Matrix(nodeDimension, 1);
-
 
             // Loop over all the edges to add their contributions to A and b
             for (Edge anEdge : edges) {
@@ -163,9 +274,16 @@ public class BackEnd{
 
             double[] deltaX = myDecomp.solve(b).copyAsVector();
 
-            maxChange = LinAlg.max(LinAlg.abs(deltaX));
 
-            // System.out.println("Max change from guass newton is" + maxChange);
+            if (useIncremental) {
+                // Hand this off to our SparseFactorizationSystem
+                Matrix L = myDecomp.getL();
+                Matrix rhs = myDecomp.getDecompRHS();
+                sparseFactor.setR(L.transpose());
+                sparseFactor.setRHS(new DenseVec(rhs.copyAsVector()));
+            }
+
+            maxChange = LinAlg.max(LinAlg.abs(deltaX));
 
             x = LinAlg.add(x, deltaX);
 
@@ -332,6 +450,37 @@ public class BackEnd{
         return estimate;
     }
 
+
+    private double[] getLinearizationEstimate() {
+
+        int index = 0;
+
+        double[] estimate = new double[nodeDimension];
+
+        // Every node contributes to the state estimate
+        for (Node aNode : nodes) {
+
+            double[] nodeState = aNode.getLinearizationState();
+            for (int i=0; i < aNode.getDOF(); i++) {
+                estimate[index+i] = nodeState[i];
+            }
+
+            index += aNode.getDOF();
+
+        }
+
+        return estimate;
+
+    }
+
+
+    private void updateNodeLinearizationPoints() {
+        for (Node aNode : nodes) {
+
+            aNode.updateLinearizationPoint();
+
+        }
+    }
 
     private void updateNodesWithNewState(double[] x) {
 

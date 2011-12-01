@@ -12,6 +12,9 @@ public abstract class Vec
     /** How long is the vector? **/
     public abstract int size();
 
+    public abstract int first();
+    public abstract int last();
+
     /** How many non-zero entries are there? **/
     public abstract int getNz();
 

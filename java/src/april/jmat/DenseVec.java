@@ -54,6 +54,14 @@ public class DenseVec extends Vec
         v = newv;
     }
 
+    public int last() {
+        return -1;
+    }
+
+    public int first() {
+        return -1;
+    }
+
     public final double[] getDoubles()
     {
         return v;

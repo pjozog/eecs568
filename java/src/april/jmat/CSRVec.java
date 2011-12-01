@@ -38,6 +38,26 @@ public class CSRVec extends Vec
         return X;
     }
 
+
+    public int last() {
+        if (indices.length > 0 && nz > 0) {
+            sort();
+            return indices[indices.length-1];
+        } else {
+            return -1;
+        }
+    }
+
+
+    public int first() {
+        if (indices.length > 0 && nz > 0) {
+            sort();
+            return indices[0];
+        } else {
+            return -1;
+        }
+    }
+
     public final double[] copyArray()
     {
         return getDoubles();
@@ -114,6 +134,10 @@ public class CSRVec extends Vec
             values[nz-1] = 0;
             nz--;
         }
+    }
+
+    public void performSort() {
+        sort();
     }
 
     final void sort()
@@ -578,4 +602,3 @@ public class CSRVec extends Vec
         return X;
     }
 }
-

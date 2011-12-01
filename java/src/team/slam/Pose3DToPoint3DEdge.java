@@ -47,15 +47,13 @@ public class Pose3DToPoint3DEdge extends Edge {
 
         if (!n2.isInitialized()) {
 
-            Pose3D n1State = n1.getState();
-
             // Treat observation as a Pose3D
             Pose3D fakeDeltaPose = new Pose3D();
             fakeDeltaPose.setX(observation.getX());
             fakeDeltaPose.setY(observation.getY());
             fakeDeltaPose.setZ(observation.getZ());
 
-            double[] prediction = SixDofCoords.headToTail(n1State.getArray(), fakeDeltaPose.getArray());
+            double[] prediction = SixDofCoords.headToTail(n1.getLinearizationState(), fakeDeltaPose.getArray());
 
             // Only keep the 3 important guys
             double[] slimPrediction = new double[] {prediction[0], prediction[1], prediction[2]};
@@ -67,7 +65,7 @@ public class Pose3DToPoint3DEdge extends Edge {
 
     protected Matrix getJacobian() {
 
-        double[] pointEst = nodes.get(1).getStateArray();
+        double[] pointEst = nodes.get(1).getLinearizationState();
 
         double[] fakePose = new double[6];
         fakePose[0] = pointEst[0];
@@ -77,8 +75,7 @@ public class Pose3DToPoint3DEdge extends Edge {
         fakePose[4] = 0.0;
         fakePose[5] = 0.0;
 
-
-        Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getStateArray(),
+        Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getLinearizationState(),
                                                                fakePose));
 
         //We want the 3x9 jacobian that relates Pose3D's global 6DOF
@@ -91,7 +88,8 @@ public class Pose3DToPoint3DEdge extends Edge {
     //Must be 3x1 vector (xyz)
     public double[] getResidual() {
 
-        double[] pointEst = nodes.get(1).getStateArray();
+        // double[] pointEst = nodes.get(1).getStateArray();
+        double[] pointEst = nodes.get(1).getLinearizationState();
 
         double[] fakePose = new double[6];
         fakePose[0] = pointEst[0];
@@ -101,10 +99,11 @@ public class Pose3DToPoint3DEdge extends Edge {
         fakePose[4] = 0.0;
         fakePose[5] = 0.0;
 
-        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getLinearizationState(),
                                                    fakePose);
 
         double[] predictedXyz = SixDofCoords.getPosition(relPose);
+
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
 
         return residual;

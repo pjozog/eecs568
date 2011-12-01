@@ -51,7 +51,7 @@ public class Listener implements OldSimulator.Listener {
 
         numConverge = config.requireInt("simulator.numConverge");
 
-        slam = new BackEnd(numConverge, lambda, epsilon);
+        slam = new BackEnd(config);
 
         startTime = System.nanoTime();
 
@@ -66,7 +66,7 @@ public class Listener implements OldSimulator.Listener {
 
 
         Matrix cov = Matrix.identity(6, 6);
-        cov.times(100);
+        // cov.times(100);
 
         // Create Pose3D at origin
         Pose3D p3d = new Pose3D();
@@ -98,7 +98,7 @@ public class Listener implements OldSimulator.Listener {
         Pose3DNode p3dn = new Pose3DNode();
 
         Matrix cov = Matrix.identity(6, 6);
-        cov.times(100);
+        // cov.times(100);
 
         //Create Pose3DtoPose3DEdge with prevPose
         Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(prevPose, p3dn, deltaMotion, cov);
@@ -135,12 +135,15 @@ public class Listener implements OldSimulator.Listener {
             slam.addEdge(poseToPoint);
         }
 
-        slam.solve();
+        //-------------------
+        // GO FORTH BACKEND!
+        //-------------------
+        slam.update();
 
         if (numUpdates == 383) {
             long endTime = System.nanoTime();
             double elapsedTime = (endTime-startTime)/1000000000f;
-            System.out.printf("Total Simulation Time: %.4f\n", elapsedTime);
+            System.out.printf("\nTotal Simulation Time: %.4f\n", elapsedTime);
         }
 
         drawSetup();

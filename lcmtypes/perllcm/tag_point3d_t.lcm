@@ -1,0 +1,12 @@
+package perllcm;
+
+struct tag_point3d_t
+{
+    int64_t utime;
+
+    int32_t  id; //Id of april tag
+
+    // x_ij
+    double   mu[3];       // [x,y,z,r,p,h]  meters and rads
+    double   Sigma[9];
+}

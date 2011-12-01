@@ -203,10 +203,12 @@ public class TagDemo {
                     lcm.publish("ARDRONE_CAM_TO_TAG", msg);
 
                     vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));
-                    vb.swap();
                     poseDisplay.swap();
+
                 }
 
+                vb.swap();
+                
             }
 
         }

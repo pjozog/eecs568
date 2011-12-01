@@ -72,6 +72,9 @@ public class DroneTag implements LCMSubscriber {
 
                 ArrayList<TagDetection> detections = detector.process(im, new double[] {msg.width/2.0, msg.height/2.0});
 
+                if (detections.size() == 0)
+                    vbDetections.clear();
+
                 for (TagDetection d : detections) {
                     
                     double p0[] = d.interpolate(-1,-1);
@@ -95,8 +98,6 @@ public class DroneTag implements LCMSubscriber {
                                                                    new VzText(VzText.ANCHOR.CENTER,
                                                                               String.format("<<sansserif-48,center,red,dropshadow=#88000000>>ID=%3d\nHamming=%d\n", d.id, d.hammingDistance)))));
 
-                    vbDetections.swap();
-
                     double tagsize = config.requireDouble("target.width");
                     double fx = config.requireDouble("camera.fx");
                     double fy = config.requireDouble("camera.fy");
@@ -112,11 +113,9 @@ public class DroneTag implements LCMSubscriber {
                     outMsg.Sigma    = poseSigma.copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", outMsg);
 
-                    return;
-
                 }
 
-                vbDetections.clear();
+                vbDetections.swap();
 
             }
 

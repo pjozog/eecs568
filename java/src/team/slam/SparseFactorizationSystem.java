@@ -111,29 +111,23 @@ public class SparseFactorizationSystem {
 
                 // We need the vector to be exactly the right size for this edge when we
                 // add it to R
-                // TODO: Is the +1 correct here?
                 if (newColSize < colStart+aNode.getDOF()) {
                     newColSize = colStart+aNode.getDOF();
                 }
             }
 
-            // FIX: Probably not necessary. There's a first() call below that sorts things.
-            oneRow.performSort();
-
-            // System.out.println("Adding a row to the sparse system");
-            // LinAlg.printTranspose(oneRow.copyArray());
+            // Make the row the correct size...necessary for dangerous sparse row
+            // replacement call below.
             oneRow.resize(newColSize);
             addRowViaGivensRotation(oneRow, newResiduals[i]);
         }
 
-        // LinAlg.printPattern(R.copyArray());
         if (valuesVerbose) {
             System.out.println("R");
             LinAlg.print(R.copyArray());
             System.out.println("\nrhs");
             LinAlg.print(rhs.copyArray());
         }
-
 
     }
 
@@ -190,25 +184,13 @@ public class SparseFactorizationSystem {
 
         // It's possible that the new row wasn't associated with a new node. The row could
         // now totally be zeros. In that case, we remove it and its assocated residual.
-        // TODO: In our situation, I don't think this will ever happen?
-        // FIX: This will definitely happen!
         if (R.getRow(rowIndex).getNz() == 0) {
-            // This is for you Schuyler
-            // System.out.println("I wasn't ready for this...");
-            // assert(false);
-            // System.out.println("REMOVING ROW! Is this correct?");
-            // assert(false);
 
             int originalNumRows = getNumRows();
             R.resize(originalNumRows - 1, getNumCols());
             rhs.resize(originalNumRows-1);
 
-            // System.out.println("\tNew R size "+R.getRowDimension()+" "+R.getColumnDimension());
-            // System.out.println("\tNew rhs length "+rhs.size());
-
-
         }
-
 
     }
 
@@ -275,33 +257,6 @@ public class SparseFactorizationSystem {
             }
         }
 
-        // if (row == 22 && col == 20) {
-        //     LinAlg.print(newBotRow.copyArray());
-        // }
-
-        // The whole point of this was to make this one element zero!
-        // assert(newBotRow.get(col) == 0);
-        newBotRow.set(col, 0);
-
-        int numNzBot = newBotRow.getNz();
-
-        // // Remove any elements that should be zero...machine precision issues
-        // // newTopRow.filterZeros(EPSILON);
-        // // newBotRow.filterZeros(EPSILON);
-
-        // newTopRow.filterZeros();
-        newBotRow.filterZeros();
-
-        if (numNzBot != newBotRow.getNz()) {
-            System.out.println("WARNING WARNING!!!!!!!! The machine precision filter removed an element! Sizes "+numNzBot+" " + newBotRow.getNz());
-            // assert(false);
-        }
-
-
-        // if (row == 22 && col == 20) {
-        //     LinAlg.print(newBotRow.copyArray());
-        // }
-
         // Replace the rows in R with the new rows
         R.setRow(col, newTopRow);
         R.setRow(row, newBotRow);
@@ -310,6 +265,7 @@ public class SparseFactorizationSystem {
         //--------
         // Apply same rotation to rhs
         //--------
+
         double r1 = rhs.get(col);
         double r2 = rhs.get(row);
         rhs.set(col, c*r1 - s*r2);

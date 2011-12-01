@@ -182,7 +182,6 @@ public class BackEnd{
         double[] deltaX = sparseFactor.solve();
 
         x = LinAlg.add(x, deltaX);
-
         updateNodesWithNewState(x);
 
     }
@@ -195,6 +194,9 @@ public class BackEnd{
      */
     private void solve() {
 
+
+        //WARNING: Do not change it from fasterGaussNewton() right now because it's the
+        // only method that supports incremental updates.
 
         // gaussNewton();
         fasterGaussNewton();

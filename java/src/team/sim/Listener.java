@@ -38,6 +38,7 @@ public class Listener implements OldSimulator.Listener {
     // ArrayList<VzPoints> landmarks = new ArrayList<VzPoints>();
     ArrayList<double[]> landmarks = new ArrayList<double[]>();
     ArrayList<double[]> allEdgeLinks = new ArrayList<double[]>();
+    double[] latestXYTGuess = new double[3];
 
     public void init(Config _config, VisWorld _vw) {
 
@@ -140,7 +141,7 @@ public class Listener implements OldSimulator.Listener {
         //-------------------
         slam.update();
 
-        if (numUpdates == 383) {
+        if (numUpdates % 383 == 0) {
             long endTime = System.nanoTime();
             double elapsedTime = (endTime-startTime)/1000000000f;
             System.out.printf("\nTotal Simulation Time: %.4f\n", elapsedTime);
@@ -209,6 +210,8 @@ public class Listener implements OldSimulator.Listener {
         trajectory.remove(trajectory.size()-1);
         trajectory.add(Quiver.getQuiverAt(lastPose.getStateArray(), 1.0));
 
+        latestXYTGuess = SixDofCoords.get2DXYTfrom3DPose(lastPose.getStateArray());
+
 
         allEdgeLinks.clear();
 
@@ -243,21 +246,6 @@ public class Listener implements OldSimulator.Listener {
 
             vb.swap();
         }
-
-
-        // Draw our least squares best guess of the landmark positions
-        // {
-        //     VisWorld.Buffer vb = vw.getBuffer("landmarks-local");
-
-        //     for (VzPoints aPoint : landmarks) {
-
-        //         vb.addBack(aPoint);
-
-        //     }
-
-        //     vb.swap();
-
-        // }
 
 
         // Get the vertext data for a star
@@ -305,6 +293,22 @@ public class Listener implements OldSimulator.Listener {
         }
 
 
+        // Draw the landmark observations -- the blue lines shooting out of our position
+        {
+            VisWorld.Buffer vb = vw.getBuffer("landmarks-obs");
+            for (OldSimulator.landmark_t lmark : landmarkObs) {
+                double[] obs = lmark.obs;
+                ArrayList<double[]> obsPoints = new ArrayList<double[]>();
+                obsPoints.add(LinAlg.resize(latestXYTGuess, 2));
+                double rel_xy[] = {obs[0] * Math.cos(obs[1]), obs[0] *Math.sin(obs[1])};
+                obsPoints.add(LinAlg.transform(latestXYTGuess, rel_xy));
+                vb.addBack(new VzLines(new VisVertexData(obsPoints),
+                                       new VisConstantColor(lmark.id == -1? Color.gray : Color.cyan),
+                                       2,
+                                       VzLines.TYPE.LINE_STRIP));
+            }
+            vb.swap();
+        }
 
 
         // Scene grid

@@ -11,6 +11,9 @@ public class SparseFactorizationSystem {
     private Matrix R;
     private DenseVec rhs;
 
+    // Variable reordering
+    private Permutation varReordering = null;
+
     private double EPSILON = 1e-20;
 
     private boolean verbose = false;
@@ -39,6 +42,10 @@ public class SparseFactorizationSystem {
         return rhs;
     }
 
+    public Permutation getVarReordering() {
+        return varReordering;
+    }
+
     public void setR(Matrix newR) {
 
         if (patternVerbose) {
@@ -57,6 +64,13 @@ public class SparseFactorizationSystem {
         }
 
         rhs = newRHS;
+    }
+
+    public void setVarReordering(int[] newPerm) {
+
+        // I don't think it matters that this isn't deep
+        varReordering = new Permutation(newPerm);
+
     }
 
 
@@ -82,7 +96,7 @@ public class SparseFactorizationSystem {
         }
 
 
-        Linearization edgeLin = anEdge.getLinearization();
+        Linearization edgeLin = anEdge.getLinearization(true);
 
         // Array of associated residuals
         double[] newResiduals = edgeLin.residual;
@@ -103,6 +117,14 @@ public class SparseFactorizationSystem {
 
                 int colStart = aNode.getIndex();
 
+                if (varReordering != null) {
+                    if (colStart < varReordering.perm.length) {
+                        colStart = varReordering.invperm[colStart];
+                    } else {
+                        colStart = varReordering.perm.length;
+                    }
+                }
+
                 double[][] nodeJacob = edgeLin.J.get(k);
 
                 for (int j = 0; j < aNode.getDOF(); j++) {
@@ -114,6 +136,26 @@ public class SparseFactorizationSystem {
                 if (newColSize < colStart+aNode.getDOF()) {
                     newColSize = colStart+aNode.getDOF();
                 }
+            }
+
+            // Update our variable reordering to include the newly added row
+            if (varReordering != null && varReordering.perm.length < newColSize) {
+
+                int[] currPermute = varReordering.perm;
+                int[] newPermute = new int[newColSize];
+
+                for (int v = 0; v < newColSize; v++) {
+
+                    if (v < currPermute.length) {
+                        newPermute[v] = currPermute[v];
+                    } else {
+                        newPermute[v] = v;
+                    }
+
+                }
+
+                varReordering = new Permutation(newPermute);
+
             }
 
             // Make the row the correct size...necessary for dangerous sparse row
@@ -310,7 +352,8 @@ public class SparseFactorizationSystem {
 
         int numCols = getNumCols();
 
-        DenseVec result = new DenseVec(numCols);
+        Matrix result = new Matrix(numCols, 1);
+
 
         for (int rowIndex = numCols-1; rowIndex >= 0; rowIndex--) {
 
@@ -322,7 +365,7 @@ public class SparseFactorizationSystem {
                 double v = theRow.get(colIndex);
 
                 if (rowIndex != colIndex) {
-                    elem = elem - result.get(colIndex)*v;
+                    elem = elem - result.get(colIndex, 0)*v;
                 }
             }
 
@@ -333,7 +376,7 @@ public class SparseFactorizationSystem {
                 assert(false);
             }
 
-            result.set(rowIndex, elem/diag);
+            result.set(rowIndex, 0, elem/diag);
 
         }
 
@@ -342,7 +385,22 @@ public class SparseFactorizationSystem {
             LinAlg.print(result.copyArray());
         }
 
-        return result.copyArray();
+        if (varReordering != null) {
+
+            // System.out.println("The variable reordering at this point");
+            // ArrayUtil.print1dArray(varReordering.perm);
+            // System.out.println();
+            // System.out.println("The result before reordering");
+            // LinAlg.print(result.copyArray());
+
+            result.inversePermuteRows(varReordering.perm);
+
+            // System.out.println("The result after reordering");
+            // LinAlg.print(result.copyArray());
+
+        }
+
+        return result.copyAsVector();
     }
 
 

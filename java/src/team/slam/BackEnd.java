@@ -8,6 +8,8 @@ import team.common.*;
 
 // Experimental
 import april.jmat.ordering.*;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 
 
 public class BackEnd{
@@ -21,8 +23,9 @@ public class BackEnd{
     private double lambda = 1.0;
     private double epsilon = .0001;
     private double maxIter = 10;
-    private boolean verbose = false;
     private boolean useIncremental = true;
+    private boolean verbose = false;
+    private boolean saveRSparsity = false;
 
     // Controls the frequency of update types. tunable.
     private int updateRate = 1;
@@ -128,8 +131,21 @@ public class BackEnd{
                 }
 
                 // We'll just change this to be our fastest overall method
-                // HACK: Right now only fasterGaussNewton() works
                 solve();
+
+                // Save newly reordered factorization to disk for analysis
+                if (saveRSparsity) {
+                    try {
+                        FileWriter fstream = new FileWriter("analysis/afterReorder.m");
+                        BufferedWriter out = new BufferedWriter(fstream);
+
+                        sparseFactor.getR().writeMatlab(out, "Rafter");
+                    } catch (Exception e){
+                        System.err.println("Errorz!: " + e.getMessage());
+                    }
+                }
+
+
 
             } else {
 
@@ -143,8 +159,25 @@ public class BackEnd{
                     solveBackSubstitution();
                 }
 
+                // Save (presumably) dense-ish R matrix to disk for analysis
+                if (saveRSparsity && (numSteps+1) % batchSolveRate == 0) {
+                    try {
+
+                        FileWriter fstream = new FileWriter("analysis/beforeReorder.m");
+                        BufferedWriter out = new BufferedWriter(fstream);
+
+                        sparseFactor.getR().writeMatlab(out, "Rbefore");
+
+                    } catch (Exception e){
+                        System.err.println("Errorz!: " + e.getMessage());
+                    }
+                }
+
+
+
             }
         }
+
 
         numSteps++;
     }
@@ -195,13 +228,12 @@ public class BackEnd{
     private void solve() {
 
 
-        //WARNING: Do not change it from fasterGaussNewton() right now because it's the
-        // only method that supports incremental updates.
+        //WARNING: Do not use the normal gaussNewton() method with incremental updating!
 
         // gaussNewton();
-        fasterGaussNewton();
+        // fasterGaussNewton();
         // experimentalFactoringGausssNewton(new MinimumDegreeOrdering());
-        // experimentalFactoringGausssNewton(new SimpleDegreeOrdering());
+        experimentalFactoringGausssNewton(new SimpleDegreeOrdering());
 
         numNewMeasurements = 0;
 
@@ -237,7 +269,7 @@ public class BackEnd{
             for (Edge anEdge : edges) {
 
                 // Get the jacobian blocks for the edge (numerically or symbolically)
-                Linearization edgeLin = anEdge.getLinearization();
+                Linearization edgeLin = anEdge.getLinearization(false);
 
                 // For every node associated with the edge
                 for (int i = 0; i < anEdge.getNodes().size(); i++) {
@@ -388,7 +420,7 @@ public class BackEnd{
             Edge anEdge = edges.get(i);
 
             // Get the jacobian blocks for the edge (numerically or symbolically)
-            Linearization edgeLin = anEdge.getLinearization();
+            Linearization edgeLin = anEdge.getLinearization(false);
 
             // For every jacobian block associated with the edge...
             for (int j = 0; j < edgeLin.J.size(); j++) {
@@ -519,6 +551,10 @@ public class BackEnd{
         return edges;
     }
 
+    // public Matrix getR() {
+    //     return sparseFactor.getR();
+    // }
+
 
     //////////////////////////////
     ////// EXPERIMENTAL
@@ -576,6 +612,8 @@ public class BackEnd{
 
         do {
 
+            updateNodeLinearizationPoints();
+
             Matrix A = new Matrix(nodeDimension, nodeDimension, Matrix.SPARSE);
             Matrix b = new Matrix(nodeDimension, 1);
 
@@ -584,7 +622,7 @@ public class BackEnd{
             for (Edge anEdge : edges) {
 
                 // Get the jacobian blocks for the edge (numerically or symbolically)
-                Linearization edgeLin = anEdge.getLinearization();
+                Linearization edgeLin = anEdge.getLinearization(false);
 
                 // For every node associated with the edge
                 for (int i = 0; i < anEdge.getNodes().size(); i++) {
@@ -613,7 +651,7 @@ public class BackEnd{
             }
 
 
-            // Tikhanoff regulaization
+            // Tikhanoff regularization
             A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
             assert(A.isSparse());
 
@@ -625,15 +663,6 @@ public class BackEnd{
             int perm[] = new int[nodeDimension];
             int pos = 0;
 
-            // updateNodeIndices();
-            // System.out.println("Node state index info");
-            // for (Node aNode : nodes) {
-            //     System.out.println(aNode.getIndex());
-            // }
-
-
-            // System.out.println("saPerm info "+ saPerm.length);
-            // ArrayUtil.print1dArray(saPerm);
 
             for (int saidx = 0; saidx < saPerm.length; saidx++) {
                 int gnidx = saPerm[saidx];
@@ -672,11 +701,6 @@ public class BackEnd{
                     count = 1;
                 }
 
-
-                // Tikhanoff regulaization
-                // PAP = PAP.plus(Matrix.identity(PAP.getRowDimension(), PAP.getColumnDimension()).times(lambda));
-                // assert(A.isSparse());
-
                 for (int i = 0; i < PAP.getRowDimension(); i++) {
                     if (PAP.get(i,i) == 0) {
                         PAP.set(i,i, acc / count);
@@ -686,35 +710,32 @@ public class BackEnd{
                 }
             }
 
-            CholeskyDecomposition cd = new CholeskyDecomposition(PAP);
-            // L = cd.getL();
-            Matrix deltaX = cd.solve(PB);
-            // System.out.println("perm info "+ perm.length);
-            // ArrayUtil.print1dArray(perm);
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(PAP);
+
+            Matrix deltaX = myDecomp.solve(PB);
+
+            if (useIncremental) {
+                // Hand this off to our SparseFactorizationSystem
+                Matrix L = myDecomp.getL();
+                Matrix rhs = myDecomp.getDecompRHS();
+                sparseFactor.setR(L.transpose());
+                sparseFactor.setRHS(new DenseVec(rhs.copyAsVector()));
+                sparseFactor.setVarReordering(perm);
+            }
 
 
-
-            // double[] deltaXVecBefore = deltaX.copyAsVector();
             deltaX.inversePermuteRows(perm);
-            // System.out.println("SA dim "+ SA.getRowDimension() +" "+ SA.getColumnDimension());
-            // System.out.println("deltaX dim "+ deltaX.getRowDimension() +" "+ deltaX.getColumnDimension());
+
 
             double[] deltaXVec = deltaX.copyAsVector();
 
             maxChange = LinAlg.max(LinAlg.abs(deltaXVec));
 
-            // System.out.println("Max change from guass newton is" + maxChange);
 
             x = LinAlg.add(x, deltaXVec);
-
             updateNodesWithNewState(x);
 
             numIter++;
-
-            // System.out.println("Node state index info");
-            // for (Node aNode : nodes) {
-            //     System.out.println(aNode.getIndex());
-            // }
 
 
         } while (numIter < maxIter && maxChange > epsilon);

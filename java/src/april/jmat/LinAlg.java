@@ -1527,7 +1527,9 @@ public final class LinAlg
     public final static double[] transform(double xyt[], double p[])
     {
         assert(xyt.length==3);
+
         double c = Math.cos(xyt[2]), s = Math.sin(xyt[2]);
+
 
         if (p.length==2)
             return new double[] { p[0]*c - p[1]*s + xyt[0],

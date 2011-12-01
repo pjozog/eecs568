@@ -185,6 +185,19 @@ public class SixDofCoords {
         return pos;
     }
 
+    public static double[] get2DXYTfrom3DPose(double[] pose) {
+
+        assert(pose.length == 6);
+
+        double[] result = new double[3];
+
+        result[0] = pose[0];
+        result[1] = pose[1];
+        result[2] = pose[5];
+
+        return result;
+    }
+
     /**
      * Compute positional uncertainty by marginalizing out orientation
      * uncertainty.  Useful for getting the covariance of a landmark
@@ -210,8 +223,8 @@ public class SixDofCoords {
 
     /**
      * Compute jacobian for headToTail (see Eustice pg 150)
-     */ 
-   public static double[][] headToTailJacob(double[] xij, double[] xjk) {
+     */
+    public static double[][] headToTailJacob(double[] xij, double[] xjk) {
 
         Matrix J = new Matrix(6, 12);
 
@@ -234,7 +247,7 @@ public class SixDofCoords {
         double R33 = Rji[2][2]; double R32 = Rji[2][1];
 
         double Rkj12 = Rkj[0][1]; double Rkj13 = Rkj[0][2];
-        
+
         double Rij13 = Rij[0][2]; double Rij23 = Rij[1][2];
 
         double x_ij = xij[0]; double y_ij = xij[1]; double z_ij = xij[2];

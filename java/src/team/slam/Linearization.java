@@ -9,7 +9,8 @@ public class Linearization {
     // TODO: Make these private
     public List<double[][]> J = new ArrayList<double[][]>();
     public double[] residual;
-    public double[][] cov;
 
+    // This will be the inverse of the covariance matrix
+    public double[][] cov;
 
 }

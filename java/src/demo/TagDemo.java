@@ -34,7 +34,7 @@ import april.config.*;
 
 import lcm.lcm.*;
 
-import perllcm.tag_pose3d_t;
+import perllcm.tag_point3d_t;
 
 public class TagDemo {
 
@@ -194,12 +194,12 @@ public class TagDemo {
                                                                                          poseTagToHzCam[5]))));
 
 
-                    tag_pose3d_t msg = new tag_pose3d_t();
+                    tag_point3d_t msg = new tag_point3d_t();
 
                     msg.utime = System.nanoTime();
                     msg.id    = d.id;
-                    msg.mu    = poseTagToHzCam;
-                    msg.Sigma = Sigma.copyAsVector();
+                    msg.mu    = new double[]{poseTagToHzCam[0], poseTagToHzCam[1], poseTagToHzCam[2]};
+                    msg.Sigma = new Matrix(Sigma.copyArray(0, 0, 3, 3)).copyAsVector();
                     lcm.publish("ARDRONE_CAM_TO_TAG", msg);
 
                     vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));

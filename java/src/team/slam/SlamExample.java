@@ -32,7 +32,7 @@ public class SlamExample {
         backend.addEdge(edge01);
         backend.addEdge(edge12);
 
-        backend.solve();
+        backend.update();
 
     }
 

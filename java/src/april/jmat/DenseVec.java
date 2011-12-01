@@ -174,4 +174,15 @@ public class DenseVec extends Vec
 
         return X;
     }
+
+    public final Vec copyInversePermuteColumns(Permutation p)
+    {
+        DenseVec X = new DenseVec(v.length);
+
+        for (int i = 0; i < v.length; i++) {
+            X.set(i, v[p.invperm[i]]);
+        }
+
+        return X;
+    }
 }

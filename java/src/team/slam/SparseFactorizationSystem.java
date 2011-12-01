@@ -62,12 +62,15 @@ public class SparseFactorizationSystem {
 
     /**
      * Add an entire edge to the sparse system. This almost belongs in the BackEnd instead
-     * of here, because it just assembles sparse rows from the edge's linearization and
+     * of this file because it just assembles sparse rows from the edge's linearization and
      * passes them off to addRowViaGivensRotation(). It lives here now because the BackEnd
-     * is getting huge.
+     * interface is getting huge.
+
+     * This also takes care of the problem with column sizing mentioned in the BackEnd. As
+     * long as newColDimension is >= what is truly needed, everything will work swimmingly.
      *
      * @param the new edge to add
-     * @param the column size that the sparse system should have after this addition
+     * @param the column size that the sparse system should have after this addition (over-estimate)
      */
     public void addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
 
@@ -315,7 +318,6 @@ public class SparseFactorizationSystem {
     }
 
 
-
     /**
      * Actually add the row into R and the new residual component into rhs
      */
@@ -380,7 +382,7 @@ public class SparseFactorizationSystem {
         }
 
         if (valuesVerbose) {
-            System.out.println("Incremental X");
+            System.out.println("Incremental deltaX");
             LinAlg.print(result.copyArray());
         }
 

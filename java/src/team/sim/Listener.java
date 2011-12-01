@@ -51,7 +51,7 @@ public class Listener implements OldSimulator.Listener {
 
         numConverge = config.requireInt("simulator.numConverge");
 
-        slam = new BackEnd(numConverge, lambda, epsilon);
+        slam = new BackEnd(config);
 
         startTime = System.nanoTime();
 
@@ -136,9 +136,8 @@ public class Listener implements OldSimulator.Listener {
         }
 
         //-------------------
-        // CHOOSE YOUR WEAPON
+        // GO FORTH BACKEND!
         //-------------------
-        // slam.solve();
         slam.update();
 
         if (numUpdates == 383) {

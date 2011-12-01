@@ -14,6 +14,8 @@ public class CholeskyDecomposition
     Matrix L;
     Matrix U; // contains L' and garbage in the lower diagonal
 
+    Matrix decompRHS;
+
     boolean isSpd;
     boolean verbose;
 
@@ -136,6 +138,11 @@ public class CholeskyDecomposition
         */
     }
 
+    public Matrix getDecompRHS()
+    {
+        return decompRHS;
+    }
+
     public boolean isSPD()
     {
         return isSpd;
@@ -150,7 +157,7 @@ public class CholeskyDecomposition
         if (!isSpd)
             throw new RuntimeException("Matrix is not SPD");
 
-        //	erp.util.Tic tic = new erp.util.Tic();
+        //  erp.util.Tic tic = new erp.util.Tic();
 
         // Solve L*Y = B
         Matrix YT = new Matrix(B.getColumnDimension(), B.getRowDimension());
@@ -172,11 +179,12 @@ public class CholeskyDecomposition
 
         // I believe YT is what our "residual" should be in incremental.
         // LT is what our R should be in incremental
-        System.out.println("Cholesky LT");
-        LinAlg.print(LT.copyArray());
-        System.out.println("Cholesky YT");
-        LinAlg.print(YT.transpose().copyArray());
+        // System.out.println("Cholesky LT");
+        // LinAlg.print(LT.copyArray());
+        // System.out.println("Cholesky YT");
+        // LinAlg.print(YT.transpose().copyArray());
 
+        decompRHS = YT;
 
         // most of the time, Y will have one column.
         // Solve L'*X = Y
@@ -191,11 +199,11 @@ public class CholeskyDecomposition
             }
         }
 
-        //	if (verbose)
-        //	    System.out.println("backsolve time: "+tic.toc());
+        //  if (verbose)
+        //      System.out.println("backsolve time: "+tic.toc());
 
-        System.out.println("Cholesky XY");
-        LinAlg.print(XT.transpose().copyArray());
+        // System.out.println("Cholesky XY");
+        // LinAlg.print(XT.transpose().copyArray());
 
 
         return XT.transpose();
@@ -220,7 +228,7 @@ public class CholeskyDecomposition
             PAP.print();
         }
 
-        //	System.exit(0);
+        //  System.exit(0);
 
         System.out.println("Testing factors");
         for (int iters=0; iters<1000;iters++) {

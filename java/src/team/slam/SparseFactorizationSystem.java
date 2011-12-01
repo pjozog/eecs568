@@ -96,7 +96,7 @@ public class SparseFactorizationSystem {
         }
 
 
-        Linearization edgeLin = anEdge.getLinearization(true);
+        Linearization edgeLin = anEdge.getLinearization();
 
         // Array of associated residuals
         double[] newResiduals = edgeLin.residual;
@@ -284,8 +284,8 @@ public class SparseFactorizationSystem {
         // Apply the Givens rotation to R
         //--------
 
-        CSRVec newTopRow = new CSRVec(topRow.length);
-        CSRVec newBotRow = new CSRVec(topRow.length);
+        CSRVec newTopRow = new CSRVec(topRow.length, topRow.nz + botRow.nz);
+        CSRVec newBotRow = new CSRVec(topRow.length, topRow.nz + botRow.nz);
 
         // From section 5.1.9 in Matrix Computations by Golub and Van Loan
         for (int j = col; j < topRow.length; j++) {
@@ -298,6 +298,44 @@ public class SparseFactorizationSystem {
                 newBotRow.set(j, s*tauTop + c*tauBot);
             }
         }
+
+        // INTERESTING: The algoritm below is actually slower than what I have above. weird. I think the
+        // variable reordering takes care of a lot of things.
+
+        // Slight optimization from april.jmat. I wish I knew they had done rotations
+        // already!
+        // int topRowIndex = 0;
+        // int botRowIndex = 0;
+
+        // while (topRowIndex < topRow.nz || botRowIndex < botRow.nz) {
+
+        //     int thisIndex = Integer.MAX_VALUE;
+        //     if (topRowIndex < topRow.nz)
+        //         thisIndex = topRow.indices[topRowIndex];
+        //     if (botRowIndex < botRow.nz)
+        //         thisIndex = Math.min(thisIndex, botRow.indices[botRowIndex]);
+
+        //     assert(thisIndex != Integer.MAX_VALUE);
+
+        //     double tauTop = 0;
+        //     double tauBot = 0;
+        //     if (topRowIndex < topRow.nz && topRow.indices[topRowIndex] == thisIndex)
+        //         tauTop = topRow.values[topRowIndex++];
+        //     if (botRowIndex < botRow.nz && botRow.indices[botRowIndex] == thisIndex)
+        //         tauBot = botRow.values[botRowIndex++];
+
+        //     double x0r, y0r;
+        //     x0r = c*tauTop - s*tauBot;
+        //     y0r = s*tauTop + c*tauBot;
+
+        //     if (x0r != 0) {
+        //         newTopRow.set(thisIndex, x0r);
+        //     }
+
+        //     if (y0r != 0 && thisIndex > col) {
+        //         newBotRow.set(thisIndex, y0r);
+        //     }
+        // }
 
         // Replace the rows in R with the new rows
         R.setRow(col, newTopRow);
@@ -342,7 +380,8 @@ public class SparseFactorizationSystem {
 
 
     /**
-     * Solve system via back substitution.
+     * Solve system via back substitution. This is a much faster version (borrowed from
+     * the newly discovered april.jmat.Givens that exploits the vector sparsity.
      *
      * @return deltaX
      */
@@ -352,55 +391,25 @@ public class SparseFactorizationSystem {
 
         int numCols = getNumCols();
 
-        Matrix result = new Matrix(numCols, 1);
+        DenseVec result = new DenseVec(numCols);
 
+        for (int i = numCols-1; i >= 0; i--) {
 
-        for (int rowIndex = numCols-1; rowIndex >= 0; rowIndex--) {
+            CSRVec theRow = (CSRVec)R.getRow(i);
+            double diag = theRow.get(i);
+            double acc = theRow.dotProduct(result);
 
-            CSRVec theRow = (CSRVec)R.getRow(rowIndex);
-            double elem = rhs.get(rowIndex);
-
-            for (int colIndex = theRow.first() ; colIndex < theRow.length; colIndex++) {
-
-                double v = theRow.get(colIndex);
-
-                if (rowIndex != colIndex) {
-                    elem = elem - result.get(colIndex, 0)*v;
-                }
-            }
-
-            double diag = theRow.get(rowIndex);
-
-            if (diag == 0.0) {
-                System.out.println("Matrix is not upper triangular!");
-                assert(false);
-            }
-
-            result.set(rowIndex, 0, elem/diag);
-
+            result.set(i, (rhs.get(i) - acc)/diag);
         }
 
-        if (valuesVerbose) {
-            System.out.println("Incremental deltaX");
-            LinAlg.print(result.copyArray());
-        }
 
         if (varReordering != null) {
 
-            // System.out.println("The variable reordering at this point");
-            // ArrayUtil.print1dArray(varReordering.perm);
-            // System.out.println();
-            // System.out.println("The result before reordering");
-            // LinAlg.print(result.copyArray());
-
-            result.inversePermuteRows(varReordering.perm);
-
-            // System.out.println("The result after reordering");
-            // LinAlg.print(result.copyArray());
+            result = (DenseVec)result.copyInversePermuteColumns(varReordering);
 
         }
 
-        return result.copyAsVector();
+        return result.getDoubles();
     }
 
 

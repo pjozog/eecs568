@@ -54,7 +54,7 @@ public abstract class Edge {
     /**
      * Get all the fun stuff about this edge like jacobian blocks and the residual.
      */
-    public Linearization getLinearization(boolean incorporateSqrtCovariance) {
+    public Linearization getLinearization() {
 
         Linearization result = new Linearization();
 
@@ -71,19 +71,19 @@ public abstract class Edge {
 
         result.residual = getResidual();
 
-        if (incorporateSqrtCovariance) {
+        // if (true) {
 
-            // Compute cov^{-T/2}
+        //     // Compute cov^{-T/2}
 
-            // Pre-multiply jacobian blocks by it
+        //     // Pre-multiply jacobian blocks by it
 
-            // Pre-multiply residual by it
+        //     // Pre-multiply residual by it
 
-        } else {
+        // } else {
 
             result.cov = cov.inverse().copyArray();
 
-        }
+        // }
 
         return result;
     }

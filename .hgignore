@@ -22,3 +22,4 @@ april_jcam_ImageSourceNative.h
 april_vis_GL.h
 april_jserial_JSerial.h
 java/analysis/*
+lcm/*

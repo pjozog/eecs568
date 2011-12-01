@@ -269,7 +269,7 @@ public class BackEnd{
             for (Edge anEdge : edges) {
 
                 // Get the jacobian blocks for the edge (numerically or symbolically)
-                Linearization edgeLin = anEdge.getLinearization(false);
+                Linearization edgeLin = anEdge.getLinearization();
 
                 // For every node associated with the edge
                 for (int i = 0; i < anEdge.getNodes().size(); i++) {
@@ -420,7 +420,7 @@ public class BackEnd{
             Edge anEdge = edges.get(i);
 
             // Get the jacobian blocks for the edge (numerically or symbolically)
-            Linearization edgeLin = anEdge.getLinearization(false);
+            Linearization edgeLin = anEdge.getLinearization();
 
             // For every jacobian block associated with the edge...
             for (int j = 0; j < edgeLin.J.size(); j++) {
@@ -622,7 +622,7 @@ public class BackEnd{
             for (Edge anEdge : edges) {
 
                 // Get the jacobian blocks for the edge (numerically or symbolically)
-                Linearization edgeLin = anEdge.getLinearization(false);
+                Linearization edgeLin = anEdge.getLinearization();
 
                 // For every node associated with the edge
                 for (int i = 0; i < anEdge.getNodes().size(); i++) {

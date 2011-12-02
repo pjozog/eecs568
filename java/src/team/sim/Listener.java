@@ -67,7 +67,7 @@ public class Listener implements OldSimulator.Listener {
 
 
         Matrix cov = Matrix.identity(6, 6);
-        // cov.times(100);
+        cov.times(1.0/100);
 
         // Create Pose3D at origin
         Pose3D p3d = new Pose3D();
@@ -98,8 +98,9 @@ public class Listener implements OldSimulator.Listener {
 
         Pose3DNode p3dn = new Pose3DNode();
 
-        Matrix cov = Matrix.identity(6, 6);
+        // Matrix cov = Matrix.identity(6, 6);
         // cov.times(100);
+        Matrix cov = new Matrix(getOdomCov(odom.obs[0], odom.obs[1]));
 
         //Create Pose3DtoPose3DEdge with prevPose
         Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(prevPose, p3dn, deltaMotion, cov);
@@ -128,7 +129,8 @@ public class Listener implements OldSimulator.Listener {
                 slam.addNode(pointNode);
             }
 
-            Matrix landCov = Matrix.identity(3, 3);
+            // Matrix landCov = Matrix.identity(3, 3);
+            Matrix landCov = new Matrix(getLandCov());
 
             Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(p3dn, pointNode, obs, landCov);
 
@@ -325,5 +327,74 @@ public class Listener implements OldSimulator.Listener {
 
 
     }
+
+
+    private double[][] getOdomCov(double t_l, double t_r) {
+
+
+        double odomD[] = config.requireDoubles("noisemodels.odometryDiag");
+
+        double sigmaL = odomD[0];
+        double sigmaR = odomD[1];
+
+
+        double[][] tltrCovariance = new double[2][2];
+        tltrCovariance[0][0] = Math.pow(t_l*sigmaL, 2);
+        tltrCovariance[0][1] = 0.0;
+        tltrCovariance[1][0] = 0.0;
+        tltrCovariance[1][1] = Math.pow(t_r*sigmaR, 2);
+
+        double[][] tltrToXYTJacob = new double[3][2];
+
+        double dPhi = MathUtil.mod2pi(Math.atan2(t_r - t_l, baseline));
+
+        double x = (t_l + t_r)/(2.0);
+
+        tltrToXYTJacob[0][0] = .5;
+        tltrToXYTJacob[0][1] = .5;
+        tltrToXYTJacob[1][0] = 0.0;
+        tltrToXYTJacob[1][1] = 0.0;
+        tltrToXYTJacob[2][0] = -1.0/(baseline*(Math.pow(t_l - t_r, 2)/Math.pow(baseline,2) + 1));
+        tltrToXYTJacob[2][1] =  1.0/(baseline*(Math.pow(t_l - t_r, 2)/Math.pow(baseline,2) + 1));
+
+
+
+        double[][] result = new double[3][3];
+        result = LinAlg.matrixABCt(tltrToXYTJacob, tltrCovariance, tltrToXYTJacob);
+        result[1][1] = result[0][0]/100.0;
+
+        double[][] realResult = new double[6][6];
+        realResult[0][0] = result[0][0];
+        realResult[1][1] = result[1][1];
+        realResult[5][5] = result[2][2];
+
+        realResult[2][2] = 1.0;
+        realResult[3][3] = 1.0;
+        realResult[4][4] = 1.0;
+
+        return realResult;
+
+    }
+
+
+    private double[][] getLandCov() {
+
+        double landmarkSig[] = config.requireDoubles("noisemodels.landmarkDiag");
+
+        double[][] result = new double[3][3];
+        result[0][0] = landmarkSig[0];
+        result[0][1] = 0.0;
+        result[0][2] = 0.0;
+        result[1][0] = 0.0;
+        result[1][1] = landmarkSig[1];
+        result[1][0] = 0.0;
+        result[2][0] = 0.0;
+        result[2][1] = 0.0;
+        result[2][2] = 1.0;
+
+        return result;
+    }
+
+
 
 }

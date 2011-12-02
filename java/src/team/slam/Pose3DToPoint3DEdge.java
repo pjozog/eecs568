@@ -53,7 +53,8 @@ public class Pose3DToPoint3DEdge extends Edge {
             fakeDeltaPose.setY(observation.getY());
             fakeDeltaPose.setZ(observation.getZ());
 
-            double[] prediction = SixDofCoords.headToTail(n1.getLinearizationState(), fakeDeltaPose.getArray());
+            // double[] prediction = SixDofCoords.headToTail(n1.getLinearizationState(), fakeDeltaPose.getArray());
+            double[] prediction = SixDofCoords.headToTail(n1.getStateArray(), fakeDeltaPose.getArray());
 
             // Only keep the 3 important guys
             double[] slimPrediction = new double[] {prediction[0], prediction[1], prediction[2]};

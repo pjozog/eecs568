@@ -67,7 +67,7 @@ public class Listener implements OldSimulator.Listener {
 
 
         Matrix cov = Matrix.identity(6, 6);
-        cov.times(1.0/100);
+        cov.times(.0000001);
 
         // Create Pose3D at origin
         Pose3D p3d = new Pose3D();
@@ -98,9 +98,9 @@ public class Listener implements OldSimulator.Listener {
 
         Pose3DNode p3dn = new Pose3DNode();
 
-        // Matrix cov = Matrix.identity(6, 6);
-        // cov.times(100);
+
         Matrix cov = new Matrix(getOdomCov(odom.obs[0], odom.obs[1]));
+        // Matrix cov = Matrix.identity(6, 6);
 
         //Create Pose3DtoPose3DEdge with prevPose
         Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(prevPose, p3dn, deltaMotion, cov);
@@ -129,8 +129,8 @@ public class Listener implements OldSimulator.Listener {
                 slam.addNode(pointNode);
             }
 
+            Matrix landCov = new Matrix(getLandCov(rLand, tLand));
             // Matrix landCov = Matrix.identity(3, 3);
-            Matrix landCov = new Matrix(getLandCov());
 
             Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(p3dn, pointNode, obs, landCov);
 
@@ -377,20 +377,34 @@ public class Listener implements OldSimulator.Listener {
     }
 
 
-    private double[][] getLandCov() {
+    private double[][] getLandCov(double rMean, double thetaMean) {
 
         double landmarkSig[] = config.requireDoubles("noisemodels.landmarkDiag");
 
+
+        double [][]jac = new double[2][2];
+
+        jac[0][0] = Math.cos(thetaMean);
+        jac[1][0] = Math.sin(thetaMean);
+        jac[0][1] = -rMean * Math.sin(thetaMean);
+        jac[1][1] = rMean * Math.cos(thetaMean);
+
+        double[][] beforeProj = new double[2][2];
+        beforeProj[0][0] = landmarkSig[0];
+        beforeProj[1][1] = landmarkSig[1];
+
+        double[][] afterProj = LinAlg.matrixABCt(jac, beforeProj, jac);
+
         double[][] result = new double[3][3];
-        result[0][0] = landmarkSig[0];
-        result[0][1] = 0.0;
+        result[0][0] = afterProj[0][0];
+        result[0][1] = afterProj[0][1];
         result[0][2] = 0.0;
-        result[1][0] = 0.0;
-        result[1][1] = landmarkSig[1];
-        result[1][0] = 0.0;
+        result[1][0] = afterProj[1][0];
+        result[1][1] = afterProj[1][1];
+        result[1][2] = 0.0;
         result[2][0] = 0.0;
         result[2][1] = 0.0;
-        result[2][2] = 1.0;
+        result[2][2] = .000001;
 
         return result;
     }

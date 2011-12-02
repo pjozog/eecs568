@@ -40,13 +40,15 @@ public class Pose3DToPose3DEdge extends Edge {
 
         if (n1.isInitialized() && !n2.isInitialized()) {
 
-            double[] prediction = SixDofCoords.headToTail(n1.getLinearizationState(), deltaMotion.getArray());
-
+            // double[] prediction = SixDofCoords.headToTail(n1.getLinearizationState(), deltaMotion.getArray());
+            double[] prediction = SixDofCoords.headToTail(n1.getStateArray(), deltaMotion.getArray());
             n2.init(new Pose3D(prediction));
 
         } else if (!n1.isInitialized() && n2.isInitialized()) {
 
-            double[] prediction = SixDofCoords.headToTail(n2.getLinearizationState(),
+            // double[] prediction = SixDofCoords.headToTail(n2.getLinearizationState(),
+                                                          // SixDofCoords.inverse(deltaMotion.getArray()));
+            double[] prediction = SixDofCoords.headToTail(n2.getStateArray(),
                                                           SixDofCoords.inverse(deltaMotion.getArray()));
 
             n1.init(new Pose3D(prediction));

@@ -159,10 +159,12 @@ public class TagDemo {
 
             VisWorld.Buffer poseDisplay = vw.getBuffer("Pose Display");
 
-            vbOrigin.addBack(Quiver.getQuiverAt(new double[]{0,0,0,0,0,0}, 1, 
-                                                Color.yellow, Color.yellow, Color.yellow));
+            //vbOrigin.addBack(Quiver.getQuiverAt(new double[]{0,0,0,0,0,0}, 1, 
+            //                                   Color.yellow, Color.yellow, Color.yellow));
             vbOrigin.swap();
 
+    
+            double []initialPose = null;
             while (true) {
 
                 byte buf[] = is.getFrame();
@@ -173,17 +175,22 @@ public class TagDemo {
 
                 Tic tic = new Tic();
                 ArrayList<TagDetection> detections = detector.process(im, new double[] {im.getWidth()/2.0, im.getHeight()/2.0});
+                
                 double dt = tic.toc();
 
-                if (detections.size() == 0)
-                    vb.clear();
 
-                for (TagDetection d : detections) {
 
+                if (detections.size() == 0){
+                    //vb.clear();
+                }
+                if(initialPose != null){
+                    vb.addBack(Quiver.getQuiverAt(initialPose));
+                }
+                for(TagDetection d : detections){
                     double[] poseTagToHzCam = TagUtil.getPose(d.homography, tagsize, fx, fy);
                     Matrix Sigma = TagUtil.getPoseSigma(d.homography, d.covariance, tagsize, fx, fy);
 
-                    poseDisplay.addBack(new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
+                    VisPixelCoordinates curCoords = new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
                                                                 new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
                                                                            String.format("<<cyan>>[%.2f %.2f %.2f %.2f %.2f %.2f]", 
                                                                                          poseTagToHzCam[0],
@@ -191,19 +198,28 @@ public class TagDemo {
                                                                                          poseTagToHzCam[2],
                                                                                          poseTagToHzCam[3],
                                                                                          poseTagToHzCam[4],
-                                                                                         poseTagToHzCam[5]))));
+                                                                                         poseTagToHzCam[5])));
+                    poseDisplay.addBack(curCoords);
+
+                    if(initialPose == null){
+                        initialPose = poseTagToHzCam;
+                    }
+                    else{
+                        
+                        tag_point3d_t msg = new tag_point3d_t();
+                        
+                        msg.utime = System.nanoTime();
+                        msg.id    = d.id;
+                        msg.mu    = new double[]{poseTagToHzCam[0], poseTagToHzCam[1], poseTagToHzCam[2]};
+                        msg.Sigma = new Matrix(Sigma.copyArray(0, 0, 3, 3)).copyAsVector();
+                        lcm.publish("ARDRONE_CAM_TO_TAG", msg);
+                        
+                        vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));
+                        poseDisplay.swap();
+                    }
+                       
 
 
-                    tag_point3d_t msg = new tag_point3d_t();
-
-                    msg.utime = System.nanoTime();
-                    msg.id    = d.id;
-                    msg.mu    = new double[]{poseTagToHzCam[0], poseTagToHzCam[1], poseTagToHzCam[2]};
-                    msg.Sigma = new Matrix(Sigma.copyArray(0, 0, 3, 3)).copyAsVector();
-                    lcm.publish("ARDRONE_CAM_TO_TAG", msg);
-
-                    vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));
-                    poseDisplay.swap();
 
                 }
 

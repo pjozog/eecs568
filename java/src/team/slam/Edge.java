@@ -2,8 +2,13 @@ package team.slam;
 
 import java.util.List;
 import java.util.ArrayList;
+
 import april.jmat.Matrix;
+import april.jmat.LinAlg;
+import april.jmat.CholeskyDecomposition;
+
 import team.slam.Linearization;
+
 
 public abstract class Edge {
 
@@ -17,6 +22,12 @@ public abstract class Edge {
      * The uncertainty of the edge.
      */
     protected Matrix cov;
+
+    /**
+     * The upper triangular result of the cholesky decomposition of the inverse of the
+     * covariance. Phew. Needs to be created during initialization (but thankfully, only once).
+     */
+    protected Matrix cholInvCov = null;
 
     /**
      * Degrees of Freedom in the Edge.
@@ -47,10 +58,6 @@ public abstract class Edge {
      */
     abstract public double[] getResidual();
 
-    public Matrix getCov(){
-        return cov;
-    }
-
     /**
      * Get all the fun stuff about this edge like jacobian blocks and the residual.
      */
@@ -58,8 +65,16 @@ public abstract class Edge {
 
         Linearization result = new Linearization();
 
+        if (cholInvCov == null) {
+            // Create cholInvCov
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(cov.inverse());
+            cholInvCov = myDecomp.getL().transpose();
+        }
 
         Matrix jacobians = getJacobian();
+
+        // Incorporate the covarance
+        jacobians = cholInvCov.times(jacobians);
 
         // Split up the jacob into appropriate blocks
         int col = 0;
@@ -69,21 +84,8 @@ public abstract class Edge {
             result.J.add(nodeJBlock);
         }
 
-        result.residual = getResidual();
-
-        // if (true) {
-
-        //     // Compute cov^{-T/2}
-
-        //     // Pre-multiply jacobian blocks by it
-
-        //     // Pre-multiply residual by it
-
-        // } else {
-
-            result.cov = cov.inverse().copyArray();
-
-        // }
+        // Incorporate the covarance
+        result.residual = LinAlg.matrixAB(cholInvCov.copyArray(), getResidual());
 
         return result;
     }

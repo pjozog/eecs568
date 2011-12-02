@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
 
+
 /**
  * Used as a prior so we don't have an underconstrained system. Could be used anywhere if
  * we just know where we are at any point.
@@ -28,6 +29,7 @@ public class Pose3DEdge extends Edge{
     }
 
     public void initialize() {
+        // Initialize connected nodes
         Pose3DNode aNode = (Pose3DNode)nodes.get(0);
         if (!aNode.isInitialized()) {
             aNode.init(position);

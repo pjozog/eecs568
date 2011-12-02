@@ -277,20 +277,20 @@ public class BackEnd{
                     // getIndex() represents the state vector index of the associated node
                     int aIndex = anEdge.getNodes().get(i).getIndex();
 
-                    double[][] JatW = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.cov);
+                    // double[][] JatW = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.cov);
 
                     // For every node associated with the edge (again)
                     for (int j = 0; j < anEdge.getNodes().size(); j++) {
 
                         int bIndex =  anEdge.getNodes().get(j).getIndex();
 
-                        double[][] JatWJb = LinAlg.matrixAB(JatW, edgeLin.J.get(j));
+                        double[][] JatWJb = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.J.get(j));
 
                         // Add the contribution of node j and i to A
                         A.plusEquals(aIndex, bIndex, JatWJb);
                     }
 
-                    double[] JatWr = LinAlg.matrixAB(JatW, edgeLin.residual);
+                    double[] JatWr = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.residual);
                     b.plusEqualsColumnVector(aIndex, 0, JatWr);
 
                 }
@@ -338,18 +338,18 @@ public class BackEnd{
 
         double maxChange = 0;
 
-        Matrix sigmaInv = assembleInvCov();
+        // Matrix sigmaInv = assembleInvCov();
 
         do {
 
             Matrix J = assembleJacobian();
             double[] residuals = assembleResiduals();
 
-            Matrix jtSig = J.transpose().times(sigmaInv);
+            // Matrix jtSig = J.transpose().times(sigmaInv);
 
-            Matrix A = jtSig.times(J);
+            Matrix A = J.transpose().times(J);
 
-            Matrix b = jtSig.times(Matrix.columnMatrix(residuals));
+            Matrix b = J.transpose().times(Matrix.columnMatrix(residuals));
 
             // Tikhanoff regulaization
             A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
@@ -441,24 +441,24 @@ public class BackEnd{
     }
 
 
-    /*Takes all the cov blocks from the edges and assembles the large inverse matrix*/
-    private Matrix assembleInvCov(){
+    // /*Takes all the cov blocks from the edges and assembles the large inverse matrix*/
+    // private Matrix assembleInvCov(){
 
-        int curIndex = 0;
+    //     int curIndex = 0;
 
-        /*edgeDimension is the total DOF of all edges*/
-        Matrix cov = new Matrix(edgeDimension, edgeDimension, Matrix.SPARSE);
-        for(Edge edge : edges){
+    //     /*edgeDimension is the total DOF of all edges*/
+    //     Matrix cov = new Matrix(edgeDimension, edgeDimension, Matrix.SPARSE);
+    //     for(Edge edge : edges){
 
-            double[][] covInv = edge.getCov().inverse().copyArray();
+    //         double[][] covInv = edge.getCov().inverse().copyArray();
 
-            cov.set(curIndex, curIndex, covInv);
+    //         cov.set(curIndex, curIndex, covInv);
 
-            curIndex += edge.getDOF();
-        }
-        return cov;
+    //         curIndex += edge.getDOF();
+    //     }
+    //     return cov;
 
-    }
+    // }
 
 
     private double[] getStateEstimate() {
@@ -630,20 +630,20 @@ public class BackEnd{
                     // getIndex() represents the state vector index of the associated node
                     int aIndex = anEdge.getNodes().get(i).getIndex();
 
-                    double[][] JatW = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.cov);
+                    // double[][] JatW = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.cov);
 
                     // For every node associated with the edge (again)
                     for (int j = 0; j < anEdge.getNodes().size(); j++) {
 
                         int bIndex =  anEdge.getNodes().get(j).getIndex();
 
-                        double[][] JatWJb = LinAlg.matrixAB(JatW, edgeLin.J.get(j));
+                        double[][] JatWJb = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.J.get(j));
 
                         // Add the contribution of node j and i to A
                         A.plusEquals(aIndex, bIndex, JatWJb);
                     }
 
-                    double[] JatWr = LinAlg.matrixAB(JatW, edgeLin.residual);
+                    double[] JatWr = LinAlg.matrixAtB(edgeLin.J.get(i), edgeLin.residual);
                     b.plusEqualsColumnVector(aIndex, 0, JatWr);
 
                 }

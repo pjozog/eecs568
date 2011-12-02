@@ -1,0 +1,22 @@
+#!/bin/bash
+
+SCRIPT=$0
+SCRIPT_DIR=$(dirname $SCRIPT)
+SCRIPT_NAME=$(basename $SCRIPT)
+
+DRONE_STATE_CLASS=team.drone.DroneState
+
+DRONE_TAG_CLASS=team.drone.DroneTag
+DRONE_TAG_CONFIG=${SCRIPT_DIR}/../config/droneCam.config
+
+DRONE_LISTENER_CLASS=team.drone.DroneListener
+DRONE_LISTENER_CONFIG=${SCRIPT_DIR}/../config/droneListener.config
+
+cd "$SCRIPT_DIR"
+
+java lcm.spy.Spy &
+
+java ${DRONE_TAG_CLASS} ${DRONE_TAG_CONFIG} &
+java ${DRONE_LISTENER_CLASS} ${DRONE_LISTENER_CONFIG} &
+java ${DRONE_STATE_CLASS} &
+

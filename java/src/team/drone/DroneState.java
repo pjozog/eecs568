@@ -59,22 +59,24 @@ public class DroneState implements LCMSubscriber {
                 
                 double delx = velx * (time - oldState.utime)/1e6;
                 double dely = vely * (time - oldState.utime)/1e6;
-                double delz = alt - oldState.altitude;
+                double delz = oldState.altitude - alt;
+                if (Math.abs(delz) > 1)
+                    delz = 0;
                 double delr = r - oldState.roll;
                 double delp = p - oldState.pitch;
-                double depy = y - oldState.yaw;
+                double delh = y - oldState.yaw;
                     
                 pose3d_t outMsg = new pose3d_t();                    
                 outMsg.utime    = System.nanoTime();
                 outMsg.Sigma    = Matrix.identity(6,6).copyAsVector();        
                 
-                double []deltaPose = new double[]{delx, dely, delz, delr, delp ,dely};
+                double []deltaPose = new double[]{delx, dely, delz, delr, delp, delh};
                 outMsg.mu = deltaPose;
                 
 
                 lcm.publish("ARDRONE_DELTA_POSE", outMsg);
 
-		oldState = msg;
+                oldState = msg;
 
                 return;
 
@@ -88,7 +90,6 @@ public class DroneState implements LCMSubscriber {
         
     }
 
-    
     public static void main(String[] args) {
         
         try {

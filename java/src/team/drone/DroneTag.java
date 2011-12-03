@@ -76,6 +76,10 @@ public class DroneTag implements LCMSubscriber {
                     vbDetections.clear();
 
                 for (TagDetection d : detections) {
+
+                    if (d.hammingDistance > 0) {
+                        continue;
+                    }
                     
                     double p0[] = d.interpolate(-1,-1);
                     double p1[] = d.interpolate(1,-1);

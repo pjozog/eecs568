@@ -9,8 +9,8 @@ DRONE_STATE_CLASS=team.drone.DroneState
 DRONE_TAG_CLASS=team.drone.DroneTag
 DRONE_TAG_CONFIG=${SCRIPT_DIR}/../config/droneCam.config
 
-DRONE_LISTENER_CLASS=team.drone.DroneListenerDR
-#DRONE_LISTENER_CLASS=team.drone.DroneListener
+#DRONE_LISTENER_CLASS=team.drone.DroneListenerDR
+DRONE_LISTENER_CLASS=team.drone.DroneListener
 DRONE_LISTENER_CONFIG=${SCRIPT_DIR}/../config/droneListener.config
 
 cd "$SCRIPT_DIR"

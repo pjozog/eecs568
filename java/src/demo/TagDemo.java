@@ -35,6 +35,8 @@ import april.config.*;
 import lcm.lcm.*;
 
 import perllcm.tag_point3d_t;
+import perllcm.pose3d_t;
+
 
 public class TagDemo {
 
@@ -164,7 +166,8 @@ public class TagDemo {
             vbOrigin.swap();
 
     
-            double []initialPose = null;
+            
+            double [] lastPose = null;
             while (true) {
 
                 byte buf[] = is.getFrame();
@@ -183,9 +186,7 @@ public class TagDemo {
                 if (detections.size() == 0){
                     //vb.clear();
                 }
-                if(initialPose != null){
-                    vb.addBack(Quiver.getQuiverAt(initialPose));
-                }
+                
                 for(TagDetection d : detections){
                     double[] poseTagToHzCam = TagUtil.getPose(d.homography, tagsize, fx, fy);
                     Matrix Sigma = TagUtil.getPoseSigma(d.homography, d.covariance, tagsize, fx, fy);
@@ -201,22 +202,32 @@ public class TagDemo {
                                                                                          poseTagToHzCam[5])));
                     poseDisplay.addBack(curCoords);
 
-                    if(initialPose == null){
-                        initialPose = poseTagToHzCam;
+
+                        
+                    tag_point3d_t msg = new tag_point3d_t();
+                    
+                    msg.utime = System.nanoTime();
+                    msg.id    = d.id;
+                    msg.mu    = new double[]{poseTagToHzCam[0], poseTagToHzCam[1], poseTagToHzCam[2]};
+                    msg.Sigma = new Matrix(Sigma.copyArray(0, 0, 3, 3)).copyAsVector();
+                    lcm.publish("ARDRONE_CAM_TO_TAG", msg);
+                    
+                   
+                    vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));
+                    vb.addBack(Quiver.getQuiverAt(SixDofCoords.inverse(poseTagToHzCam)));
+                    poseDisplay.swap();
+  
+                    if(lastPose != null){
+                        
+                        double []relativePose = SixDofCoords.tailToTail(lastPose, poseTagToHzCam);
+                        pose3d_t pose = new pose3d_t();
+                        pose.mu = relativePose;
+                        lcm.publish("DEMO_RELATIVE_POSE", pose);
+                        
                     }
-                    else{
-                        
-                        tag_point3d_t msg = new tag_point3d_t();
-                        
-                        msg.utime = System.nanoTime();
-                        msg.id    = d.id;
-                        msg.mu    = new double[]{poseTagToHzCam[0], poseTagToHzCam[1], poseTagToHzCam[2]};
-                        msg.Sigma = new Matrix(Sigma.copyArray(0, 0, 3, 3)).copyAsVector();
-                        lcm.publish("ARDRONE_CAM_TO_TAG", msg);
-                        
-                        vb.addBack(Quiver.getQuiverAt(poseTagToHzCam));
-                        poseDisplay.swap();
-                    }
+
+
+                    lastPose = poseTagToHzCam;
                        
 
 

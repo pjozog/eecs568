@@ -214,22 +214,8 @@ public class BackEnd{
 
         double[] deltaX = sparseFactor.solve();
 
-        if (numSteps > 140 && numSteps < 150) {
-            System.out.println("Last node's position before deltaX");
-            ArrayUtil.print1dArray(nodes.get(nodes.size()-1).getStateArray());
-            System.out.println("");
-        }
-
         x = LinAlg.add(x, deltaX);
         updateNodesWithNewState(x);
-
-
-        if (numSteps > 140 && numSteps < 150) {
-            System.out.println("Last node's position after deltaX");
-            ArrayUtil.print1dArray(nodes.get(nodes.size()-1).getStateArray());
-            System.out.println("");
-        }
-
 
     }
 

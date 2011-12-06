@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
 import april.jmat.MathUtil;
+import april.jmat.CholeskyDecomposition;
 import team.common.SixDofCoords;
 import team.slam.Linearization;
 
@@ -80,6 +81,28 @@ public class Pose3DToPose3DEdge extends Edge {
         residual[5] = MathUtil.mod2pi(residual[5]);
 
         return residual;
+
+    }
+
+    public double[] getChi2Error() {
+
+        double[] predictedOdom = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+                                                         nodes.get(1).getStateArray());
+
+        double[] residual = LinAlg.subtract(deltaMotion.getArray(), predictedOdom);
+
+
+        residual[3] = MathUtil.mod2pi(residual[3]);
+        residual[4] = MathUtil.mod2pi(residual[4]);
+        residual[5] = MathUtil.mod2pi(residual[5]);
+
+        if (cholInvCov == null) {
+            // Create cholInvCov
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(cov.inverse());
+            cholInvCov = myDecomp.getL().transpose();
+        }
+
+        return LinAlg.matrixAB(cholInvCov.copyArray(), residual);
 
     }
 

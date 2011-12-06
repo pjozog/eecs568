@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
-
+import april.jmat.CholeskyDecomposition;
 
 /**
  * Used as a prior so we don't have an underconstrained system. Could be used anywhere if
@@ -50,6 +50,22 @@ public class Pose3DEdge extends Edge{
 
         return residual;
 
+    }
+
+    public double[] getChi2Error() {
+
+
+        if (cholInvCov == null) {
+            // Create cholInvCov
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(cov.inverse());
+            cholInvCov = myDecomp.getL().transpose();
+        }
+
+
+        double[] predicted = nodes.get(0).getStateArray();
+        double[] residual = LinAlg.subtract(position.getArray(), predicted);
+
+        return LinAlg.matrixAB(cholInvCov.copyArray(), residual);
     }
 
 }

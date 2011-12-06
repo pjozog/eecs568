@@ -26,6 +26,7 @@ public class DroneState implements LCMSubscriber {
 
     ardrone_state_t oldState = null;
 
+    private static double ALT_FUDGE = 0.3;
 
     public DroneState() throws IOException {
 
@@ -40,6 +41,7 @@ public class DroneState implements LCMSubscriber {
 
                 ardrone_state_t msg = new ardrone_state_t(ins);
 
+                msg.altitude += ALT_FUDGE;
 
                 double time = msg.utime;
                 double velx = msg.vx;
@@ -50,12 +52,13 @@ public class DroneState implements LCMSubscriber {
                 double p = msg.pitch;
                 double y = msg.yaw;
 
-                
+                if (velx == 0.0 && vely == 0.0)
+                    return;
+
                 if(oldState == null){
                     oldState = msg;
                     return;
                 }
-                
                 
                 double delx = velx * (time - oldState.utime)/1e6;
                 double dely = vely * (time - oldState.utime)/1e6;
@@ -68,7 +71,7 @@ public class DroneState implements LCMSubscriber {
                     
                 pose3d_t outMsg = new pose3d_t();                    
                 outMsg.utime    = System.nanoTime();
-                outMsg.Sigma    = Matrix.identity(6,6).copyAsVector();        
+                outMsg.Sigma    = Matrix.identity(6,6).times(.01).copyAsVector();        
                 
                 double []deltaPose = new double[]{delx, dely, delz, delr, delp, delh};
                 outMsg.mu = deltaPose;

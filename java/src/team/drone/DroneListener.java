@@ -111,8 +111,8 @@ public class DroneListener implements LCMSubscriber {
 
                 Pose3D deltaMotion = new Pose3D(relPose);
                 Pose3DNode p3dn = new Pose3DNode();
-                //Matrix cov = Matrix.columnPackedMatrix(msg.Sigma, 6, 6);
-                Matrix cov = Matrix.identity(6, 6);
+                Matrix cov = Matrix.columnPackedMatrix(msg.Sigma, 6, 6);
+                //Matrix cov = Matrix.identity(6, 6);
                 
                 Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(prevPose, p3dn, deltaMotion, cov);
 
@@ -142,8 +142,8 @@ public class DroneListener implements LCMSubscriber {
                     slam.addNode(pointNode);
                 }
 
-                //Matrix cov = Matrix.columnPackedMatrix(msg.Sigma, 3, 3);
-                Matrix cov = Matrix.identity(3, 3).times(1000);
+                Matrix cov = Matrix.columnPackedMatrix(msg.Sigma, 3, 3);
+                //Matrix cov = Matrix.identity(3, 3).times(20);
 
                 Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, pointNode, obs, cov);
 

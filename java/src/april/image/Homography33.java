@@ -37,7 +37,7 @@ public class Homography33
     ArrayList<Double> imagey;
     SingularValueDecomposition svd;
 
-    public static final double FEATURE_NOISE_VARIANCE = 20;
+    public static final double FEATURE_NOISE_VARIANCE = 100;
     
     public Homography33(double cx, double cy)
     {

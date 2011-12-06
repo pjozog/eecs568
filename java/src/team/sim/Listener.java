@@ -325,6 +325,25 @@ public class Listener implements OldSimulator.Listener {
         }
 
 
+        // Display normalized Chi^2 text
+        {
+
+            VisWorld.Buffer vb = vw.getBuffer("chi2");
+
+            vb.addBack(new VisDepthTest(false,
+                                        new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
+                                                                new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
+                                                                           "<<margin=15>>" +
+                                                                           "<<center,sansserif-italic-10>>Normalized Chi2\n"+
+                                                                           "<<center,sansserif-bold-10>>"+slam.getNormalizedChi2()+"\n"))));
+
+
+            vb.swap();
+
+
+        }
+
+
 
     }
 

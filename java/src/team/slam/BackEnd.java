@@ -551,10 +551,35 @@ public class BackEnd{
         return edges;
     }
 
-    // public Matrix getR() {
-    //     return sparseFactor.getR();
-    // }
+    /**
+     * Returns weight sum of squared errors
+     */
+    public double getChi2() {
 
+        updateNodeIndices();
+
+        int row = 0;
+
+        Matrix allErrors = new Matrix(edgeDimension, 1);
+
+        for (int i = 0; i < edges.size(); i++) {
+
+            Edge anEdge = edges.get(i);
+
+            double[] chi2Error = anEdge.getChi2Error();
+
+            allErrors.plusEqualsColumnVector(row, 0, chi2Error);
+
+            row += anEdge.getDOF();
+        }
+
+        return allErrors.normF();
+
+    }
+
+    public double getNormalizedChi2() {
+        return (double)getChi2()/(edgeDimension - nodeDimension);
+    }
 
     //////////////////////////////
     ////// EXPERIMENTAL

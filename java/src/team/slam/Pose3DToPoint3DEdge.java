@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
+import april.jmat.CholeskyDecomposition;
 import team.common.SixDofCoords;
 
 public class Pose3DToPoint3DEdge extends Edge {
@@ -89,7 +90,6 @@ public class Pose3DToPoint3DEdge extends Edge {
     //Must be 3x1 vector (xyz)
     public double[] getResidual() {
 
-        // double[] pointEst = nodes.get(1).getStateArray();
         double[] pointEst = nodes.get(1).getLinearizationState();
 
         double[] fakePose = new double[6];
@@ -108,6 +108,36 @@ public class Pose3DToPoint3DEdge extends Edge {
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
 
         return residual;
+
+    }
+
+    public double[] getChi2Error() {
+
+        double[] pointEst = nodes.get(1).getStateArray();
+
+        double[] fakePose = new double[6];
+        fakePose[0] = pointEst[0];
+        fakePose[1] = pointEst[1];
+        fakePose[2] = pointEst[2];
+        fakePose[3] = 0.0;
+        fakePose[4] = 0.0;
+        fakePose[5] = 0.0;
+
+        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+                                                   fakePose);
+
+        double[] predictedXyz = SixDofCoords.getPosition(relPose);
+
+        double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
+
+
+        if (cholInvCov == null) {
+            // Create cholInvCov
+            CholeskyDecomposition myDecomp = new CholeskyDecomposition(cov.inverse());
+            cholInvCov = myDecomp.getL().transpose();
+        }
+
+        return LinAlg.matrixAB(cholInvCov.copyArray(), residual);
 
     }
 

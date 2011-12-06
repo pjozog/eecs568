@@ -59,6 +59,12 @@ public abstract class Edge {
     abstract public double[] getResidual();
 
     /**
+     * This is residual calculation except it uses the current estimate of the nodes
+     * instead of the linearization point for evaluation. We should merge the methods later.
+     */
+    abstract public double[] getChi2Error();
+
+    /**
      * Get all the fun stuff about this edge like jacobian blocks and the residual.
      */
     public Linearization getLinearization() {

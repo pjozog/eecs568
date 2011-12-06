@@ -11,39 +11,49 @@ import java.io.*;
 import april.vis.*;
 import april.config.*;
 import april.jmat.*;
+import april.util.*;
 
 import lcm.lcm.*;
 import perllcm.pose3d_t;
 import perllcm.tag_point3d_t;
 
-//Dead reckoning
-public class DroneListener implements LCMSubscriber {
+public class DroneListener implements LCMSubscriber, ParameterListener {
 
     Config config;
     LCM lcm;
-    JFrame jf    = new JFrame("Drone Tag Process");
+    JFrame jf    = new JFrame("Drone Listener Process");
     VisWorld  vw = new VisWorld();
     VisLayer vl  = new VisLayer(vw);
     VisCanvas vc = new VisCanvas(vl);
     VzGrid vg    = new VzGrid(new Color(.5f, .5f, .5f),
                               new Color(1.0f, 1.0f, 1.0f, 0.0f));
 
+    ParameterGUI pg = new ParameterGUI();
+
     double[] currentPose = new double[6];
-    double[] robotToCam = new double[6];
-    double[] NwuToNed = new double[6];
+    double[] robotToCam  = new double[6];
+    double[] NwuToNed    = new double[6];
 
     double[] latestPoseGuess = new double[6];
 
     BackEnd slam;
     Pose3DNode prevPose; //Pointer to most recently created pose3d node
 
-    ArrayList<double[]> poses = new ArrayList<double[]>();
-
-    ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
-    ArrayList<double[]> landmarks = new ArrayList<double[]>();
+    ArrayList<double[]> poses        = new ArrayList<double[]>();
+    ArrayList<VzLines> trajectory    = new ArrayList<VzLines>();
+    ArrayList<double[]> landmarks    = new ArrayList<double[]>();
     ArrayList<double[]> allEdgeLinks = new ArrayList<double[]>();
 
     public DroneListener(Config config) throws IOException {
+
+        pg.addButtons("reset", "Reset");
+        pg.addListener(new ParameterListener() {
+                public void parameterChanged(ParameterGUI pg, String name) {
+                    if (name.equals("reset")) {
+                        poseReset();
+                    }
+                }
+            });
 
         try {
             lcm = new LCM();
@@ -56,11 +66,12 @@ public class DroneListener implements LCMSubscriber {
         robotToCam = config.requireDoubles("robot.vehicle_to_camera");
         NwuToNed = config.requireDoubles("robot.NwuToNed");
 
-        poses.add(new double[]{currentPose[0], currentPose[1], currentPose[2]});
+        poseReset();
 
         jf.setLayout(new BorderLayout());
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.add(vc, BorderLayout.CENTER);
+        jf.add(pg, BorderLayout.SOUTH);
         jf.setVisible(true);
         jf.setSize(800,600);
 
@@ -78,10 +89,32 @@ public class DroneListener implements LCMSubscriber {
 
     }
 
+    public void poseReset() {
+
+        poses.clear();
+        trajectory.clear();
+        landmarks.clear();
+        allEdgeLinks.clear();
+
+        vw.getBuffer("edges-local").clear();
+        vw.getBuffer("trajectory-local").clear();
+        vw.getBuffer("landmarks-local").clear();
+
+        slam = new BackEnd(this.config);
+
+        poses.add(new double[]{currentPose[0], currentPose[1], currentPose[2]});
+        addPrior();
+
+    }
+
+    public void parameterChanged(ParameterGUI pg, String name) {
+        
+    }
+
     public void addPrior() {
 
         Matrix cov = Matrix.identity(6, 6);
-        cov.times(.0000001);
+        cov.times(.0001);
 
         // Create Pose3D at origin
         Pose3D p3d = new Pose3D(NwuToNed);
@@ -151,7 +184,6 @@ public class DroneListener implements LCMSubscriber {
 
 
             }
-
 
         } catch (IOException ex) {
             System.out.println("Caught exception: "+ex);

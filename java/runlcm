@@ -15,7 +15,7 @@ DRONE_LISTENER_CONFIG=${SCRIPT_DIR}/../config/droneListener.config
 
 cd "$SCRIPT_DIR"
 
-java lcm.spy.Spy &
+#java lcm.spy.Spy &
 
 java ${DRONE_TAG_CLASS} ${DRONE_TAG_CONFIG} &
 java ${DRONE_LISTENER_CLASS} ${DRONE_LISTENER_CONFIG} &

@@ -25,7 +25,14 @@ public class BackEnd{
     private double maxIter = 10;
     private boolean useIncremental = true;
     private boolean verbose = false;
+
+    // For logging
     private boolean saveRSparsity = false;
+    private int RSaveNum = 0;
+    private boolean saveStepTime = false;
+    private long startTime;
+    private boolean saveNumRotations = true;
+
 
     // Controls the frequency of update types. tunable.
     private int updateRate = 1;
@@ -120,6 +127,10 @@ public class BackEnd{
      */
     public void update() {
 
+        if (saveStepTime) {
+            startTime = System.nanoTime();
+        }
+
         // Only actually update if we're supposed to do so
         if (numSteps % updateRate == 0) {
 
@@ -136,10 +147,10 @@ public class BackEnd{
                 // Save newly reordered factorization to disk for analysis
                 if (saveRSparsity) {
                     try {
-                        FileWriter fstream = new FileWriter("analysis/afterReorder.m");
+                        FileWriter fstream = new FileWriter("analysis/reorder"+(RSaveNum++)+".m");
                         BufferedWriter out = new BufferedWriter(fstream);
 
-                        sparseFactor.getR().writeMatlab(out, "Rafter");
+                        sparseFactor.getR().writeMatlab(out, "R");
                     } catch (Exception e){
                         System.err.println("Errorz!: " + e.getMessage());
                     }
@@ -160,13 +171,13 @@ public class BackEnd{
                 }
 
                 // Save (presumably) dense-ish R matrix to disk for analysis
-                if (saveRSparsity && (numSteps+1) % batchSolveRate == 0) {
+                if (saveRSparsity && (numSteps+1) % (batchSolveRate/10) == 0) {
                     try {
 
-                        FileWriter fstream = new FileWriter("analysis/beforeReorder.m");
+                        FileWriter fstream = new FileWriter("analysis/reorder"+(RSaveNum++)+".m");
                         BufferedWriter out = new BufferedWriter(fstream);
 
-                        sparseFactor.getR().writeMatlab(out, "Rbefore");
+                        sparseFactor.getR().writeMatlab(out, "R");
 
                     } catch (Exception e){
                         System.err.println("Errorz!: " + e.getMessage());
@@ -175,6 +186,25 @@ public class BackEnd{
 
 
 
+            }
+        }
+
+        if (saveStepTime) {
+
+            long endTime = System.nanoTime();
+            double elapsedTime = (endTime-startTime)/1000000000f;
+
+            try {
+
+                FileWriter fstream = new FileWriter("analysis/stepTime.txt", true);
+                BufferedWriter out = new BufferedWriter(fstream);
+
+                out.write(numSteps +","+elapsedTime+"\n");
+
+                out.close();
+
+            } catch (Exception e){
+                System.err.println("Errorz!: " + e.getMessage());
             }
         }
 
@@ -190,16 +220,31 @@ public class BackEnd{
 
         updateNodeIndices();
 
+        int numRotations = 0;
+
         // Add each new edge to the system (if there's anything to add!)
         for (int i = edges.size()-numNewMeasurements; i < edges.size(); i++) {
 
             Edge anEdge = edges.get(i);
 
-            sparseFactor.addEdgeViaGivensRotations(edges.get(i), nodeDimension);
+            numRotations += sparseFactor.addEdgeViaGivensRotations(edges.get(i), nodeDimension);
 
         }
 
         numNewMeasurements = 0;
+
+        // Log num rotations?
+        if (saveNumRotations) {
+            try {
+                FileWriter fstream = new FileWriter("analysis/numRotations.txt", true);
+                BufferedWriter out = new BufferedWriter(fstream);
+                out.write(numSteps +","+numRotations+"\n");
+                out.close();
+            } catch (Exception e){
+                System.err.println("Errorz!: " + e.getMessage());
+            }
+        }
+
 
     }
 
@@ -229,6 +274,7 @@ public class BackEnd{
 
 
         //WARNING: Do not use the normal gaussNewton() method with incremental updating!
+        // In fact, just never use it!
 
         // gaussNewton();
         // fasterGaussNewton();

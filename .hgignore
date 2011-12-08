@@ -23,3 +23,13 @@ april_vis_GL.h
 april_jserial_JSerial.h
 java/analysis/*
 lcm/*
+
+# specifically for LaTeX
+*.pdf
+*.aux
+*.log
+*.pyg
+*flymake*
+*.bbl
+*.gz
+*.blg

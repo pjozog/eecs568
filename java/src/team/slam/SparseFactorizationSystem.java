@@ -84,9 +84,12 @@ public class SparseFactorizationSystem {
      * long as newColDimension is >= what is truly needed, everything will work swimmingly.
      *
      * @param the new edge to add
-     * @param the column size that the sparse system should have after this addition (over-estimate)
+     * @param the column size that the sparse system should have after this addition
+     * (over-estimate)
+     *
+     * @return number of givens rotations performed
      */
-    public void addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
+    public int addEdgeViaGivensRotations(Edge anEdge, int newColDimension) {
 
 
         if (verbose) {
@@ -102,6 +105,8 @@ public class SparseFactorizationSystem {
         double[] newResiduals = edgeLin.residual;
 
         List<Node> nodes = anEdge.getNodes();
+
+        int numRot = 0;
 
         // Construct a CSRVec for every row in the edge and add it to the system
         for (int i = 0; i < anEdge.getDOF(); i++) {
@@ -161,7 +166,7 @@ public class SparseFactorizationSystem {
             // Make the row the correct size...necessary for dangerous sparse row
             // replacement call below.
             oneRow.resize(newColSize);
-            addRowViaGivensRotation(oneRow, newResiduals[i]);
+            numRot += addRowViaGivensRotation(oneRow, newResiduals[i]);
         }
 
         if (valuesVerbose) {
@@ -171,14 +176,18 @@ public class SparseFactorizationSystem {
             LinAlg.print(rhs.copyArray());
         }
 
+        return numRot;
+
     }
 
 
     /**
      * Adds a row to the system and then applies givens rotations to maintain our upper
      * triangular shape that is our factorization.
+     *
+     * @return number of givens rotations performed
      */
-    private void addRowViaGivensRotation(CSRVec newRow, double newResidual) {
+    private int addRowViaGivensRotation(CSRVec newRow, double newResidual) {
 
         if (verbose) {
             System.out.println("addRowViaGivensRotation");
@@ -204,6 +213,8 @@ public class SparseFactorizationSystem {
         // Start applying givens rotations until we again arrive at a upper triangular
         // system. This shouldn't take long if we do variable reordering ocassionally.
 
+        int numRotations = 0;
+
         // Only perfrom this in elements before the diagonal
         while ((colIndex >=0) && (colIndex < rowIndex)) {
 
@@ -216,6 +227,8 @@ public class SparseFactorizationSystem {
                 System.out.println("\t iter colindex "+ colIndex+" nnz "+lastRow.getNz());
                 LinAlg.printPattern(R.copyArray());
             }
+
+            numRotations++;
 
         }
 
@@ -233,6 +246,8 @@ public class SparseFactorizationSystem {
             rhs.resize(originalNumRows-1);
 
         }
+
+        return numRotations;
 
     }
 

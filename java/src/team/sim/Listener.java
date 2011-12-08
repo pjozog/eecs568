@@ -149,8 +149,12 @@ public class Listener implements OldSimulator.Listener {
             System.out.printf("\nTotal Simulation Time: %.4f\n", elapsedTime);
         }
 
-        drawSetup();
-        drawScene(dets);
+        if (numUpdates == 801) {
+            assert(false);
+        }
+
+        // drawSetup();
+        // drawScene(dets);
     }
 
     private Point3DNode dataAssociation(int idToLookFor) {

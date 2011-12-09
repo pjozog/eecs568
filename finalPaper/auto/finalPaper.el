@@ -12,6 +12,9 @@
      "fig:images/reorderResult32Resized"
      "fig:images/reorderResult33Resized"
      "fig:reorder"
+     "sub:compoundingoperation"
+     "sub:inverseoperation"
+     "sub:compositionoperation"
      "sec:apriltags"
      "sec:experiments"
      "sub:simulation"
@@ -19,6 +22,7 @@
      "sub:quadrotor"
      "sec:conclusion")
     (TeX-run-style-hooks
+     "tensor"
      "minted"
      "extarrows"
      "subfigure"

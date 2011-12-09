@@ -10,6 +10,7 @@
 \usepackage{subfigure}
 \usepackage{extarrows}
 \usepackage{minted}
+\usepackage{tensor}
 \usemintedstyle{vs}
 
 \DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
@@ -67,7 +68,7 @@ est laborum.
 
 
 
-\section*{System Architecture}
+\section{System Architecture}
 \label{sec:systemarchitecture}
 
 % Steve's Section
@@ -100,9 +101,11 @@ In standard least-squares SLAM, we solve a system of equations such as
   &= \underset{\Delta x}{\operatorname{argmin}} \| J\Delta x - r \|^2_{\Sigma}
 \end{align*}
 
-where $J$ is the Jacobian of the system, $x$ is the state vector that contains all robot
-poses and landmark positions, and $r$ is the residual of observations versus the predicted
-measurements. The minimizing solution results in the standard normal equations.
+where $x$ is the state vector that contains all robot poses and
+landmark positions, $J$ is the Jacobian of the observation model that
+predicts measurements given the state vector, and $r$ is the residual
+of observations versus the predicted measurements. The minimizing
+solution results in the standard normal equations.
 
 \[
 (J^{\text{T}} \Sigma^{-1} J) \Delta x = J^{\text{T}} \Sigma^{-1}r
@@ -181,9 +184,122 @@ est laborum.
 \end{figure}
 
 
+\section{6-DOF Motion and Observation Models}
 
+% Paul's section
 
+We adopt the notation from \cite{rsmith-1990a,reustice-phdthesis} to
+describe the motion and observation models of a robot in 6-DOF.  This
+notation allows us to abstract away the linear algebra operations
+necessary for determining three spatial relationships between one or more
+6-DOF coordinate frames: {\it compound, inverse}, and {\it composite}.
 
+Let ${\bf x}_{ij} = \begin{bmatrix}
+  {\bf t}_{ij}^i & {\boldsymbol \Theta}_{ij}\\
+\end{bmatrix}^\top$ be a vector in $\mathbb{R}^6$ describing the
+relative pose of frame $j$ with respect to frame $i$.  ${\bf
+  t}_{ij}^i$ is the $3\times 1$ translation vector from frame $i$ to
+frame $j$ as expressed in frame $i$.  ${\boldsymbol \Theta}_{ij}$ is
+the $3 \times 1$ vector describing the Euler angles of the $x$, $y$,
+and $z$ axes.  We define the function $(\text{rotxyz}: \mathbb{R}^3
+\rightarrow \mathbb{R}^{3\times3})$ that maps a vector of Euler angles to
+a rotation matrix as follows:
+\begin{eqnarray*}
+  R_j^i & = & \text{rotxyz}({\boldsymbol \Theta}_{ij})
+\end{eqnarray*}
+where $R_j^i$ is the matrix that rotates frame $j$ into frame $i$.
+
+These definitions allow us to describe the transformation matrix
+that uniquely relates homogeneous 3D points in frame $j$ to homogeneous
+points in frame $i$ as:
+\begin{eqnarray*}
+  H_{j}^i & = & \begin{bmatrix}
+    R_j^i & {\bf t}_{ij}^i\\
+    {\bf 0} & 1
+  \end{bmatrix}
+\end{eqnarray*}
+Note that given $H_j^i$, we can easily compute ${\bf x}_{ij}$ and vice
+versa using April's \texttt{LinAlg} java package.
+
+\subsection*{Compounding Operation}
+\label{sub:compoundingoperation}
+
+Let the $\oplus$ operator describe the spatial relationship between
+two frames arranged ``head-to-tail'':
+\begin{eqnarray*}
+  {\bf x}_{ik} & = & {\bf x}_{ij} \oplus {\bf x}_{jk} 
+\end{eqnarray*}
+${\bf x}_{ik}$ can be computed from recovering the $6 \times 1$ vector
+corresponding to the matrix
+\begin{eqnarray*}
+  H_k^i & = & H_j^i H_k^j
+\end{eqnarray*}
+
+For example, for the compounding operation, our SLAM backend takes $i$
+to denote the world frame.  $j$ and $k$ denote the frame of the robot
+at the previous and current timesteps, respectively.  This effectively
+acts as a motion model that predicts the global pose of a robot in
+6-DOF given the odometry at every timestep.
+
+The Jacobian of the compounding operation $J_\oplus$ is given in
+\cite{reustice-phdthesis}.  Using this matrix, we can compute to
+first order the covariance of ${\bf x}_{ik}$ as
+\begin{eqnarray*}
+  \Sigma({\bf x}_{ij}) & = & J_\oplus \begin{bmatrix}
+    \Sigma({\bf x}_{ik}) & \Sigma({\bf x}_{ij}, {\bf x}_{kj})\\
+    \Sigma({\bf x}_{kj}, {\bf x}_{ij}) & \Sigma({\bf x}_{kj})\\
+  \end{bmatrix} J_\oplus^\top
+\end{eqnarray*}
+
+\subsection*{Inverse Operation}
+\label{sub:inverseoperation}
+Let the $\ominus$ operator describe the inverse of a relative pose
+vector:
+\begin{eqnarray*}
+  {\bf x}_{ji} & = & \ominus {\bf x}_{ij}
+\end{eqnarray*}
+This operation is computed from the transformation matrix
+\begin{eqnarray*}
+  H_i^j & = & \left(H_j^i\right)^{-1} \\
+  & = & \begin{bmatrix}
+    \left( R_j^i \right)^\top & -\left( R_j^i \right)^\top {\bf t}_{ij}^i\\
+    {\bf 0} & 1
+  \end{bmatrix}
+\end{eqnarray*}
+The first-order covariance projection of this operation is
+\begin{eqnarray*}
+  \Sigma({\bf x}_{ji}) & = & J_\ominus \Sigma({\bf x}_{ij}) J_\ominus^\top
+\end{eqnarray*}
+where the closed-form expression for the Jacobian is given in
+\cite{reustice-phdthesis}.
+
+\subsection*{Composition Operation}
+\label{sub:compositionoperation}
+We define the composite operation on two frames related
+``tail-to-tail'' using the compounding and inverse operations:
+\begin{eqnarray*}
+  {\bf x}_{jk} & = & \ominus {\bf x}_{ij} \oplus {\bf x}_{ik}
+\end{eqnarray*}
+where the Jacobian of this relationship is 
+\begin{eqnarray*}
+  \tensor[_\ominus]{J}{_\oplus} & = & J_\oplus \begin{bmatrix}
+    J_\ominus & 0_{6 \times 6}\\
+    0_{6 \times 6} & I_{6 \times 6}\\
+  \end{bmatrix}
+\end{eqnarray*}
+and thus the first-order covariance projection of the composite
+operation is
+\begin{eqnarray*}
+  \Sigma({\bf x}_{jk}) & = & \tensor[_\ominus]{J}{_\oplus} \begin{bmatrix}
+    \Sigma({\bf x}_{ij}) & \Sigma({\bf x}_{ij}, {\bf x}_{ik})\\
+    \Sigma({\bf x}_{ik}, {\bf x}_{ij}) & \Sigma({\bf x}_{ik})\\
+  \end{bmatrix} \tensor[_\ominus]{J}{_\oplus^\top}
+\end{eqnarray*}
+An example application of the composite operation is to estimate the
+odometry of a robot between two successive timesteps (given the
+current and previous poses of the robot in the global frame).  In this
+case, $i$ is the global frame, $j$ is the frame of the robot at the
+previous timestep, and $k$ is the robot frame at the current timestep.
 
 \section{AprilTags}
 \label{sec:apriltags}

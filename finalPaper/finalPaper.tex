@@ -11,6 +11,7 @@
 \usepackage{extarrows}
 \usepackage{minted}
 \usemintedstyle{vs}
+\usepackage{kbordermatrix}
 
 \DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
 
@@ -139,7 +140,7 @@ This means that calculations are only performed on elements that are actually af
  new measurements. We can get away with this because we often have a very good estimate of
  the state vector so doing a full batch re-linearization and solution at each step wastes
  calculations because most elements of $\Delta x$ will be zero. However, iSAM periodically
- does perform a full batch solution in order to compensate for potential linearization
+ does perform a full batch solution in order to compensate for accumulated linearization
  errors. Over time, loop closures greatly decrease the sparsity of the matrix
  factorization, so variable reordering is performed during each batch solution step. The
  incremental update and variable reordering will be covered below.
@@ -148,12 +149,41 @@ This means that calculations are only performed on elements that are actually af
 \subsection*{Givens Rotations}
 \label{sub:givensrotations}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
+The $R$ term that results from the QR decomposition of $A$ is upper triangular by
+definition. When a new measurement row is added to $A$, we can incrementally update $R$
+instead of performing the entire QR decomposition again. The way to achieve this is via
+Givens rotations. 
+
+Givens rotations are a way to introduce a zero at a specified point in a matrix by
+premultiplying by a matrix of the form
+
+
+\[
+G(i, k, \theta) =
+\kbordermatrix{  & & &i& &k & & \\
+ & 1   & \cdots &    0   & \cdots &    0   & \cdots &    0   \\
+ & \vdots & \ddots & \vdots &        & \vdots &        & \vdots \\
+i & 0   & \cdots &    c   & \cdots &    -s   & \cdots &    0   \\
+ & \vdots &        & \vdots & \ddots & \vdots &        & \vdots \\
+k & 0   & \cdots &   s   & \cdots &    c   & \cdots &    0   \\
+ & \vdots &        & \vdots &        & \vdots & \ddots & \vdots \\
+ & 0   & \cdots &    0   & \cdots &    0   & \cdots &    1
+       }
+\] 
+
+where $c = \cos{(\theta)}$ and $s = \sin{(\theta)}$ for some $\theta$. We follow the
+  algorithms in Golub and Van Loan's \emph{Matrix Computations} to find $c$ and $s$ to
+  zero a particular element in a matrix. \cite{golub1996matrix} 
+
+When we receive new rows for $A$ when a new measurement occurs, they are appended to $R$,
+which is then no longer upper-triangular. A series of Givens rotations are applied to the
+elements that are below the diagonal. This is called triangularization and once the
+below-diagonal elements have been removed via the rotations, the resulting
+upper-triangular matrix is equivalent to the QR decomposition of the full $A$ matrix.
+\cite{golub1996matrix} The same series of rotations needs to be applied to our right hand
+side $b$ term.
+
+After the rotations have been performed, the system can be solved with simple back-substitution.
 
 
 \subsection*{Variable Reordering}

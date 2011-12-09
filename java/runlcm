@@ -4,6 +4,15 @@ SCRIPT=$0
 SCRIPT_DIR=$(dirname $SCRIPT)
 SCRIPT_NAME=$(basename $SCRIPT)
 
+trap cleanup INT
+trap cleanup TERM
+
+function cleanup {    
+    echo -e "\n$SCRIPT: Goodbye"
+    kill -9 ${tagPid} ${listenPid} ${statePid} &> /dev/null
+    exit 0
+}
+
 DRONE_STATE_CLASS=team.drone.DroneState
 
 DRONE_TAG_CLASS=team.drone.DroneTag
@@ -18,6 +27,14 @@ cd "$SCRIPT_DIR"
 #java lcm.spy.Spy &
 
 java ${DRONE_TAG_CLASS} ${DRONE_TAG_CONFIG} &
+tagPid=$!
 java ${DRONE_LISTENER_CLASS} ${DRONE_LISTENER_CONFIG} &
+listenPid=$!
 java ${DRONE_STATE_CLASS} &
+statePid=$!
 
+while [ 1 ]; do
+
+    sleep 1
+
+done

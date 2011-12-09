@@ -55,7 +55,7 @@ public class TagSLAM {
     ImageSource is;
     TagFamily tf;
     TagDetector detector;
-    JFrame jf         = new JFrame("VisDemo");
+    JFrame jf         = new JFrame("568 Interactive Demo (TagSLAM)");
     final VisWorld vw = new VisWorld();
     VisLayer vl       = new VisLayer(vw);
     VisCanvas vc      = new VisCanvas(vl);

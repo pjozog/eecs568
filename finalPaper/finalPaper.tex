@@ -136,7 +136,9 @@ where
 
 This allows us to solve $A\Delta x = b$ by applying QR factorization directly to $A$. This
 is advantageous because it avoids the squaring of the matrix condition number that is
-associated with the normal equation form. \cite{Kaess08tro}
+associated with the normal equation form. Moreover, there is the nice property that the
+$R$ that results from the QR decomposition of $A$ is equivalent to the upper triangular
+term in the Cholesky decomposition of $A^{\text{T}}A$ if A is real. \cite{Kaess08tro}
 
 iSAM recovers the posterior by doing fast incremental updates to the factorization of $A$.
 This means that calculations are only performed on elements that are actually affected* by
@@ -192,29 +194,43 @@ After the rotations have been performed, the system can be solved with simple ba
 \subsection*{Variable Reordering}
 \label{sub:variablereordering}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
+When a robot closes a loop, a correlation is introduced between the current pose and a
+previously observed landmark. This landmark is connected to earlier poses in the
+trajectory as well. These correlations greatly increase the number of non-zero elements in
+the matrix factorization which in turn increases the computational complexity of updating
+and solving the system. Figure \ref{fig:images/reorder32} shows the large swaths of
+non-zero elements that are introduced during loop closures. 
+
+In order to avoid this problem, we can perform variable reordering. This is essentially a
+permutation of the columns of $A$ where columns that belong to the same node in the SLAM
+graph are kept together. This new order influences the variable elimination which
+has a profound effect on the sparsity of the factorization. Figure
+\ref{fig:images/reorder33} shows the result of applying variable reordering to simulated
+data that has experienced several loop closures.
 
 
 \begin{figure}[!h]
   \begin{center}
     \subfigure[] {
     \includegraphics[width=2.5in]{images/reorder32}
-    \label{fig:images/reorderResult32Resized}}
+    \label{fig:images/reorder32}}
     \subfigure[] {
     \includegraphics[width=2.5in]{images/reorder33}
-    \label{fig:images/reorderResult33Resized}}
-    \caption{asdfasdf}
+    \label{fig:images/reorder33}}
+    \caption{The factorization of the $A$ matrix after 300 time steps of simulated data
+      that includes loop closures. (a) Before variable reordering, the loop closures
+      introduce many non-zero elements. (b) After variable reordering, we have a much more
+    sparse factorization. Over 50\% of the non-zero elements were removed.}
     \label{fig:reorder}
   \end{center}
 \end{figure}
 
 
-\section{6-DOF Motion and Observation Models}
+The best column variable ordering is NP hard, and iSAM uses COLAMD as a heuristic to
+assist in the process. \cite{davis2004column} Our implementation uses a simplified
+heuristic that counts the number of connected nodes in the graph. It is not the minimum
+degree ordering, but we have found it to be more than adequate in our tests. Figure
+\ref{fig:reorder} is an example of the application of our simplified heuristic.
 
 % Paul's section
 

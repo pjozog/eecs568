@@ -168,28 +168,19 @@ public class DroneListener implements LCMSubscriber, ParameterListener {
                 double[] worldToPoint = new double[]{_worldToPoint[0], _worldToPoint[1], _worldToPoint[2]};
 
                 Point3D obs = new Point3D(robotToPoint);
-                Matrix cov = Matrix.columnPackedMatrix(msg.Sigma, 3, 3);
-                java.util.List<Point3DNode> pointNodes = dataAssociation(msg.id);
+                Point3DNode pointNode = dataAssociation(msg.id);
 
-                if (pointNodes.size() == 0) {
-
-                    Point3DNode pointNode = new Point3DNode(msg.id);
-                    Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, pointNode, obs, cov);
-                    slam.addEdge(poseToPoint);
+                if (pointNode == null) {
+                    pointNode = new Point3DNode(msg.id);
                     slam.addNode(pointNode);
-
-                } else {
-                    
-                    for (Point3DNode n : pointNodes) {
-
-                        Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, n, obs, cov);
-                        slam.addEdge(poseToPoint);
-
-                    }
-
-
                 }
 
+                Matrix cov = Matrix.columnPackedMatrix(msg.Sigma, 3, 3);
+                //Matrix cov = Matrix.identity(3, 3).times(20);
+
+                Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, pointNode, obs, cov);
+
+                slam.addEdge(poseToPoint);
 
 
             }
@@ -344,22 +335,21 @@ public class DroneListener implements LCMSubscriber, ParameterListener {
 
     }
 
-    private java.util.List<Point3DNode> dataAssociation(int idToLookFor) {
+    private Point3DNode dataAssociation(int idToLookFor) {
 
-        java.util.List<Point3DNode> nodeList = new ArrayList<Point3DNode>();
         java.util.List<Node> allNodes = slam.getNodes();
 
         for (Node aNode : allNodes) {
 
             if (aNode instanceof Point3DNode) {
                 if (((Point3DNode)aNode).getId() == idToLookFor) {
-                    nodeList.add((Point3DNode)aNode);
+                    return (Point3DNode)aNode;
                 }
             }
 
         }
 
-        return nodeList;
+        return null;
 
     }
 

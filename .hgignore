@@ -33,3 +33,5 @@ lcm/*
 *.bbl
 *.gz
 *.blg
+*_region_*
+*finalPaper/auto/*

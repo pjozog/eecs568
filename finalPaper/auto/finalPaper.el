@@ -5,14 +5,14 @@
      "references")
     (LaTeX-add-labels
      "sec:introduction"
-     "sec:parrotar.drone"
+     "sec:systemarchitecture"
      "sec:incrementalsmoothingandmapping"
      "sub:givensrotations"
      "sub:variablereordering"
      "fig:images/reorderResult32Resized"
      "fig:images/reorderResult33Resized"
      "fig:reorder"
-     "sec:tagcovarianceprojection"
+     "sec:apriltags"
      "sec:experiments"
      "sub:simulation"
      "fig:stepTime"

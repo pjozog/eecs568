@@ -87,14 +87,62 @@ est laborum.
 
 %Pat's section
 
-I guess we need to cite something for this to compile. \cite{Kaess08tro}
+Incremental smoothing and mapping (iSAM) is a relatively recent approach to solving the
+full SLAM problem. \cite{Kaess08tro} The full SLAM problem, in contrast to the online SLAM
+problem, recovers the full posterior of the robot trajectory and landmark positions
+instead of just the current robot pose and landmark positions. \cite{thrun2005probabilistic}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
+In standard least-squares SLAM, we solve a system of equations such as
+
+\begin{align*}
+  \Delta x' &= \underset{\Delta x}{\operatorname{argmin}} (J\Delta x - r)^{\text{T}}
+\Sigma^{-1} (J\Delta x - r) \\
+  &= \underset{\Delta x}{\operatorname{argmin}} \| J\Delta x - r \|^2_{\Sigma}
+\end{align*}
+
+where $J$ is the Jacobian of the system, $x$ is the state vector that contains all robot
+poses and landmark positions, and $r$ is the residual of observations versus the predicted
+measurements. The minimizing solution results in the standard normal equations.
+
+\[
+(J^{\text{T}} \Sigma^{-1} J) \Delta x = J^{\text{T}} \Sigma^{-1}r
+\]
+
+This is solved via the Cholesky decomposition of the information matrix,
+$J^{\text{T}}\Sigma^{-1}J$.
+
+iSAM makes a change to this problem formulation by considering the Cholesky decomposition
+of $\Sigma^{-1}$ -- written as $\Sigma^{-\text{T}/2}$ to denote the upper triangular
+result of the decomposition --  and rewriting the least squares problem as
+
+\begin{align*}
+    \Delta x' &= \underset{\Delta x}{\operatorname{argmin}} (J\Delta x - r)^{\text{T}}
+\Sigma^{-1/2}\Sigma^{-\text{T}/2} (J\Delta x - r) \\
+  &= \underset{\Delta x}{\operatorname{argmin}} \| \Sigma^{-\text{T}/2}(J\Delta x - r)
+  \|^2\\
+&= \underset{\Delta x}{\operatorname{argmin}} \| (A\Delta x - b)\|^2
+\end{align*}
+
+where
+
+\begin{align*}
+  A &= \Sigma^{-\text{T}/2}J \\
+  b &= \Sigma^{-\text{T}/2}r
+\end{align*}
+
+This allows us to solve $A\Delta x = b$ by applying QR factorization directly to $A$. This
+is advantageous because it avoids the squaring of the matrix condition number that is
+associated with the normal equation form. \cite{Kaess08tro}
+
+iSAM recovers the posterior by doing fast incremental updates to the factorization of $A$.
+This means that calculations are only performed on elements that are actually affected* by
+ new measurements. We can get away with this because we often have a very good estimate of
+ the state vector so doing a full batch re-linearization and solution at each step wastes
+ calculations because most elements of $\Delta x$ will be zero. However, iSAM periodically
+ does perform a full batch solution in order to compensate for potential linearization
+ errors. Over time, loop closures greatly decrease the sparsity of the matrix
+ factorization, so variable reordering is performed during each batch solution step. The
+ incremental update and variable reordering will be covered below.
 
 
 \subsection*{Givens Rotations}

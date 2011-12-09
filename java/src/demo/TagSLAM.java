@@ -39,6 +39,14 @@ import lcm.lcm.*;
 import perllcm.tag_point3d_t;
 import perllcm.pose3d_t;
 
+class PointColorPair {
+    double[] point;
+    Color color;
+    public PointColorPair(double[] p, Color c) {
+        this.point = p;
+        this.color = c;
+    }
+}
 
 public class TagSLAM {
 
@@ -67,7 +75,7 @@ public class TagSLAM {
     BackEnd slam;
 
     ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
-    ArrayList<double[]> landmarks    = new ArrayList<double[]>();
+    ArrayList<PointColorPair> landmarks    = new ArrayList<PointColorPair>();
     ArrayList<double[]> allEdgeLinks = new ArrayList<double[]>();
 
     Point3DNode landmarkNode = new Point3DNode();
@@ -79,6 +87,9 @@ public class TagSLAM {
 
     //The id of the tag we'll use for "odometry"
     public static int POSE_TAG = 0;
+
+    //How often we'll reset
+    public static int MAX_UPDATES = 1000;
 
     //The color map
     HashMap<Integer, Color> idToColor = new HashMap<Integer, Color>();
@@ -141,12 +152,8 @@ public class TagSLAM {
             } else if (aNode instanceof Point3DNode) {
 
                 double[] landPos = aNode.getStateArray();
-
-                // VzPoints posGuess = new VzPoints(new VisVertexData(landPos),
-                //                                  new VisConstantColor(Color.cyan),
-                //                                  10.0);
-                // landmarks.add(posGuess);
-                landmarks.add(landPos);
+                Point3DNode castedNode = (Point3DNode)aNode;
+                landmarks.add(new PointColorPair(landPos, idToColor.get(castedNode.getId())));
 
             } else {
 
@@ -218,10 +225,12 @@ public class TagSLAM {
 
             VisWorld.Buffer vb = vw.getBuffer("landmarks-local");
 
-            for (double[] l : landmarks) {
-                vb.addBack(new VisChain(LinAlg.translate(l[0],l[1],l[2]),
+            for (PointColorPair pcp : landmarks) {
+                double[] point = pcp.point;
+                Color color = pcp.color;
+                vb.addBack(new VisChain(LinAlg.translate(point[0],point[1],point[2]),
                                         LinAlg.scale(.25,.25,.25),
-                                        new VzLines(vdat, new VisConstantColor(Color.cyan),
+                                        new VzLines(vdat, new VisConstantColor(color),
                                                     2, VzLines.TYPE.LINE_LOOP)));
             }
             vb.swap();
@@ -374,6 +383,7 @@ public class TagSLAM {
 
             VisWorld.Buffer cameraFrame = vw.getBuffer("Camera Frame");
 
+            int count = 0;
             while (true) {
 
                 byte buf[] = is.getFrame();
@@ -466,10 +476,15 @@ public class TagSLAM {
 
                     }
 
+                    count++;
                     slam.update();
 
                     drawSetup();
                     drawScene();
+
+                    if (count % MAX_UPDATES == 0) {
+                        reset();
+                    }
 
                 }
 
@@ -478,6 +493,23 @@ public class TagSLAM {
             }
 
         }
+
+    }
+
+    public void reset() {
+
+        trajectory.clear();
+        landmarks.clear();
+        allEdgeLinks.clear();
+
+        vw.getBuffer("edges-local").clear();
+        vw.getBuffer("trajectory-local").clear();
+        vw.getBuffer("landmarks-local").clear();
+
+        slam = new BackEnd(this.config);
+
+        lastCamPose = null;
+        prevPose = null;
 
     }
 

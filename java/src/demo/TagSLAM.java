@@ -345,7 +345,7 @@ public class TagSLAM {
 
     public void addPrior(double[] pose) {
 
-        Matrix cov = Matrix.identity(6,6).times(100);
+        Matrix cov = Matrix.identity(6,6).times(1);
         
         Pose3D p3d = new Pose3D(pose);
 
@@ -461,7 +461,7 @@ public class TagSLAM {
                         //Create the landmark observation (remember: from camera to target)
                         double[] camToTag = SixDofCoords.inverse(currentCamPose);
                         double[] landmarkObs = new double[]{camToTag[0], camToTag[1], camToTag[2]};
-                        Matrix obsCov = Matrix.identity(3,3);
+                        Matrix obsCov = Matrix.identity(3,3).times(100000);
 
                         Point3D obs = new Point3D(landmarkObs);
                         Point3DNode pointNode = dataAssociation(d.id);

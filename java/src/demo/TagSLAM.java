@@ -359,7 +359,10 @@ public class TagSLAM {
 
     }
 
-    private Point3DNode dataAssociation(int idToLookFor){
+    private java.util.List<Point3DNode> dataAssociation(int idToLookFor){
+
+        java.util.List<Point3DNode> assocNodes = new ArrayList<Point3DNode>();
+
         java.util.List<Node> allNodes = slam.getNodes();
 
         for(Node node : allNodes){
@@ -367,12 +370,12 @@ public class TagSLAM {
             //forgive me 
             if(node instanceof Point3DNode){
                 if(((Point3DNode)node).getId() == idToLookFor){
-                    return(Point3DNode)node;
+                    assocNodes.add((Point3DNode)node);
                 }
             }
 
         }
-        return null;
+        return assocNodes;
     }
 
     class RunThread extends Thread {
@@ -461,19 +464,24 @@ public class TagSLAM {
                         //Create the landmark observation (remember: from camera to target)
                         double[] camToTag = SixDofCoords.inverse(currentCamPose);
                         double[] landmarkObs = new double[]{camToTag[0], camToTag[1], camToTag[2]};
-                        Matrix obsCov = Matrix.identity(3,3).times(100000);
+                        Matrix obsCov = Matrix.identity(3,3).times(100);
 
                         Point3D obs = new Point3D(landmarkObs);
-                        Point3DNode pointNode = dataAssociation(d.id);
+                        java.util.List<Point3DNode> pointNodes = dataAssociation(d.id);
 
-                        if (pointNode == null) {
-                            pointNode = new Point3DNode(d.id);
+                        if (pointNodes.size() == 0) {
+                            Point3DNode pointNode = new Point3DNode(d.id);
+                            Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, pointNode, obs, obsCov);
                             slam.addNode(pointNode);
+                            slam.addEdge(poseToPoint);
+                        } else {
+
+                            for (Point3DNode n : pointNodes) {
+                                Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, n, obs, obsCov);
+                                slam.addEdge(poseToPoint);
+                            }
+
                         }
-
-                        Pose3DToPoint3DEdge poseToPoint = new Pose3DToPoint3DEdge(prevPose, pointNode, obs, obsCov);
-                        slam.addEdge(poseToPoint);
-
                     }
 
                     count++;

@@ -104,7 +104,8 @@ In standard least-squares SLAM, we solve a system of equations such as
 
 where $x$ is the state vector that contains all robot poses and
 landmark positions, $J$ is the Jacobian of the observation model that
-predicts measurements given the state vector, and $r$ is the residual
+predicts measurements given the state vector, $\Delta x$ is the
+deviation of $x$ from the linearization point, and $r$ is the residual
 of observations versus the predicted measurements. The minimizing
 solution results in the standard normal equations.
 
@@ -151,7 +152,7 @@ This means that calculations are only performed on elements that are actually af
  incremental update and variable reordering will be covered below.
 
 
-\subsection*{Givens Rotations}
+\subsection{Givens Rotations}
 \label{sub:givensrotations}
 
 The $R$ term that results from the QR decomposition of $A$ is upper triangular by
@@ -191,7 +192,7 @@ side $b$ term.
 After the rotations have been performed, the system can be solved with simple back-substitution.
 
 
-\subsection*{Variable Reordering}
+\subsection{Variable Reordering}
 \label{sub:variablereordering}
 
 When a robot closes a loop, a correlation is introduced between the current pose and a
@@ -234,15 +235,15 @@ degree ordering, but we have found it to be more than adequate in our tests. Fig
 
 
 
-\section{6-DOF Motion and Observation Models}
-
+\section{6-DOF Spatial Relationships}
+\label{sec:6dof}
 % Paul's section
 
-We adopt the notation from \cite{rsmith-1990a,reustice-phdthesis} to
-describe the motion and observation models of a robot in 6-DOF.  This
-notation allows us to abstract away the linear algebra operations
-necessary for determining three spatial relationships between one or more
-6-DOF coordinate frames: {\it compound, inverse}, and {\it composite}.
+We adopt the notation from~\cite{rsmith-1990a,reustice-phdthesis} to
+describe three particular spatial relationships of 6-DOF coordinate
+frames: {\it compound, inverse}, and {\it composite}.  This notation
+allows us to abstract away the linear algebra operations necessary for
+applying these relationships to nonlinear motion and observation models.
 
 Let ${\bf x}_{ij} = \begin{bmatrix}
   {\bf t}_{ij}^i & {\boldsymbol \Theta}_{ij}\\
@@ -269,9 +270,9 @@ points in frame $i$ as:
   \end{bmatrix}
 \end{eqnarray*}
 Note that given $H_j^i$, we can easily compute ${\bf x}_{ij}$ and vice
-versa using April's \texttt{LinAlg} java package.
+versa using April's \texttt{LinAlg} Java package.
 
-\subsection*{Compounding Operation}
+\subsection{Compounding Operation}
 \label{sub:compoundingoperation}
 
 Let the $\oplus$ operator describe the spatial relationship between
@@ -291,8 +292,8 @@ at the previous and current timesteps, respectively.  This effectively
 acts as a motion model that predicts the global pose of a robot in
 6-DOF given the odometry at every timestep.
 
-The Jacobian of the compounding operation $J_\oplus$ is given in
-\cite{reustice-phdthesis}.  Using this matrix, we can compute to
+The Jacobian of the compounding operation $J_\oplus$ is given
+in~\cite{reustice-phdthesis}.  Using this matrix, we can compute to
 first order the covariance of ${\bf x}_{ik}$ as
 \begin{eqnarray*}
   \Sigma({\bf x}_{ij}) & = & J_\oplus \begin{bmatrix}
@@ -301,7 +302,7 @@ first order the covariance of ${\bf x}_{ik}$ as
   \end{bmatrix} J_\oplus^\top
 \end{eqnarray*}
 
-\subsection*{Inverse Operation}
+\subsection{Inverse Operation}
 \label{sub:inverseoperation}
 Let the $\ominus$ operator describe the inverse of a relative pose
 vector:
@@ -320,10 +321,10 @@ The first-order covariance projection of this operation is
 \begin{eqnarray*}
   \Sigma({\bf x}_{ji}) & = & J_\ominus \Sigma({\bf x}_{ij}) J_\ominus^\top
 \end{eqnarray*}
-where the closed-form expression for the Jacobian is given in
-\cite{reustice-phdthesis}.
+where the closed-form expression for the Jacobian is given
+in~\cite{reustice-phdthesis}.
 
-\subsection*{Composition Operation}
+\subsection{Composition Operation}
 \label{sub:compositionoperation}
 We define the composite operation on two frames related
 ``tail-to-tail'' using the compounding and inverse operations:
@@ -345,29 +346,75 @@ operation is
     \Sigma({\bf x}_{ik}, {\bf x}_{ij}) & \Sigma({\bf x}_{ik})\\
   \end{bmatrix} \tensor[_\ominus]{J}{_\oplus^\top}
 \end{eqnarray*}
-An example application of the composite operation is to estimate the
+An example application of this composite operation is to estimate the
 odometry of a robot between two successive timesteps (given the
 current and previous poses of the robot in the global frame).  In this
 case, $i$ is the global frame, $j$ is the frame of the robot at the
 previous timestep, and $k$ is the robot frame at the current timestep.
+${\bf x}_{jk}$ is then the predicted odometry between frame $j$ and
+frame $k$.
 
-\section{AprilTags}
+\section{AprilTag Relative Pose Covariance Estimate}
 \label{sec:apriltags}
 
 % Paul's section
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
+We used the AprilTag throughout our project's experiments and
+demonstrations for relative position and orientation.  The accuracy,
+detection performance, and compatibility with the April visualization
+library made it particularly desirable~\cite{olson2011tags}.
 
+We applied principles of linearized covariance projection to estimate
+a covariance matrix for the 6-DOF relative pose vector ${\bf x}_{tc}$
+that describes the relative pose from the tag's frame to the camera's frame.
 
+Denote $f$ as the function that computes the $9 \times 1$ homography
+vector ${\bf h}$ from a set of world points and image points via the
+Direct Linear Transform (DLT) algorithm.  By linearizing $f$ around a
+mean input (the observed image point coordinates), we can compute the
+$9 \times 9$ covariance matrix $\Sigma({\bf h})$ to first order.  From
+there, we project the covariance estimate of $h$ by linearizing a
+function $g$, which maps the homography to ${\bf x}_{tc}$.
 
+For simplicity, we assume that the uncertainty of the world points and
+the camera calibration parameters are zero.  Further, we assume
+negligible lens distortion.  All differentiations are done numerically.
 
+Under these assumptions, the covariance estimate of the relative pose
+from tag to camera is simply
+\begin{eqnarray*}
+  \Sigma({{\bf x}_{tc}}) & = & J_g J_f \Sigma({\bf u}) J_f^\top J_g^\top
+\end{eqnarray*}
+where ${\bf u}$ is the $2N \times 1$ vector of $N$ noisy image point
+coordinates and $\Sigma({\bf u})$ is the associated isotropic
+covariance matrix.  The diagonal elements of this matrix are tuned by
+the user.
 
+The Jacobians are computed by finite difference:
+\begin{align*}
+  \left[J_f\right]_{ij} &=\frac{\partial f_i}{\partial u_j} \\
+  &= \frac{f_i(u_0, u_1, \dots, u_i +
+    \epsilon, \dots, u_{2N})}{\epsilon} \\
+  & \ \ \  - \frac{f_i(u_0, \dots, u_{2N})}{\epsilon}
+\end{align*}
+for some small $\epsilon$. One should note that when differentiating
+$f$, the homography vectors must have the same sign.  This is not
+guaranteed in typical Singular Value Decomposition (SVD) libraries
+because the sign of the singular vectors may be flipped when the input
+matrix is slightly perturbed.
 
+Also, we take $g$ to directly map the homography to ${\bf x}_{tc}$.
+The covariance projections operations referred to in \S\ref{sec:6dof}
+are therefore included in $g$.
+
+%Just to see how it looks using both columns
+\begin{figure*}[!t]
+  \begin{center}
+    \includegraphics[width=1.0\textwidth]{images/square}
+    \caption{asdf}
+    \label{fig:square}
+  \end{center}
+\end{figure*}
 
 
 
@@ -382,7 +429,7 @@ sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit 
 est laborum.
 
 
-\subsection*{Simulation}
+\subsection{Simulation}
 \label{sub:simulation}
 
 % Pat's section
@@ -401,8 +448,7 @@ est laborum.
   \label{fig:stepTime}
 \end{figure}
 
-
-\subsection*{Parrot AR.Drone}
+\subsection{Parrot AR.Drone}
 \label{sub:quadrotor}
 
 % Steve talks about drone hardware
@@ -414,10 +460,6 @@ ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor i
 reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
 sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
 est laborum.
-
-
-
-
 
 
 
@@ -438,7 +480,7 @@ est laborum.
 
 
 
-\section*{Acknowledgment}
+\section{Acknowledgment}
 
 The authors would like to thank Sprite, the number 7, and Emacs.
 

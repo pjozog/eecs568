@@ -79,12 +79,16 @@ As a result, the SLAM software essentially consists of two sides: a front-end th
 the robot and produces a graph of nodes and edges from odometry and landmark observations, and a back-end
 that solves the SLAM problem from this graph.
 
-In our framework, each robot node is a six dimensional pose and each landmark node is a three 
-dimensional position. These poses and positions make up the state vector solved by the back-end.
-The edges represent relative poses between two nodes. The relative pose between two robot nodes 
-is an odometry edge, and the relative pose between a landmark node and a robot node is an observation
-edge. These relative poses are the constraints that the back-end SLAM solver uses to optimize the 
-estimate of the state vector. Together, the nodes and edges form a graph representation of the SLAM problem.
+In our framework, each robot node is a six dimensional pose and each landmark node is a
+three dimensional position. These poses and positions make up the state vector solved by
+the back-end.  The edges represent relative poses between two nodes. The relative pose
+between two robot nodes is an odometry edge, and the relative pose between a landmark node
+and a robot node is an observation edge. These relative poses are the constraints that the
+back-end SLAM solver uses to optimize the estimate of the state vector. Together, the
+nodes and edges form a graph representation of the SLAM problem.  \S\ref{sec:6dof}
+describes the mathematical 6-DOF spatial relationships we use frequently in our graph
+representation.
+
 
 For passing information between the front-end and back-end, we employ the Lightweight Communications and
 Marshalling (LCM) library. \cite{huang2010} The front-end also uses LCM to receive data from the robot and
@@ -248,9 +252,10 @@ heuristic that counts the number of connected nodes in the graph. It is not the 
 degree ordering, but we have found it to be more than adequate in our tests. Figure
 \ref{fig:reorder} is an example of the application of our simplified heuristic.
 
+\section{Back-end Motion and Observation Models}
+\label{sec:backendModels}
 
-
-\section{6-DOF Spatial Relationships}
+\subsection{6-DOF Spatial Relationships}
 \label{sec:6dof}
 % Paul's section
 
@@ -287,7 +292,7 @@ points in frame $i$ as:
 Note that given $H_j^i$, we can easily compute ${\bf x}_{ij}$ and vice
 versa using April's \texttt{LinAlg} Java package.
 
-\subsection{Compounding Operation}
+\subsubsection{Compounding Operation}
 \label{sub:compoundingoperation}
 
 Let the $\oplus$ operator describe the spatial relationship between
@@ -301,11 +306,11 @@ corresponding to the matrix
   H_k^i & = & H_j^i H_k^j
 \end{eqnarray*}
 
-For example, for the compounding operation, our SLAM backend takes $i$
-to denote the world frame.  $j$ and $k$ denote the frame of the robot
-at the previous and current timesteps, respectively.  This effectively
-acts as a motion model that predicts the global pose of a robot in
-6-DOF given the odometry at every timestep.
+% For example, for the compounding operation, our SLAM backend takes $i$
+% to denote the world frame.  $j$ and $k$ denote the frame of the robot
+% at the previous and current timesteps, respectively.  This effectively
+% acts as a motion model that predicts the global pose of a robot in
+% 6-DOF given the odometry at every timestep.
 
 The Jacobian of the compounding operation $J_\oplus$ is given
 in~\cite{reustice-phdthesis}.  Using this matrix, we can compute to
@@ -317,7 +322,7 @@ first order the covariance of ${\bf x}_{ik}$ as
   \end{bmatrix} J_\oplus^\top
 \end{eqnarray*}
 
-\subsection{Inverse Operation}
+\subsubsection{Inverse Operation}
 \label{sub:inverseoperation}
 Let the $\ominus$ operator describe the inverse of a relative pose
 vector:
@@ -339,7 +344,7 @@ The first-order covariance projection of this operation is
 where the closed-form expression for the Jacobian is given
 in~\cite{reustice-phdthesis}.
 
-\subsection{Composition Operation}
+\subsubsection{Composition Operation}
 \label{sub:compositionoperation}
 We define the composite operation on two frames related
 ``tail-to-tail'' using the compounding and inverse operations:
@@ -361,13 +366,78 @@ operation is
     \Sigma({\bf x}_{ik}, {\bf x}_{ij}) & \Sigma({\bf x}_{ik})\\
   \end{bmatrix} \tensor[_\ominus]{J}{_\oplus^\top}
 \end{eqnarray*}
-An example application of this composite operation is to estimate the
-odometry of a robot between two successive timesteps (given the
-current and previous poses of the robot in the global frame).  In this
-case, $i$ is the global frame, $j$ is the frame of the robot at the
-previous timestep, and $k$ is the robot frame at the current timestep.
-${\bf x}_{jk}$ is then the predicted odometry between frame $j$ and
-frame $k$.
+% An example application of this composite operation is to estimate the
+% odometry of a robot between two successive timesteps (given the
+% current and previous poses of the robot in the global frame).  In this
+% case, $i$ is the global frame, $j$ is the frame of the robot at the
+% previous timestep, and $k$ is the robot frame at the current timestep.
+% ${\bf x}_{jk}$ is then the predicted odometry between frame $j$ and
+% frame $k$.
+
+
+
+\subsection{Node Initialization}
+\label{sub:nodeinitializationandedgeresiduals}
+Every timestep in which the robot moves or a feature is observed, a new node is created
+and initialized.  To initialize a node means to assign that node a pose (for robot poses)
+or a point (for landmarks) in the global frame.  This is computed the edge (or ``factor'')
+that connects the new node to a previous node.  To initialize a node with no previously
+initialized nodes is a referred to as adding a ``prior.''
+
+For the following sections, let $g$ represent the global frame.  For each node, a
+first-order covariance projection can be computed as in Section~\ref{sec:6dof}.
+
+\subsubsection{Pose Nodes}
+\label{subs:posenodeinit}
+
+Say frame $i$ corresponds to an initialized node in the SLAM graph.  We observe a odometry
+measurement relating frame $i$ and frame $j$.  Then we initialize node $j$ to be in the
+global frame with the ``head-to-tail'' operation:
+\begin{eqnarray*}
+  {\hat {\bf x}_{gj}} & = & {\bf x}_{gi} \oplus {\bf x}_{ij}
+\end{eqnarray*}
+
+\subsubsection{Landmark Nodes}
+\label{subs:pointnodeinit}
+Given the relative {\it position} of a landmark with respect to frame $i$, we construct a
+relative {\it pose} vector by setting the three Euler angles to be arbitrary.  Let's call
+this pose vector ${\bf x}_{ij}$.  Then, the relative {\it position} of the landmark in the
+global frame is the translation vector corresponding to 
+\begin{eqnarray*}
+  {\bf x}_{gi} \oplus {\bf x}_{ij}
+\end{eqnarray*}
+
+\subsection{Node Linearization}
+\label{sub:nodeinitializationandedgeresiduals}
+
+To solve the least squares problem described in
+Section~\ref{sec:incrementalsmoothingandmapping}, we need to compute a observation model
+Jacobian $J$ and residual vector $r$.  In the following section, we describe how this is
+done for pose nodes and landmark nodes.
+
+\subsubsection{Pose Nodes}
+\label{subs:posenodelinear}
+Given two guesses of robot frames $i$ and $j$ (with respect to the global frame), then the
+predicted relative pose observation ${\hat {\bf x}}_{ij}$ is 
+\begin{eqnarray*}
+  {\hat {\bf x}_{ij}} &=& \ominus {\bf x}_{gi} \oplus {\bf x}_{gj}
+\end{eqnarray*}
+The Jacobian of this relationship is evaluated as in
+Section~\ref{sub:compositionoperation}.  The residual vector is simply the difference
+between the predicted ${\hat {\bf x}_{ij}}$ and the observed ${\bf x}_{ij}$.
+
+\subsubsection{Landmark Nodes}
+\label{subs:pointnodelinear}
+
+For landmark measurement prediction, we create a 6-DOF relative pose vector from world to
+landmark frame $l$ whose translation components are determined directly from the best
+guess of the landmark location in the global frame.  Then, the estimated observation ${\bf
+  x}_{il}$ is 
+\begin{eqnarray*}
+  {\hat {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{ij}
+\end{eqnarray*}
+The residual for the landmark is then the difference between this prediction and what the
+robot actually measured.
 
 \section{AprilTag Relative Pose Covariance Estimate}
 \label{sec:apriltags}

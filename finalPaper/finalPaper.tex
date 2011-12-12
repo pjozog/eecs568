@@ -74,12 +74,27 @@ est laborum.
 
 % Steve's Section
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
+The architecture of our SLAM software was developed with modularity and versatility in mind.
+As a result, the SLAM software essentially consists of two sides: a front-end that interfaces with
+the robot and produces a graph of nodes and edges from odometry and landmark observations, and a back-end
+that solves the SLAM problem from this graph.
+
+In our framework, each robot node is a six dimensional pose and each landmark node is a three 
+dimensional position. These poses and positions make up the state vector solved by the back-end.
+The edges represent relative poses between two nodes. The relative pose between two robot nodes 
+is an odometry edge, and the relative pose between a landmark node and a robot node is an observation
+edge. These relative poses are the constraints that the back-end SLAM solver uses to optimize the 
+estimate of the state vector. Together, the nodes and edges form a graph representation of the SLAM problem.
+
+For passing information between the front-end and back-end, we employ the Lightweight Communications and
+Marshalling (LCM) library. \cite{huang2010} The front-end also uses LCM to receive data from the robot and
+send it motion commands. 
+
+By designing the software in a modular framework, the back-end is a generic solver for any graph-based 
+SLAM problem. Thus, the back-end can be easily transferred between SLAM applications. Only the front-end 
+is specific to the application. The back-end solver we implemented is called incremental smoothing and 
+mapping (iSAM), and is discussed in the following section. However, because of its modularity, other back-end
+SLAM solvers (like batch methods, for example) can be inserted without alteration to the front-end.
 
 
 
@@ -453,6 +468,28 @@ est laborum.
 
 % Steve talks about drone hardware
 % Schuyler gets results
+
+The quadrotor helicopter we used for experimental testing of the realtime 6-DOF SLAM algorithm
+was a Parrot AR.Drone. Despite its reputation as an augmented reality gaming platform (for which
+it is markteted), the AR.Drone has a substantial robotics community. The AR.Drone has a full 
+suite of MEMS inertial sensors: a three-axis accelerometer, a two-axis gyroscope for measuring 
+pitch and roll, and a yaw angle precision gyroscope.  It also features an ultrasound altimeter
+and two cameras for recording images in the forward-looking and downward-looking directions.
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[width=2.5in]{images/drone1}
+  \caption{The Parrot AR.Drone used for experimental testing.}
+  \label{fig:drone}
+\end{figure}
+
+The downward-looking camera was used to detect AprilTags acting as landmarks in our environment.
+The AR.Drone itself fuses measurements from its inertial sensors and cameras to provide estimates 
+of the velocities and Euler angles along its principal axes. The front-end we implemented manipulates these
+measurements, along with the AR.Drone's reported altitude, into relative poses (quadrotor odometry).
+Both the camera images and state measurements are transmitted by the AR.Drone over its own
+wireless ad-hoc network and read into the front-end using LCM.
+
 
 Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
 ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation

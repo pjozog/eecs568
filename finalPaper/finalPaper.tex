@@ -74,10 +74,10 @@ est laborum.
 
 % Steve's Section
 
-The architecture of our SLAM software was developed with modularity and versatility in mind.
-As a result, the SLAM software essentially consists of two sides: a front-end that interfaces with
-the robot and produces a graph of nodes and edges from odometry and landmark observations, and a back-end
-that solves the SLAM problem from this graph.
+The architecture of our SLAM software was developed with modularity and versatility in
+mind.  As a result, the SLAM software essentially consists of two sides: a front-end that
+interfaces with the robot and produces a graph of nodes and edges from odometry and
+landmark observations, and a back-end that solves the SLAM problem from this graph.
 
 In our framework, each robot node is a six dimensional pose and each landmark node is a
 three dimensional position. These poses and positions make up the state vector solved by
@@ -90,17 +90,16 @@ describes the mathematical 6-DOF spatial relationships we use frequently in our 
 representation.
 
 
-For passing information between the front-end and back-end, we employ the Lightweight Communications and
-Marshalling (LCM) library. \cite{huang2010} The front-end also uses LCM to receive data from the robot and
-send it motion commands. 
+For passing information between the front-end and back-end, we employ the Lightweight
+Communications and Marshalling (LCM) library. \cite{huang2010} The front-end also uses LCM
+to receive data from the robot and send it motion commands.
 
-By designing the software in a modular framework, the back-end is a generic solver for any graph-based 
-SLAM problem. Thus, the back-end can be easily transferred between SLAM applications. Only the front-end 
-is specific to the application. The back-end solver we implemented is called incremental smoothing and 
-mapping (iSAM), and is discussed in the following section. However, because of its modularity, other back-end
-SLAM solvers (like batch methods, for example) can be inserted without alteration to the front-end.
-
-
+By designing the software in a modular framework, the back-end is a generic solver for any
+graph-based SLAM problem. Thus, the back-end can be easily transferred between SLAM
+applications. Only the front-end is specific to the application. The back-end solver we
+implemented is called incremental smoothing and mapping (iSAM), and is discussed in the
+following section. However, because of its modularity, other back-end SLAM solvers (like
+batch methods, for example) can be inserted without alteration to the front-end.
 
 
 \section{Incremental Smoothing and Mapping}
@@ -390,40 +389,33 @@ first-order covariance projection can be computed as in Section~\ref{sec:6dof}.
 \subsubsection{Pose Nodes}
 \label{subs:posenodeinit}
 
-Say frame $i$ corresponds to an initialized node in the SLAM graph.  We observe a odometry
-measurement relating frame $i$ and frame $j$.  Then we initialize node $j$ to be in the
-global frame with the ``head-to-tail'' operation:
-\begin{eqnarray*}
-  {\hat {\bf x}_{gj}} & = & {\bf x}_{gi} \oplus {\bf x}_{ij}
-\end{eqnarray*}
+Say frame $i$ corresponds to an initialized pose node in the SLAM graph.  We observe a
+odometry measurement relating frame $i$ and frame $j$.  Then we initialize node $j$ to be
+in the global frame with the ``head-to-tail'' operation $ {\hat {\bf x}_{gj}} = {\bf
+  x}_{gi} \oplus {\bf x}_{ij} $
 
 \subsubsection{Landmark Nodes}
 \label{subs:pointnodeinit}
-Given the relative {\it position} of a landmark with respect to frame $i$, we construct a
-relative {\it pose} vector by setting the three Euler angles to be arbitrary.  Let's call
-this pose vector ${\bf x}_{ij}$.  Then, the relative {\it position} of the landmark in the
-global frame is the translation vector corresponding to 
-\begin{eqnarray*}
-  {\bf x}_{gi} \oplus {\bf x}_{ij}
-\end{eqnarray*}
+Given the relative {\it position} of a landmark frame $l$ with respect to robot frame $i$,
+we construct a relative {\it pose} vector by setting the orientation of $l$ to be
+arbitrary.  Then, the relative {\it position} of the landmark in the global frame is the
+translation vector corresponding to $ {\hat {\bf x}}_{gl} = {\bf x}_{gi} \oplus {\bf
+ x}_{il} $
 
 \subsection{Node Linearization}
 \label{sub:nodeinitializationandedgeresiduals}
 
 To solve the least squares problem described in
-Section~\ref{sec:incrementalsmoothingandmapping}, we need to compute a observation model
-Jacobian $J$ and residual vector $r$.  In the following section, we describe how this is
-done for pose nodes and landmark nodes.
+\S\ref{sec:incrementalsmoothingandmapping}, we need to compute a observation model
+Jacobian $J$ and residual vector $r$.  In the following section, we describe how these are
+computed using the notation from \S\ref{sec:6dof}.
 
 \subsubsection{Pose Nodes}
 \label{subs:posenodelinear}
 Given two guesses of robot frames $i$ and $j$ (with respect to the global frame), then the
-predicted relative pose observation ${\hat {\bf x}}_{ij}$ is 
-\begin{eqnarray*}
-  {\hat {\bf x}_{ij}} &=& \ominus {\bf x}_{gi} \oplus {\bf x}_{gj}
-\end{eqnarray*}
-The Jacobian of this relationship is evaluated as in
-Section~\ref{sub:compositionoperation}.  The residual vector is simply the difference
+predicted relative pose observation is $ {\hat {\bf x}_{ij}} = \ominus {\bf x}_{gi} \oplus
+{\bf x}_{gj}$. The Jacobian of this relationship is evaluated as in
+\S\ref{sub:compositionoperation}.  The residual vector is simply the difference
 between the predicted ${\hat {\bf x}_{ij}}$ and the observed ${\bf x}_{ij}$.
 
 \subsubsection{Landmark Nodes}
@@ -431,49 +423,48 @@ between the predicted ${\hat {\bf x}_{ij}}$ and the observed ${\bf x}_{ij}$.
 
 For landmark measurement prediction, we create a 6-DOF relative pose vector from world to
 landmark frame $l$ whose translation components are determined directly from the best
-guess of the landmark location in the global frame.  Then, the estimated observation ${\bf
-  x}_{il}$ is 
-\begin{eqnarray*}
-  {\hat {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{ij}
-\end{eqnarray*}
-The residual for the landmark is then the difference between this prediction and what the
-robot actually measured.
+guess of the landmark location in the global frame.  Then, the estimated observation is $
+{\hat {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{gl} $. The residual for the
+landmark is then the difference between this prediction and what the robot actually
+measured.
+
+Note that for computation of the observation Jacobian, we drop the differentiations with
+respect to the orientation of the landmark.  This leaves us with a $3 \times 9$ Jacobian
+and $3 \times 3$ positional covariance matrix. 
 
 \section{AprilTag Relative Pose Covariance Estimate}
 \label{sec:apriltags}
 
 % Paul's section
 
-We used the AprilTag throughout our project's experiments and
-demonstrations for relative position and orientation.  The accuracy,
-detection performance, and compatibility with the April visualization
-library made it particularly desirable~\cite{olson2011tags}.
+We used the AprilTag system throughout our project's experiments and demonstrations for
+relative position and orientation.  The accuracy, detection performance, and small memory
+footprint made it particularly desirable~\cite{olson2011tags}.
 
-We applied principles of linearized covariance projection to estimate
-a covariance matrix for the 6-DOF relative pose vector ${\bf x}_{tc}$
-that describes the relative pose from the tag's frame to the camera's frame.
+We applied principles of linearized covariance projection to estimate a covariance matrix
+for the 6-DOF relative pose vector ${\bf x}_{tc}$ that describes the relative pose from
+the tag's frame $t$ to the camera's frame $c$.
 
-Denote $f$ as the function that computes the $9 \times 1$ homography
-vector ${\bf h}$ from a set of world points and image points via the
-Direct Linear Transform (DLT) algorithm.  By linearizing $f$ around a
-mean input (the observed image point coordinates), we can compute the
-$9 \times 9$ covariance matrix $\Sigma({\bf h})$ to first order.  From
-there, we project the covariance estimate of $h$ by linearizing a
-function $g$, which maps the homography to ${\bf x}_{tc}$.
+Denote $f$ as the function that computes the $9 \times 1$ homography vector ${\bf h}$ from
+a set of world points and image points via the Direct Linear Transform (DLT) algorithm.
+By linearizing $f$ around a mean input (the observed image point coordinates), we can
+compute the $9 \times 9$ covariance matrix $\Sigma({\bf h})$ to first order.  From there,
+we project the covariance estimate of $h$ by linearizing a function $g$, which maps the
+homography to ${\bf x}_{tc}$.
 
-For simplicity, we assume that the uncertainty of the world points and
-the camera calibration parameters are zero.  Further, we assume
-negligible lens distortion.  All differentiations are done numerically.
+For simplicity, we assume that the uncertainty of the world points and the camera
+calibration parameters are zero.  Further, we assume negligible lens distortion.  All
+differentiations are done numerically.
 
-Under these assumptions, the covariance estimate of the relative pose
-from tag to camera is simply
+Under these assumptions, the covariance estimate of the relative pose from tag to camera
+is simply
 \begin{eqnarray*}
   \Sigma({{\bf x}_{tc}}) & = & J_g J_f \Sigma({\bf u}) J_f^\top J_g^\top
 \end{eqnarray*}
-where ${\bf u}$ is the $2N \times 1$ vector of $N$ noisy image point
-coordinates and $\Sigma({\bf u})$ is the associated isotropic
-covariance matrix.  The diagonal elements of this matrix are tuned by
-the user.
+where ${\bf u}$ is the $2N \times 1$ vector of $N$ noisy image point coordinates and
+$\Sigma({\bf u})$ is the associated isotropic covariance matrix.  We assume the feature
+noises are independent. The diagonal elements of this covariance matrix are tuned by the
+user.
 
 The Jacobians are computed by finite difference:
 \begin{align*}
@@ -482,15 +473,13 @@ The Jacobians are computed by finite difference:
     \epsilon, \dots, u_{2N})}{\epsilon} \\
   & \ \ \  - \frac{f_i(u_0, \dots, u_{2N})}{\epsilon}
 \end{align*}
-for some small $\epsilon$. One should note that when differentiating
-$f$, the homography vectors must have the same sign.  This is not
-guaranteed in typical Singular Value Decomposition (SVD) libraries
-because the sign of the singular vectors may be flipped when the input
-matrix is slightly perturbed.
+for some small $\epsilon$. One should note that when differentiating $f$, the homography
+vectors must have the same sign.  This is not guaranteed in typical Singular Value
+Decomposition (SVD) libraries because the sign of the singular vectors may be flipped when
+the input matrix is slightly perturbed.
 
-Also, we take $g$ to directly map the homography to ${\bf x}_{tc}$.
-The covariance projections operations referred to in \S\ref{sec:6dof}
-are therefore included in $g$.
+Also, we take $g$ to directly map the homography to ${\bf x}_{tc}$.  The covariance
+projections operations referred to in \S\ref{sec:6dof} are therefore included in $g$.
 
 %Just to see how it looks using both columns
 \begin{figure*}[!t]

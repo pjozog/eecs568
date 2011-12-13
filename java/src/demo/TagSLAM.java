@@ -244,7 +244,7 @@ public class TagSLAM {
 
 
             vb.addBack(new VzLines(new VisVertexData(allEdgeLinks),
-                                   new VisConstantColor(new Color(1.0f, 1.0f, 0.0f, 0.2f)),
+                                   new VisConstantColor(new Color(1.0f, 1.0f, 0.0f, 0.08f)),
                                    1.0,
                                    VzLines.TYPE.LINES));
 
@@ -331,11 +331,14 @@ public class TagSLAM {
         }
 
         pg.addIntSlider("numToDraw", "Number to draw", 1, 500, 100);
+        pg.addButtons("reset", "Reset");
 
         pg.addListener(new ParameterListener(){
                 public void parameterChanged(ParameterGUI pg, String name)
                 {
-                    
+                    if (name.equals("reset")) {
+                        reset();
+                    }
                 }
             });
         
@@ -383,7 +386,6 @@ public class TagSLAM {
 
             VisWorld.Buffer cameraFrame = vw.getBuffer("Camera Frame");
 
-            int count = 0;
             while (true) {
 
                 byte buf[] = is.getFrame();
@@ -476,15 +478,10 @@ public class TagSLAM {
 
                     }
 
-                    count++;
                     slam.update();
 
                     drawSetup();
                     drawScene();
-
-                    if (count % MAX_UPDATES == 0) {
-                        reset();
-                    }
 
                 }
 

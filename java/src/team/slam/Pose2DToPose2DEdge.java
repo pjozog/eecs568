@@ -6,7 +6,7 @@ import april.jmat.Matrix;
 import april.jmat.LinAlg;
 import april.jmat.MathUtil;
 import april.jmat.CholeskyDecomposition;
-import team.common.SixDofCoords;
+import team.common.ThreeDofCoords;
 import team.slam.Linearization;
 
 public class Pose2DToPose2DEdge extends Edge {

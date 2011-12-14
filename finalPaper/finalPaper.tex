@@ -106,7 +106,10 @@ representation.
 
 
 For passing information between the front-end and back-end, we employ the Lightweight
-Communications and Marshalling (LCM) library. \cite{huang2010} The front-end also uses LCM
+Communications and Marshalling (LCM) library. \cite{huang2010} One of the main benefits
+of using LCM is the ability to record and playback the messages sent between processes. This
+tool allows us to keep a record of the experiments we performed and evaluate different code 
+structures and solvers on the same real-world dataset. The front-end also uses LCM
 to receive data from the robot and send it motion commands.
 
 By designing the software in a modular framework, the back-end is a generic solver for any
@@ -559,10 +562,31 @@ and two cameras for recording images in the forward-looking and downward-looking
 
 The downward-looking camera was used to detect AprilTags acting as landmarks in our environment.
 The AR.Drone itself fuses measurements from its inertial sensors and cameras to provide estimates 
-of the velocities and Euler angles along its principal axes. The front-end we implemented manipulates these
-measurements, along with the AR.Drone's reported altitude, into relative poses (quadrotor odometry).
-Both the camera images and state measurements are transmitted by the AR.Drone over its own
-wireless ad-hoc network and read into the front-end using LCM.
+of velocities and Euler angles of the robot. The velocities reported by the AR.Drone are not body-frame 
+velocities, but rather velocities oriented with the yaw angle of the body-frame and always parallel 
+with the ground. The data available from the AR.Drone that we used in our experiments is reported by 
+a single LCM datatype. An overview of this datatype is given in Table XXX.
+
+% struct ardrone_state_t
+% {
+%     int64_t utime;
+% 	
+%     //State
+%     float pitch;			// radians	                % Euler angle about body-frame Y	
+%     float yaw;				// radians              % Euler angle about body-frame Z
+%     float roll;				// radians              % Euler angle about body-frame X
+%     float altitude;			// meters               % Height above ground
+%     float vx; 				// meters / sec         % Forward velocity, parallel to the ground
+%     float vy;				// meters / sec             % Velocity to the right, parallel to the ground
+%     float vz;				// meters / sec             % Downward vertical velocity, perpendicular to the ground
+%     float battery;          // percent                % Percentage of battery remaining
+% 
+%     boolean flying;                                   % Flag for when the AR.Drone is in the air
+% }
+
+The front-end we implemented manipulates the measurements from the AR.Drone into relative poses 
+(quadrotor odometry). Both the camera images and state measurements are transmitted by the AR.Drone 
+over its own wireless ad-hoc network and read into the front-end using LCM.
 
 \begin{figure*}[t]
   \begin{center}

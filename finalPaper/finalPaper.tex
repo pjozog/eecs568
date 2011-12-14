@@ -11,6 +11,7 @@
 \usepackage{extarrows}
 \usepackage{minted}
 \usepackage{tensor}
+\usepackage{float}
 \usemintedstyle{vs}
 \usepackage{kbordermatrix}
 
@@ -58,14 +59,11 @@
 \label{sec:introduction}
 
 % Schuyler's section
+Robots face two major challenges as they explore unknown environments, mapping the environment, and localizing itself within its current belief of the world.  A solution to this problem is using least-squares simultaneous localization and mapping techniques (SLAM) to build and move through a map.  We approach this problem from the context of a quadcoptor helicopter, discussed further in Section \ref{sub:quadrotor}, which presents us with a 6 Degree of Freedom (DOF) platform with which to work.\\
+SLAM problems presents many computational challenges, most of which stem from the large number of observations and states which must be reconciled.  To enable realtime operations, techniques must be used to simplify the solving of least-squares problems. We used two basic techniques, first, not solving the portions of the problem that have not changed since the last computation, and second,  preserving and exploiting the sparsity in matrices inherent in our problem.\\ 
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
-
+This paper presents our modular implementation of SLAM, which allows for generic sensor input to the solver.  We cover our generic observation and motion models as well as optimization techniques applied to our solver, focusing on incremental Smoothing and Mapping (iSAM), which  allows for realtime operations.\\
+We then address applying our solver to a specific robot, the AR.Drone quadcoptor.  To do this, we create a motion model using its internal measurements, and provide synthetic known data association using AprilTags.  Experimental data and results are presented showing successfully building a map of the environment and localizing itself using only the quadcoptor's odometry and arbitrarily placed landmarks in a real-world environment.     
 
 
 
@@ -482,13 +480,13 @@ Also, we take $g$ to directly map the homography to ${\bf x}_{tc}$.  The covaria
 projections operations referred to in \S\ref{sec:6dof} are therefore included in $g$.
 
 %Just to see how it looks using both columns
-\begin{figure*}[!t]
-  \begin{center}
-    \includegraphics[width=1.0\textwidth]{images/square}
-    \caption{asdf}
-    \label{fig:square}
-  \end{center}
-\end{figure*}
+%\begin{figure*}[!t]
+%  \begin{center}
+%    \includegraphics[width=1.0\textwidth]{images/square}
+%    \caption{asdf}
+%    \label{fig:square}
+%  \end{center}
+%\end{figure*}
 
 
 
@@ -549,31 +547,43 @@ measurements, along with the AR.Drone's reported altitude, into relative poses (
 Both the camera images and state measurements are transmitted by the AR.Drone over its own
 wireless ad-hoc network and read into the front-end using LCM.
 
+\subsection{Results}
+\label{sub:results}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
+By arranging the landmarks in a known orientation, and flying the AR.Drone in a set pattern, we are able to qualitatively evaluate the results of our experiments.  Our basic approach was to arrange 4 landmarks in a square and fly the AR.Drone around each edge twice to gather loop closures.  Since we did not use any ground-truth mechanisms, flying in a square allows us to evaluate the quality of our created map. A picture of one of our test runs can be seen in Figure \ref{fig:testing}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth/2]{images/setup}
+\caption{Example test run with 4 landmarks.}
+\label{fig:testing}
+\end{figure}
+
+Our implementation was able to run and process data in realtime, providing a map that is qualitatively identical to the flight path and landmark setup provided.  As we run batch steps we see the map reorient itself into a better configurations as we gather more loop closures.  An example of this is seen in Figure \ref{fig:mapadjustment}, where before loop closures are incorporated the landmarks are skewed, and after loop closures are found, the landmarks form a square.  These results hold for any configuration of arbitrarily placed landmarks; simple shapes are used purely for ease of evaluation. Additionally, the path of the AR.Drone is significantly better than using dead-reckoning based off of the reported odometry.  This is expected, as the position of the AR.Drone is calculated by double integrating accelerations, which can easily accumulate error and diverge over time.  
 
 
+\begin{figure}[H]
+  \begin{center}
+    \subfigure[] {
+    \includegraphics[width=\textwidth/2]{images/initial}
+    \label{fig:initial}}
+    \subfigure[] {
+    \includegraphics[width=\textwidth/2]{images/loopclosure}
+    \label{fig:loopclosure}}
+    \caption{The map of the world created by the AR.Drone quadcoptor with landmarks arranged in square. (a) Before a loop closure is made, the landmarks are skewed (b) After a loop closure landmarks are repositioned into square.}
+    \label{fig:mapadjustment}
+  \end{center}
+\end{figure}
+\emph{This looks a lot better when switching back and forth, cant really tell with them side by side, do we need this, is there a better example? Do we want a picture of dead reckoning vs SLAM? I don't have any}
 
-
+One test run of the AR.Drone took about 60 seconds and produced on the order of 1000 updates. We were able to do all data gathering (reading and publishing LCM messages), pre-processing (video decoding and AprilTag homography), and SLAM solving using a personal laptop with standard specs in realtime.   
 
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 % Schuyler's section
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-est laborum.
-
+We have presented the development of a optimized, generic back-end solver for a 6 DOF SLAM problem which is fast enough to allow for realtime deployment on a standard computer.  We have deployed it in a real-world 6 DOF application using known data association with demonstrably good \emph{ lawl what does good mean} results.  \emph{Is this true, do we care I have no idea how to end this} We note the back-end is agnostic of the data association problem, and could be used with a front-end that does unknown data association.  Our source code and experimental results can be found at http://do.we.provide.this.
 
 
 \section{Acknowledgment}

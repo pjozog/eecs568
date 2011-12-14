@@ -1,7 +1,7 @@
 package team.slam;
 
 public class Point2D{
-    
+
 
     private double x;
     private double y;
@@ -38,7 +38,7 @@ public class Point2D{
         return y;
     }
 
- 
+
     public double[] getArray() {
         return new double[] {x, y};
     }

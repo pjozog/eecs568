@@ -16,32 +16,9 @@ import april.util.*;
 
 public class ManhattanListener {
 
-    // private VisWorld vw;
-    // private Config config;
-    // private BackEnd slam;
 
-    // private double baseline;
-    // private double lambda;
-    // private double epsilon;
-
-    // private int numConverge;
-
-    // Pose3DNode prevPose;
-
-    // // Profiling
-    // private long startTime;
-    // private int numUpdates = 0;
     private boolean saveChi2 = false;
-
-
     private int numNodes = 0;
-
-    // // Drawing
-    // ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
-    // // ArrayList<VzPoints> landmarks = new ArrayList<VzPoints>();
-    // ArrayList<double[]> landmarks = new ArrayList<double[]>();
-    // ArrayList<double[]> allEdgeLinks = new ArrayList<double[]>();
-    // double[] latestXYTGuess = new double[3];
 
 
     Config config;
@@ -59,7 +36,6 @@ public class ManhattanListener {
     double[] robotToCam  = new double[6];
     double[] NwuToNed    = new double[6];
 
-    double[] latestPoseGuess = new double[6];
 
     BackEnd slam;
     Pose3DNode prevPose; //Pointer to most recently created pose3d node
@@ -149,34 +125,34 @@ public class ManhattanListener {
         // System.out.println("Adding measurement node indices "+indexOne+" "+indexTwo+" "+" totalNodes "+numNodes);
 
 
-        Pose3DNode p3dnOne;
-        Pose3DNode p3dnTwo;
+        Pose2DNode p2dnOne;
+        Pose2DNode p2dnTwo;
 
         if (indexOne > numNodes) {
-            p3dnOne = new Pose3DNode();
-            slam.addNode(p3dnOne);
+            p2dnOne = new Pose2DNode();
+            slam.addNode(p2dnOne);
             numNodes++;
         } else {
-            p3dnOne = (Pose3DNode)slam.getNodes().get(indexOne);
+            p2dnOne = (Pose2DNode)slam.getNodes().get(indexOne);
             // System.out.println("Getting old node one");
         }
 
         if (indexTwo > numNodes) {
-            p3dnTwo = new Pose3DNode();
-            slam.addNode(p3dnTwo);
+            p2dnTwo = new Pose2DNode();
+            slam.addNode(p2dnTwo);
             numNodes++;
         } else {
-            p3dnTwo = (Pose3DNode)slam.getNodes().get(indexTwo);
+            p2dnTwo = (Pose2DNode)slam.getNodes().get(indexTwo);
             // System.out.println("Getting old node two");
         }
 
-        Pose3D deltaMotion = new Pose3D(deltaX, deltaY, 0, 0, 0, deltaT);
+        Pose2D deltaMotion = new Pose2D(deltaX, deltaY, deltaT);
 
-        Matrix cov = Matrix.identity(6, 6);
+        Matrix cov = Matrix.identity(3, 3);
         cov.times(2000);
 
 
-        Pose3DToPose3DEdge poseToPose = new Pose3DToPose3DEdge(p3dnOne, p3dnTwo, deltaMotion, cov);
+        Pose2DToPose2DEdge poseToPose = new Pose2DToPose2DEdge(p2dnOne, p2dnTwo, deltaMotion, cov);
 
         slam.addEdge(poseToPose);
 
@@ -241,7 +217,7 @@ public class ManhattanListener {
 
 
     /**
-     * Adds a Pose3DNode and a Pose3DEdge to the graph. This is needed so we don't have an
+     * Adds a Pose2DNode and a Pose2DEdge to the graph. This is needed so we don't have an
      * underconstrained systen.
      */
     public void addPrior() {
@@ -249,22 +225,21 @@ public class ManhattanListener {
         System.out.println("Adding prior");
 
 
-        Matrix cov = Matrix.identity(6, 6);
+        Matrix cov = Matrix.identity(3, 3);
         cov.times(.0001);
 
-        // Create Pose3D at origin
-        Pose3D p3d = new Pose3D();
+        // Create Pose2D at origin
+        Pose2D p2d = new Pose2D();
 
-        // Create Pose3DEdge
-        Pose3DNode p3dn = new Pose3DNode();
-        Pose3DEdge p3de = new Pose3DEdge(p3dn, p3d, cov);
+        // Create Pose2DEdge
+        Pose2DNode p2dn = new Pose2DNode();
+        Pose2DEdge p2de = new Pose2DEdge(p2dn, p2d, cov);
 
-        prevPose = p3dn;
+        prevPose = p2dn;
 
-        slam.addNode(p3dn);
-        slam.addEdge(p3de);
+        slam.addNode(p2dn);
+        slam.addEdge(p2de);
 
-        // numNodes++;
 
     }
 
@@ -277,25 +252,31 @@ public class ManhattanListener {
         java.util.List<Node> allNodes = slam.getNodes();
         java.util.List<Edge> allEdges = slam.getEdges();
 
-        Pose3DNode lastPose = null;
+        Pose2DNode lastPose = null;
 
         // Get all poses and landmarks
         for (Node aNode : allNodes) {
 
-            if (aNode instanceof Pose3DNode) {
+            if (aNode instanceof Pose2DNode) {
 
-                trajectory.add(Quiver.getQuiverAt(aNode.getStateArray(), 0.01));
+                double[] realPose = aNode.getStateArray();
 
-                lastPose = (Pose3DNode)aNode;
+                double[] fakePose = new double[6];
+                fakePose[0] = realPose[0];
+                fakePose[1] = realPose[1];
+                fakePose[2] = 0.0;
+                fakePose[3] = 0.0;
+                fakePose[4] = 0.0;
+                fakePose[5] = realPose[2];
 
-            } else if (aNode instanceof Point3DNode) {
+                trajectory.add(Quiver.getQuiverAt(fakePose, 0.01));
+
+                lastPose = (Pose2DNode)aNode;
+
+            } else if (aNode instanceof Point2DNode) {
 
                 double[] landPos = aNode.getStateArray();
 
-                // VzPoints posGuess = new VzPoints(new VisVertexData(landPos),
-                //                                  new VisConstantColor(Color.cyan),
-                //                                  10.0);
-                // landmarks.add(posGuess);
                 landmarks.add(landPos);
 
             } else {
@@ -306,11 +287,20 @@ public class ManhattanListener {
 
         }
 
+
+        double[] realPose = lastPose.getStateArray();
+
+        double[] fakePose = new double[6];
+        fakePose[0] = realPose[0];
+        fakePose[1] = realPose[1];
+        fakePose[2] = 0.0;
+        fakePose[3] = 0.0;
+        fakePose[4] = 0.0;
+        fakePose[5] = realPose[2];
+
         // Make the last pose have a larger scale
         trajectory.remove(trajectory.size()-1);
-        trajectory.add(Quiver.getQuiverAt(lastPose.getStateArray(), .05));
-
-        latestPoseGuess = lastPose.getStateArray();
+        trajectory.add(Quiver.getQuiverAt(fakePose, .05));
 
 
         allEdgeLinks.clear();

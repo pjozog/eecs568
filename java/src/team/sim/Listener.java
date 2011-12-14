@@ -32,6 +32,7 @@ public class Listener implements OldSimulator.Listener {
     // Profiling
     private long startTime;
     private int numUpdates = 0;
+    private boolean saveChi2 = true;
 
     // Drawing
     ArrayList<VzLines> trajectory = new ArrayList<VzLines>();
@@ -330,22 +331,36 @@ public class Listener implements OldSimulator.Listener {
 
 
         // Display normalized Chi^2 text
-        // {
+        {
 
-        //     VisWorld.Buffer vb = vw.getBuffer("chi2");
+            VisWorld.Buffer vb = vw.getBuffer("chi2");
 
-        //     vb.addBack(new VisDepthTest(false,
-        //                                 new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
-        //                                                         new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
-        //                                                                    "<<margin=15>>" +
-        //                                                                    "<<center,sansserif-italic-10>>Normalized Chi2\n"+
-        //                                                                    "<<center,sansserif-bold-10>>"+slam.getNormalizedChi2()+"\n"))));
+            double theChi2 = slam.getNormalizedChi2();
+
+            vb.addBack(new VisDepthTest(false,
+                                        new VisPixelCoordinates(VisPixelCoordinates.ORIGIN.BOTTOM_RIGHT,
+                                                                new VzText(VzText.ANCHOR.BOTTOM_RIGHT,
+                                                                           "<<margin=15>>" +
+                                                                           "<<center,sansserif-italic-10>>Normalized Chi2\n"+
+                                                                           "<<center,sansserif-bold-10>>"+theChi2+"\n"))));
 
 
-        //     vb.swap();
+            if (saveChi2) {
+                try {
+                    FileWriter fstream = new FileWriter("analysis/chi2.txt", true);
+                    BufferedWriter out = new BufferedWriter(fstream);
+                    out.write(theChi2+"\n");
+                    out.close();
+                } catch (Exception e){
+                    System.err.println("Errorz!: " + e.getMessage());
+                }
+            }
 
 
-        // }
+            vb.swap();
+
+
+        }
 
 
 

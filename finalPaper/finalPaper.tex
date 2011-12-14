@@ -505,64 +505,7 @@ projections operations referred to in \S\ref{sec:6dof} are therefore included in
 %  \end{center}
 %\end{figure*}
 
-
-
-\section{Experiments}
-\label{sec:experiments}
-
-We applied our SLAM implementation to simulated and real world data. In both cases, we
-evaluated batch least-squares SLAM, incremental smoothing and mapping, and incremental
-smoothing and mapping with variable reordering. The results of these tests will be
-presented below.
-
-\subsection{Simulation}
-\label{sub:simulation}
-
-% Pat's section
-For the simulated data, we used the simulator that was featured in PS2 and PS3 with the
-same waypoints. When evaluating different SLAM backends, we seeded the random number
-generator to ensure the exact same data was being generated. The data from the simulator
-is from a 2D world, so we set the z, roll, and pitch observations to be zero. Because of
-the flexibility in our SLAM backend, it would be easy to create nodes and edges for a 2D
-world. However, we chose to use the 3D nodes and edges to see the system grow at the same
-rate of a full 6DOF application.
-
-The three different methods of SLAM that we evaluated had enormous speed differences.
-Table \ref{tab:timing} show the total simulation time for two loops of the simulator. This
-ensured that there were many loop closures.
-
-\begin{table}[!t]
-\renewcommand{\arraystretch}{1.3}
-\caption{Total simulation time for different SLAM methods}
-\label{tab:timing}
-\centering
-\begin{tabular}{|c|c|}
-\hline
-Method & Total Simulation Time (s) \\
-\hline
-Incremental + Reorder & 18.81 \\
-Incremental & 57.04 \\
-Batch Solve & 912.96 \\
-\hline
-\end{tabular}
-\end{table}
-
-Figure \ref{fig:stepTime} shows how much computation time was spent at each update step
-for the different methods. Notice the spikes at integer multiples of 100 for the
-incremental methods. This is expected because it coincides with out batch update, variable
-reordering, and relinearization. These results confirmed our suspicion that we would need
-incremental updates as well as periodic variable reordering in order to achieve realtime
-speeds when working with real world data.
-
-
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=2.5in]{images/stepTimeResults}
-  \caption{The time per step for different SLAM solve methods.}
-  \label{fig:stepTime}
-\end{figure}
-
-\subsection{Parrot AR.Drone}
+\section{Parrot AR.Drone}
 \label{sub:quadrotor}
 
 % Steve talks about drone hardware
@@ -629,7 +572,65 @@ over its own wireless ad-hoc network and read into the front-end using LCM.
   \end{center}
 \end{figure*}
 
-\subsection{Results}
+
+
+\section{Experiments}
+\label{sec:experiments}
+
+We applied our SLAM implementation to simulated and real world data. In both cases, we
+evaluated batch least-squares SLAM, incremental smoothing and mapping, and incremental
+smoothing and mapping with variable reordering. The results of these tests will be
+presented below.
+
+\subsection{Simulation}
+\label{sub:simulation}
+
+% Pat's section
+For the simulated data, we used the simulator that was featured in PS2 and PS3 with the
+same waypoints. When evaluating different SLAM backends, we seeded the random number
+generator to ensure the exact same data was being generated. The data from the simulator
+is from a 2D world, so we set the z, roll, and pitch observations to be zero. Because of
+the flexibility in our SLAM backend, it would be easy to create nodes and edges for a 2D
+world. However, we chose to use the 3D nodes and edges to see the system grow at the same
+rate of a full 6DOF application.
+
+The three different methods of SLAM that we evaluated had enormous speed differences.
+Table \ref{tab:timing} show the total simulation time for two loops of the simulator. This
+ensured that there were many loop closures.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{Total simulation time for different SLAM methods}
+\label{tab:timing}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Method & Total Simulation Time (s) \\
+\hline
+Incremental + Reorder & 18.81 \\
+Incremental & 57.04 \\
+Batch Solve & 912.96 \\
+\hline
+\end{tabular}
+\end{table}
+
+Figure \ref{fig:stepTime} shows how much computation time was spent at each update step
+for the different methods. Notice the spikes at integer multiples of 100 for the
+incremental methods. This is expected because it coincides with out batch update, variable
+reordering, and relinearization. These results confirmed our suspicion that we would need
+incremental updates as well as periodic variable reordering in order to achieve realtime
+speeds when working with real world data.
+
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=2.5in]{images/stepTimeResults}
+  \caption{The time per step for different SLAM solve methods.}
+  \label{fig:stepTime}
+\end{figure}
+
+
+\subsection{Quadrotor Helicopter}
 \label{sub:results}
 
 By arranging the landmarks in a known orientation, and flying the AR.Drone in a set

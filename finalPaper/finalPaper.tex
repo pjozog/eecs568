@@ -42,12 +42,16 @@
 
 
 \begin{abstract}
-  Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-  ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-  ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-  reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
-  sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-  est laborum.
+
+This report presents a realtime implementation of a SLAM framework for a quadrotor helicopter. 
+The framework features a front-end interface to the helicopter and a back-end solver of the graph  
+representation of the robot and its environment. The back-end employs incremental Smoothing and Mapping 
+(iSAM) in order to solve the graph in real time and provide instananeous visualization of the robot 
+trajectory and landmark positions. iSAM incrementally updates the information matrix factorization, providing
+significant time savings over other SLAM solvers. The speedups resulting from iSAM allow the 6DOF SLAM problem
+to be solved in realtime on a readily available computer. Our software implementation was tested in simulation 
+and using an AR.Drone quadrotor helicopter.
+
 \end{abstract}
 
 

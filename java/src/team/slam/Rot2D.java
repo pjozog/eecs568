@@ -9,16 +9,17 @@ public class Rot2D {
     public Rot2D() {
         yaw = 0.0;
     }
+
     public Rot2D(double yaw) {
         this.yaw = yaw;
     }
 
- 
+
     public double getYaw() {
         return yaw;
     }
 
- 
+
 
     public void setYaw(double yaw) {
         this.yaw = yaw;

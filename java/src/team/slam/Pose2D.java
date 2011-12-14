@@ -22,7 +22,7 @@ public class Pose2D {
             assert(false);
         } else {
             t = new Point2D(values[0], values[1]);
-            r = new Rot2D(values[3]);
+            r = new Rot2D(values[2]);
         }
     }
 
@@ -74,7 +74,7 @@ public class Pose2D {
         } else {
             setX(values[0]);
             setY(values[1]);
-            setYaw(values[3]);
+            setYaw(values[2]);
         }
     }
 

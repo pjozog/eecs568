@@ -14,12 +14,13 @@
 \usepackage{float}
 %\usemintedstyle{vs}
 \usepackage{kbordermatrix}
+\usepackage{my_acronyms}
 
 \DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
 
 
 
-\title{Realtime 6DOF SLAM for a Quadrotor Helicopter}
+\title{Realtime 6-DOF SLAM for a Quadrotor Helicopter}
 
 \author{\IEEEauthorblockN{Stephen Chaves}
   \and
@@ -29,13 +30,6 @@
   \and
   \IEEEauthorblockN{Paul Ozog}}
 
-% \IEEEauthorblockA{School of Electrical and\\Computer Engineering\\
-% Georgia Institute of Technology\\
-% Atlanta, Georgia 30332--0250\\
-% Email: http://www.michaelshell.org/contact.html}
-
-
-
 \begin{document}
 \maketitle
 
@@ -43,14 +37,16 @@
 
 \begin{abstract}
 
-This report presents a realtime implementation of a SLAM framework for a quadrotor helicopter. 
-The framework features a front-end interface to the helicopter and a back-end solver of the graph  
-representation of the robot and its environment. The back-end employs incremental Smoothing and Mapping 
-(iSAM) in order to solve the graph in real time and provide instananeous visualization of the robot 
-trajectory and landmark positions. iSAM incrementally updates the information matrix factorization, providing
-significant time savings over other SLAM solvers. The speedups resulting from iSAM allow the 6DOF SLAM problem
-to be solved in realtime on a readily available computer. Our software implementation was tested in simulation 
-and using an AR.Drone quadrotor helicopter.
+  This report presents a realtime implementation of a \ac{SLAM} framework for a quadrotor
+  helicopter.  The framework features a front-end interface to the helicopter and a
+  back-end solver of the graph representation of the robot and its environment. The
+  back-end implements techniques from incremental Smoothing and Mapping (iSAM) in order to
+  solve the graph in real time and provide instananeous visualization of the robot
+  trajectory and landmark positions. iSAM incrementally updates the information matrix
+  factorization, providing significant time savings over other \ac{SLAM} solvers. The speedups
+  resulting from iSAM allow the 6-\ac{DOF} \ac{SLAM} problem to be solved in realtime on a readily
+  available computer. Our software implementation was successfully tested in simulation
+  and using an AR.Drone quadrotor helicopter.
 
 \end{abstract}
 
@@ -63,102 +59,103 @@ and using an AR.Drone quadrotor helicopter.
 \label{sec:introduction}
 
 % Schuyler's section
-Robots face two major challenges as they explore unknown environments, mapping the
-environment, and localizing itself within its current belief of the world.  A solution to
-this problem is using least-squares simultaneous localization and mapping techniques
-(SLAM) to build and move through a map.  We approach this problem from the context of a
-quadrotor helicopter, discussed further in \S\ref{sub:quadrotor}, which presents us
-with a 6 Degree of Freedom (DOF) platform with which to work.
+Robots face two major challenges as they explore unknown environments: mapping the
+environment, and localization within their current belief of the world.  Least-squares
+\ac{SLAM} techniques are a popular solution for building a map and localizing within it.
+% We approach this problem from the context of a quadrotor helicopter, discussed further in
+% \S\ref{sub:quadrotor}, presenting us a 6-\ac{DOF} platform with which to work.
 
-SLAM problems presents many computational challenges, most of which stem from the large
-number of observations and states which must be reconciled.  To enable realtime
+\ac{SLAM} problems present many computational challenges, most of which stem from the
+large number of observations and states which must be reconciled.  To enable realtime
 operations, techniques must be used to simplify the solving of least-squares problems. We
 used two basic techniques, first, not solving the portions of the problem that have not
 changed since the last computation, and second, preserving and exploiting the sparsity in
-matrices inherent in our problem.
+matrices inherent in our problem.  In \S\ref{sec:incrementalsmoothingandmapping}, we
+provide a detailed explanation of these linear algebra techniques.
  
-This paper presents our modular implementation of SLAM, which allows for generic sensor
-input to the solver.  We cover our generic observation and motion models as well as
-optimization techniques applied to our solver, focusing on incremental Smoothing and
-Mapping (iSAM), which allows for realtime operations. \cite{Kaess08tro}
+This paper also covers our generic observation and motion models as well as optimization
+techniques applied to our solver, focusing on iSAM, which allows for realtime
+operations~\cite{Kaess08tro}.  This is covered and applied to least-squares
+in~\S\ref{sec:backendModels}.
 
-We then address applying our solver to a specific robot, the AR.Drone quadcoptor.  To do
-this, we create a motion model using its internal measurements, and provide synthetic
-known data association using AprilTags. \cite{olson2011tags} Experimental data and results are presented
-showing successfully building a map of the environment and localizing itself using only
-the quadrotor's odometry and arbitrarily placed landmarks in a real-world environment.
+In~\S\ref{sec:experiments}, we experimentally apply our solver to a specific robot, the
+AR.Drone quadrotor.  To do this, we create a motion model using its internal measurements,
+and provide synthetic features with known data association using
+AprilTags~\cite{olson2011tags}.  Experimental data and results are presented showing
+successful construction of a map of the environment and localization of the robot using
+only odometry and arbitrarily placed landmarks in a real-world environment.
 
 \section{System Architecture}
 \label{sec:systemarchitecture}
 
 % Steve's Section
 
-The architecture of our SLAM software was developed with modularity and versatility in
-mind.  As a result, the SLAM software essentially consists of two sides: a front-end that
-interfaces with the robot and produces a graph of nodes and edges from odometry and
-landmark observations, and a back-end that solves the SLAM problem from this graph.
+The architecture of our \ac{SLAM} software was developed with modularity and versatility
+in mind.  As a result, our software essentially consists of two subsystems: a
+front-end that interfaces with the robot and produces a graph of nodes and factors from
+odometry and landmark observations, and a back-end that solves the \ac{SLAM} problem from
+this graph.
 
 In our framework, each robot node is a six dimensional pose and each landmark node is a
 three dimensional position. These poses and positions make up the state vector solved by
-the back-end.  The edges represent relative poses between two nodes. The relative pose
-between two robot nodes is an odometry edge, and the relative pose between a landmark node
-and a robot node is an observation edge. These relative poses are the constraints that the
-back-end SLAM solver uses to optimize the estimate of the state vector. Together, the
-nodes and edges form a graph representation of the SLAM problem.  \S\ref{sec:6dof}
-describes the mathematical 6-DOF spatial relationships we use frequently in our graph
-representation.
+the back-end.  The factors contain three components: relative measurements between two
+nodes, a Jacobian of the function that predicts measurements from the state vector, and
+the residual corresponding to the two nodes.  Together, this creates an elegant
+representation of any least-squares problem.  This technique was made popular for the
+\ac{SLAM} problem in~\cite{dellaert2005square}.  These factors can relate two robot nodes,
+or a landmark node and a robot node.  Factors are the constraints that the back-end
+\ac{SLAM} solver uses to optimize the estimate of the state vector. \S\ref{sec:6dof}
+describes the mathematical 6-\ac{DOF} spatial relationships we use frequently in the
+factor graph representation.
 
 
-For passing information between the front-end and back-end, we employ the Lightweight
-Communications and Marshalling (LCM) library. \cite{huang2010} One of the main benefits
-of using LCM is the ability to record and playback the messages sent between processes. This
-tool allows us to keep a record of the experiments we performed and evaluate different code 
-structures and solvers on the same real-world dataset. The front-end also uses LCM
-to receive data from the robot and send it motion commands.
+Our software system consists of multiple processes.  For passing information between them,
+we employ the Lightweight Communications and Marshalling (LCM)
+library~\cite{huang2010}. One of the main benefits of using LCM is the ability to record
+and playback the messages sent between processes. This tool allows us to keep a record of
+the experiments we performed and evaluate different software implementations on the same
+real-world dataset. The front-end also uses LCM to receive data from the robot and to send
+it motion commands.
 
 By designing the software in a modular framework, the back-end is a generic solver for any
-graph-based SLAM problem. Thus, the back-end can be easily transferred between SLAM
-applications. Only the front-end is specific to the application. The back-end solver we
-implemented is called incremental smoothing and mapping (iSAM), and is discussed in \S\ref{sec:incrementalsmoothingandmapping}. However, because of its modularity, other back-end SLAM solvers (like
-batch methods, for example) can be inserted without alteration to the front-end.
-
+graph-based \ac{SLAM} problem. Thus, the back-end can be easily transferred between
+\ac{SLAM} applications. Only the front-end is specific to the application. The back-end
+solver we implemented is inspired by iSAM (discussed in
+\S\ref{sec:incrementalsmoothingandmapping}). However, because of our system's modularity,
+other nonlinear least-squares solvers can be inserted without alteration to the front-end.
 
 \section{Incremental Smoothing and Mapping}
 \label{sec:incrementalsmoothingandmapping}
 
 %Pat's section
 
-Incremental smoothing and mapping (iSAM) is a relatively recent approach to solving the
-full SLAM problem. \cite{Kaess08tro} The full SLAM problem, in contrast to the online SLAM
-problem, recovers the full posterior of the robot trajectory and landmark positions
-instead of just the current robot pose and landmark positions. \cite{thrun2005probabilistic}
+Incremental smoothing and mapping is a relatively recent approach to solving the
+full \ac{SLAM} problem~\cite{Kaess08tro}.  The full \ac{SLAM} problem, in contrast to the
+online \ac{SLAM} problem, recovers the full posterior of the robot trajectory and landmark
+positions instead of just the current robot pose and landmark
+positions~\cite{thrun2005probabilistic}.
 
-In standard least-squares SLAM, we solve a system of equations such as
-
+In standard least-squares \ac{SLAM}, we solve a system of equations such as
 \begin{align*}
   \Delta x' &= \underset{\Delta x}{\operatorname{argmin}} (J\Delta x - r)^{\text{T}}
 \Sigma^{-1} (J\Delta x - r) \\
   &= \underset{\Delta x}{\operatorname{argmin}} \| J\Delta x - r \|^2_{\Sigma}
 \end{align*}
-
 where $x$ is the state vector that contains all robot poses and
 landmark positions, $J$ is the Jacobian of the observation model that
 predicts measurements given the state vector, $\Delta x$ is the
 deviation of $x$ from the linearization point, and $r$ is the residual
 of observations versus the predicted measurements. The minimizing
-solution results in the standard normal equations.
-
+solution results in the standard normal equations
 \[
 (J^{\text{T}} \Sigma^{-1} J) \Delta x = J^{\text{T}} \Sigma^{-1}r
 \]
-
 This is solved via the Cholesky decomposition of the information matrix,
 $J^{\text{T}}\Sigma^{-1}J$.
 
 iSAM makes a change to this problem formulation by considering the Cholesky decomposition
 of $\Sigma^{-1}$ -- written as $\Sigma^{-\text{T}/2}$ to denote the upper triangular
 result of the decomposition --  and rewriting the least squares problem as
-
 \begin{align*}
     \Delta x' &= \underset{\Delta x}{\operatorname{argmin}} (J\Delta x - r)^{\text{T}}
 \Sigma^{-1/2}\Sigma^{-\text{T}/2} (J\Delta x - r) \\
@@ -166,41 +163,36 @@ result of the decomposition --  and rewriting the least squares problem as
   \|^2\\
 &= \underset{\Delta x}{\operatorname{argmin}} \| (A\Delta x - b)\|^2
 \end{align*}
-
 where
-
 \begin{align*}
   A &= \Sigma^{-\text{T}/2}J \\
   b &= \Sigma^{-\text{T}/2}r
 \end{align*}
-
 This allows us to solve $A\Delta x = b$ by applying QR factorization directly to $A$. This
 is advantageous because it avoids the squaring of the matrix condition number that is
 associated with the normal equation form. Moreover, there is the nice property that the
 $R$ that results from the QR decomposition of $A$ is equivalent to the upper triangular
-term in the Cholesky decomposition of $A^{\text{T}}A$ if A is real. \cite{Kaess08tro}
+term in the Cholesky decomposition of $A^{\text{T}}A$ if A is real~\cite{Kaess08tro}.
 
 iSAM recovers the posterior by doing fast incremental updates to the factorization of $A$.
-This means that calculations are only performed on elements that are actually affected* by
- new measurements. We can get away with this because we often have a very good estimate of
- the state vector so doing a full batch re-linearization and solution at each step wastes
- calculations because most elements of $\Delta x$ will be zero. However, iSAM periodically
- does perform a full batch solution in order to compensate for accumulated linearization
- errors. Over time, loop closures greatly decrease the sparsity of the matrix
- factorization, so variable reordering is performed during each batch solution step. The
- incremental update and variable reordering will be covered below.
-
+This means that calculations are only performed on elements that are actually affected by
+new measurements. We can get away with this because we often have a very good estimate of
+the state vector so doing a full batch re-linearization and solution at each step wastes
+calculations because most elements of $\Delta x$ will be zero. However, iSAM periodically
+performs a full batch solution in order to compensate for accumulated linearization
+errors. Over time, loop closures greatly decrease the sparsity of the matrix
+factorization, so variable reordering is performed during each batch solution step. 
 
 \subsection{Givens Rotations}
 \label{sub:givensrotations}
 
 The $R$ term that results from the QR decomposition of $A$ is upper triangular by
 definition. When a new measurement row is added to $A$, we can incrementally update $R$
-instead of performing the entire QR decomposition again. The way to achieve this is via
-Givens rotations. 
+instead of performing the entire QR decomposition again. This can be achieved with Givens
+rotations.
 
 Givens rotations are a way to introduce a zero at a specified point in a matrix by
-premultiplying by a matrix of the form
+premultiplying by a matrix $G$ of the form
 
 
 \[
@@ -217,16 +209,16 @@ k & 0   & \cdots &   s   & \cdots &    c   & \cdots &    0   \\
 \] 
 
 where $c = \cos{(\theta)}$ and $s = \sin{(\theta)}$ for some $\theta$. We follow the
-  algorithms in Golub and Van Loan's \emph{Matrix Computations} to find $c$ and $s$ to
-  zero a particular element in a matrix. \cite{golub1996matrix} 
+algorithms in Golub and Van Loan's \emph{Matrix Computations} to find $c$ and $s$ to
+zero a particular element in a matrix~\cite{golub1996matrix}.
 
-When we receive new rows for $A$ when a new measurement occurs, they are appended to $R$,
-which is then no longer upper-triangular. A series of Givens rotations are applied to the
-elements that are below the diagonal. This is called triangularization and once the
+When a new measurement occurs, new rows need to be added to $A$.  Here, we append them to
+$R$, which is then no longer upper-triangular. A series of Givens rotations is applied to
+the elements that are below the diagonal. This is called triangularization, and once the
 below-diagonal elements have been removed via the rotations, the resulting
-upper-triangular matrix is equivalent to the QR decomposition of the full $A$ matrix.
-\cite{golub1996matrix} The same series of rotations needs to be applied to our right hand
-side $b$ term.
+upper-triangular matrix is equivalent to the QR decomposition of the full $A$
+matrix~\cite{golub1996matrix}. The same series of rotations needs to be applied to our
+right-hand side $b$ term.
 
 After the rotations have been performed, the system can be solved with simple back-substitution.
 
@@ -257,14 +249,14 @@ and solving the system. Figure \ref{fig:images/reorder32} shows the large swaths
 non-zero elements that are introduced during loop closures. 
 
 In order to avoid this problem, we can perform variable reordering. This is essentially a
-permutation of the columns of $A$ where columns that belong to the same node in the SLAM
-graph are kept together. This new order influences the variable elimination which
+permutation of the columns of $A$ where columns that belong to the same node in the \ac{SLAM}
+graph are kept together. This new order influences the variable elimination, which
 has a profound effect on the sparsity of the factorization. Figure
 \ref{fig:images/reorder33} shows the result of applying variable reordering to simulated
 data that has experienced several loop closures.
 
 The best column variable ordering is NP hard, and iSAM uses COLAMD as a heuristic to
-assist in the process. \cite{davis2004column} Our implementation uses a simplified
+assist in the process~\cite{davis2004column}. Our implementation uses a simplified
 heuristic that counts the number of connected nodes in the graph. It is not the minimum
 degree ordering, but we have found it to be more than adequate in our tests. Figure
 \ref{fig:reorder} is an example of the application of our simplified heuristic.
@@ -272,12 +264,12 @@ degree ordering, but we have found it to be more than adequate in our tests. Fig
 \section{Back-end Motion and Observation Models}
 \label{sec:backendModels}
 
-\subsection{6-DOF Spatial Relationships}
+\subsection{6-\ac{DOF} Spatial Relationships}
 \label{sec:6dof}
 % Paul's section
 
 We adopt the notation from~\cite{rsmith-1990a,reustice-phdthesis} to
-describe three particular spatial relationships of 6-DOF coordinate
+describe three particular spatial relationships of 6-\ac{DOF} coordinate
 frames: {\it compound, inverse}, and {\it composite}.  This notation
 allows us to abstract away the linear algebra operations necessary for
 applying these relationships to nonlinear motion and observation models.
@@ -323,11 +315,11 @@ corresponding to the matrix
   H_k^i & = & H_j^i H_k^j
 \end{eqnarray*}
 
-% For example, for the compounding operation, our SLAM backend takes $i$
+% For example, for the compounding operation, our \ac{SLAM} back-end takes $i$
 % to denote the world frame.  $j$ and $k$ denote the frame of the robot
 % at the previous and current timesteps, respectively.  This effectively
 % acts as a motion model that predicts the global pose of a robot in
-% 6-DOF given the odometry at every timestep.
+% 6-\ac{DOF} given the odometry at every timestep.
 
 The Jacobian of the compounding operation $J_\oplus$ is given
 in~\cite{reustice-phdthesis}.  Using this matrix, we can compute to
@@ -407,7 +399,7 @@ first-order covariance projection can be computed as in Section~\ref{sec:6dof}.
 \subsubsection{Pose Nodes}
 \label{subs:posenodeinit}
 
-Say frame $i$ corresponds to an initialized pose node in the SLAM graph.  We observe a
+Let frame $i$ correspond to an initialized pose node in the \ac{SLAM} graph.  We observe an
 odometry measurement relating frame $i$ and frame $j$.  Then we initialize node $j$ to be
 in the global frame with the ``head-to-tail'' operation $ {\hat {\bf x}_{gj}} = {\bf
   x}_{gi} \oplus {\bf x}_{ij} $
@@ -424,14 +416,14 @@ translation vector corresponding to $ {\hat {\bf x}}_{gl} = {\bf x}_{gi} \oplus 
 \label{sub:nodeinitializationandedgeresiduals}
 
 To solve the least squares problem described in
-\S\ref{sec:incrementalsmoothingandmapping}, we need to compute a observation model
+\S\ref{sec:incrementalsmoothingandmapping}, we need to compute an observation model
 Jacobian $J$ and residual vector $r$.  Together, these comprise a ``factor'' between two
 unknowns in the graph.  In the following section, we describe how these are computed using
 the notation from \S\ref{sec:6dof}.
 
 \subsubsection{Pose-to-Pose Factors}
 \label{subs:posenodelinear}
-Given two guesses of robot frames $i$ and $j$ (with respect to the global frame), then the
+Given two guesses of robot frames $i$ and $j$ (with respect to the global frame), the
 predicted relative pose observation is $ {\hat {\bf x}_{ij}} = \ominus {\bf x}_{gi} \oplus
 {\bf x}_{gj}$. The Jacobian of this relationship is evaluated as in
 \S\ref{sub:compositionoperation}.  The residual vector is simply the difference
@@ -440,7 +432,7 @@ between the predicted ${\hat {\bf x}_{ij}}$ and the observed ${\bf x}_{ij}$.
 \subsubsection{Pose-to-Landmark Factors}
 \label{subs:pointnodelinear}
 
-If a landmark $l$ is observed frame robot frame $i$, then we can predict this measurement
+If a landmark $l$ is observed from robot frame $i$, then we can predict this measurement
 by the ``tail-to-tail'' operation.  We simply assign the orientation of ${\bf x}_{gl}$ to
 be arbitrary.  Then, the estimated observation is the translational component of $ {\hat
   {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{gl} $. The residual for the
@@ -460,15 +452,15 @@ relative position and orientation.  The accuracy, detection performance, and sma
 footprint made it particularly desirable~\cite{olson2011tags}.
 
 We applied principles of linearized covariance projection to estimate a covariance matrix
-for the 6-DOF relative pose vector ${\bf x}_{tc}$ that describes the relative pose from
+for the 6-\ac{DOF} relative pose vector ${\bf x}_{tc}$ that describes the relative pose from
 the tag's frame $t$ to the camera's frame $c$.
 
 Denote $f$ as the function that computes the $9 \times 1$ homography vector ${\bf h}$ from
-a set of world points and image points via the Direct Linear Transform (DLT) algorithm.
-By linearizing $f$ around a mean input (the observed image point coordinates), we can
-compute the $9 \times 9$ covariance matrix $\Sigma({\bf h})$ to first order.  From there,
-we project the covariance estimate of $h$ by linearizing a function $g$, which maps the
-homography to ${\bf x}_{tc}$.
+a set of corresponding world points and image points via the Direct Linear Transform (DLT)
+algorithm.  By linearizing $f$ around a mean input (the observed image point coordinates),
+we can compute the $9 \times 9$ covariance matrix $\Sigma({\bf h})$ to first order.  From
+there, we project the covariance estimate of $h$ to a pose covariance by linearizing a
+function $g$, which maps the homography to ${\bf x}_{tc}$.
 
 For simplicity, we assume that the uncertainty of the world points and the camera
 calibration parameters are zero.  Further, we assume negligible lens distortion.  All
@@ -480,14 +472,14 @@ is simply
   \Sigma({{\bf x}_{tc}}) & = & J_g J_f \Sigma({\bf u}) J_f^\top J_g^\top
 \end{eqnarray*}
 where ${\bf u}$ is the $2N \times 1$ vector of $N$ noisy image point coordinates and
-$\Sigma({\bf u})$ is the associated isotropic covariance matrix.  We assume the feature
-noises are independent. The diagonal elements of this covariance matrix are tuned by the
-user.
+$\Sigma({\bf u})$ is the associated covariance matrix.  We assume the feature noise
+realizations are independent and isotropic. The diagonal elements of this covariance
+matrix are tuned by the user.
 
 The Jacobians are computed by finite difference:
 \begin{align*}
   \left[J_f\right]_{ij} &=\frac{\partial f_i}{\partial u_j} \\
-  &= \frac{f_i(u_0, u_1, \dots, u_i +
+  &= \frac{f_i(u_0, u_1, \dots, u_j +
     \epsilon, \dots, u_{2N})}{\epsilon} \\
   & \ \ \  - \frac{f_i(u_0, \dots, u_{2N})}{\epsilon}
 \end{align*}
@@ -514,12 +506,13 @@ projections operations referred to in \S\ref{sec:6dof} are therefore included in
 % Steve talks about drone hardware
 % Schuyler gets results
 
-The quadrotor helicopter we used for experimental testing of the realtime 6-DOF SLAM algorithm
-was a Parrot AR.Drone. Despite its reputation as an augmented reality gaming platform (for which
-it is markteted), the AR.Drone has a substantial robotics community. The AR.Drone has a full 
-suite of MEMS inertial sensors: a three-axis accelerometer, a two-axis gyroscope for measuring 
-pitch and roll, and a yaw angle precision gyroscope.  It also features an ultrasound altimeter
-and two cameras for recording images in the forward-looking and downward-looking directions.
+The quadrotor helicopter we used for experimental testing of the realtime 6-\ac{DOF}
+\ac{SLAM} algorithm was a Parrot AR.Drone (Figure~\ref{fig:drone}). Despite its reputation
+as an augmented reality gaming platform (for which it is markteted), the AR.Drone has a
+substantial robotics community following. The AR.Drone has a full suite of MEMS inertial
+sensors: a three-axis accelerometer, a two-axis gyroscope for measuring pitch and roll,
+and a yaw angle precision gyroscope.  It also features an ultrasound altimeter and two
+cameras for recording images in the forward-looking and downward-looking directions.
 
 \begin{figure}[!h]
   \centering
@@ -533,24 +526,46 @@ The AR.Drone itself fuses measurements from its inertial sensors and cameras to 
 of velocities and Euler angles of the robot. The velocities reported by the AR.Drone are not body-frame 
 velocities, but rather velocities oriented with the yaw angle of the body-frame and always parallel 
 with the ground. The data available from the AR.Drone that we used in our experiments is reported by 
-a single LCM datatype. An overview of this datatype is given in Table XXX.
+a single LCM datatype. An overview of this datatype is given in Table~\ref{tab:telemetry}.
 
-% struct ardrone_state_t
-% {
-%     int64_t utime;
-% 	
-%     //State
-%     float pitch;			// radians	                % Euler angle about body-frame Y	
-%     float yaw;				// radians              % Euler angle about body-frame Z
-%     float roll;				// radians              % Euler angle about body-frame X
-%     float altitude;			// meters               % Height above ground
-%     float vx; 				// meters / sec         % Forward velocity, parallel to the ground
-%     float vy;				// meters / sec             % Velocity to the right, parallel to the ground
-%     float vz;				// meters / sec             % Downward vertical velocity, perpendicular to the ground
-%     float battery;          // percent                % Percentage of battery remaining
-% 
-%     boolean flying;                                   % Flag for when the AR.Drone is in the air
-% }
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{Telemetry from AR.Drone}
+\label{tab:telemetry}
+\centering
+% BEGIN RECEIVE ORGTBL ardrone_state
+\begin{tabular}{|l|l|}
+\hline
+Field & Description \\
+\hline
+Pitch & Euler angle about body-frame Y \\
+Yaw & Euler angle about body-frame Z \\
+Roll & Euler angle about body-frame X \\
+Altitude & Height above ground \\
+Vx & Forward velocity, parallel to the ground \\
+Vy & Velocity to the right, parallel to the ground \\
+Vz & Downward velocity, ground-perpendicular \\
+Battery & Percentage of battery remaining \\
+\hline
+\end{tabular}
+% END RECEIVE ORGTBL ardrone_state
+\end{table}
+
+\begin{comment}
+#+ORGTBL: SEND ardrone_state orgtbl-to-latex :splice nil :skip 0
+|----------+-----------------------------------------------|
+| Field    | Description                                   |
+|----------+-----------------------------------------------|
+| Pitch    | Euler angle about body-frame Y                |
+| Yaw      | Euler angle about body-frame Z                |
+| Roll     | Euler angle about body-frame X                |
+| Altitude | Height above ground                           |
+| Vx       | Forward velocity, parallel to the ground      |
+| Vy       | Velocity to the right, parallel to the ground |
+| Vz       | Downward velocity, ground-perpendicular       |
+| Battery  | Percentage of battery remaining               |
+|----------+-----------------------------------------------|
+\end{comment}
 
 The front-end we implemented manipulates the measurements from the AR.Drone into relative poses 
 (quadrotor odometry). Both the camera images and state measurements are transmitted by the AR.Drone 
@@ -567,10 +582,10 @@ over its own wireless ad-hoc network and read into the front-end using LCM.
     \subfigure[After closing the primary loop] {
       \includegraphics[width=2.1in]{images/loopclosure}
       \label{fig:loopclosure}}
-    \caption{The map of the world created by the AR.Drone quadcoptor with landmarks
+    \caption{The map of the world created by the AR.Drone quadrotor with landmarks
       arranged in square.  In \subref{fig:deadreckon} the dead reckoning trajectory has
       significant drift in the $z$ direction (up/down).  This drift is corrected when
-      using our SLAM implementation.}
+      using our \ac{SLAM} implementation~\subref{fig:loopclosure}.}
     \label{fig:mapadjustment}
   \end{center}
 \end{figure*}
@@ -580,30 +595,29 @@ over its own wireless ad-hoc network and read into the front-end using LCM.
 \section{Experiments}
 \label{sec:experiments}
 
-We applied our SLAM implementation to simulated and real world data. In both cases, we
-evaluated batch least-squares SLAM, incremental smoothing and mapping, and incremental
-smoothing and mapping with variable reordering. The results of these tests will be
-presented below.
+We applied our \ac{SLAM} implementation to simulated and real-world data. In both cases, we
+evaluated batch least-squares \ac{SLAM}, incremental smoothing and mapping, and incremental
+smoothing and mapping with variable reordering. 
 
 \subsection{Simulation}
 \label{sub:simulation}
 
 % Pat's section
-For the simulated data, we used the simulator that was featured in PS2 and PS3 with the
-same waypoints. When evaluating different SLAM backends, we seeded the random number
-generator to ensure the exact same data was being generated. The data from the simulator
-is from a 2D world, so we set the z, roll, and pitch observations to be zero. Because of
-the flexibility in our SLAM backend, it would be easy to create nodes and edges for a 2D
+For the simulated data, we used the simulator developed by the April lab. When evaluating
+different \ac{SLAM} back-ends, we seeded the random number generator to ensure the exact
+same data was being generated. The data from the simulator is from a 2D world, so we set
+the z, roll, and pitch observations to be zero with high certainty. Because of the
+flexibility in our \ac{SLAM} back-end, it would be easy to create nodes and edges for a 2D
 world. However, we chose to use the 3D nodes and edges to see the system grow at the same
-rate of a full 6DOF application.
+rate of a full 6-\ac{DOF} application.
 
-The three different methods of SLAM that we evaluated had enormous speed differences.
-Table \ref{tab:timing} show the total simulation time for two loops of the simulator. This
+The three different methods of \ac{SLAM} that we evaluated had enormous speed differences.
+Table \ref{tab:timing} shows the total simulation time for two loops of the simulator. This
 ensured that there were many loop closures.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.3}
-\caption{Total simulation time for different SLAM methods}
+\caption{Total simulation time for different \ac{SLAM} methods}
 \label{tab:timing}
 \centering
 \begin{tabular}{|c|c|}
@@ -617,18 +631,19 @@ Batch Solve & 912.96 \\
 \end{tabular}
 \end{table}
 
-Figure \ref{fig:stepTime} shows how much computation time was spent at each update step
+Figure \ref{fig:stepTime} shows the computation time spent at each update step
 for the different methods. Notice the spikes at integer multiples of 100 for the
-incremental methods. This is expected because it coincides with out batch update, variable
+incremental methods. This is expected because it coincides with our batch update, variable
 reordering, and relinearization. These results confirmed our suspicion that we would need
 incremental updates as well as periodic variable reordering in order to achieve realtime
-speeds when working with real world data.
+speeds when working with real-world data.
 
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=2.5in]{images/stepTimeResults}
-  \caption{The time per step for different SLAM solve methods.}
+  \caption{The time per step for different \ac{SLAM} solve methods.  The incremental
+    method with reordering (shown in red) is by far the fastest.}
   \label{fig:stepTime}
 \end{figure}
 
@@ -644,39 +659,38 @@ in a square allows us to evaluate the quality of our created map. A picture of o
 test runs can be seen in Figure \ref{fig:testing}.
 
 Our implementation was able to run and process data in realtime, providing a map that is
-qualitatively identical to the flight path and landmark setup provided.  As we run batch
-steps we see the map reorient itself into a better configurations as we gather more loop
-closures, as seen in Figure \ref{fig:loopclosure}. These results hold for any configuration 
-of arbitrarily placed landmarks; simple shapes are used purely for ease of evaluation. Additionally, the path of
-the AR.Drone is significantly better than using dead-reckoning based off of the reported
-odometry, shown in Figure \ref{fig:deadreckon}.  This is expected, as the position of the AR.Drone is calculated by double
-integrating accelerations, which can easily accumulate error and diverge over time.
+qualitatively acceptable.  As expected, the back-end corrects for drifts in the robot's
+odometry, shown in Figures~\ref{fig:deadreckon} and \ref{fig:loopclosure}.
 
-Without knowing a ground-truth, absolute error in odometry and landmark positions are impossible to calculate.  Therefore, we used normalized $\chi^2$ to quantitatively evaluate the map produced by SLAM.  After running on a nominal data set, we find a final value for normalized $\chi^2$ of 0.9719.  As the expected value of a normalized $\chi^2$ is 1, this shows our solution is probabilistically reasonable. 
+% As we run batch steps we see the map reorient itself into a better configurations as we
+% gather more loop closures, as seen in Figure \ref{fig:loopclosure}. These results hold for
+% any configuration of arbitrarily placed landmarks; simple shapes are used purely for ease
+% of evaluation. Additionally, the path of the AR.Drone is significantly better than using
+% dead-reckoning based off of the reported odometry, shown in Figure \ref{fig:deadreckon}.
+% This is expected, as the position of the AR.Drone is calculated by double integrating
+% accelerations, which can easily accumulate error and diverge over time.
+
+Without knowing the ground-truth trajectory, absolute error in odometry and landmark
+positions are impossible to calculate.  Therefore, we used normalized $\chi^2$ to
+quantitatively evaluate the map produced by \ac{SLAM}.  After running on a nominal data
+set, we find a final normalized $\chi^2$ error of 0.9719.  Because the expected
+value of a normalized $\chi^2$ is 1, our solution is probabilistically reasonable.
 
 One test run of the AR.Drone took about 60 seconds and produced on the order of 1000
 updates. We were able to do all data gathering (reading and publishing LCM messages),
-pre-processing (video decoding and AprilTag homography), and SLAM solving using a personal
+pre-processing (video decoding and AprilTag homography), and \ac{SLAM} solving using a personal
 laptop with standard specs in realtime.
-
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 % Schuyler's section
-We have presented the development of a optimized, generic back-end solver for a 6 DOF SLAM
-problem which is fast enough to allow for realtime deployment on a standard computer.  We
-have deployed it in a real-world 6 DOF application using known data association with
-demonstrably good \emph{ lawl what does good mean} results.  We note our back-end is agnostic of the data
-association problem, and could be used with a front-end that does unknown data
-association.  Our source code and experimental results can be found at
-http://do.we.provide.this.
-
-
-\section{Acknowledgment}
-
-The authors would like to thank Sprite, the number 7, and Emacs.
-
+We have presented the development of a optimized, generic back-end solver for a 6-\ac{DOF}
+\ac{SLAM} problem which is fast enough to allow for realtime deployment on a standard
+computer.  We have deployed it in a real-world 6-\ac{DOF} application using known data
+association with acceptable quality and $\chi^2$ error.  We note our back-end is agnostic
+of the data association problem, and could be used with a front-end that have unknown data
+association.
 
 
 \bibliographystyle{IEEEtran}

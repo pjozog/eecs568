@@ -723,7 +723,7 @@ public class BackEnd{
 
 
             // Tikhanoff regularization
-            A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
+            // A = A.plus(Matrix.identity(A.getRowDimension(), A.getColumnDimension()).times(lambda));
             assert(A.isSparse());
 
 

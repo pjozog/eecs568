@@ -54,7 +54,7 @@ public class Pose3DToPose3DEdge extends Edge {
 
             n1.init(new Pose3D(prediction));
 
-        } else {
+        } else if (!n1.isInitialized() && !n2.isInitialized()) {
             System.out.println("One of the nodes has to have a value to make a prediction!");
             assert(false);
         }

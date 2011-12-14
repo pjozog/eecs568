@@ -63,7 +63,7 @@ Robots face two major challenges as they explore unknown environments, mapping t
 environment, and localizing itself within its current belief of the world.  A solution to
 this problem is using least-squares simultaneous localization and mapping techniques
 (SLAM) to build and move through a map.  We approach this problem from the context of a
-quadrotor helicopter, discussed further in Section \ref{sub:quadrotor}, which presents us
+quadrotor helicopter, discussed further in \S\ref{sub:quadrotor}, which presents us
 with a 6 Degree of Freedom (DOF) platform with which to work.
 
 SLAM problems presents many computational challenges, most of which stem from the large
@@ -76,11 +76,11 @@ matrices inherent in our problem.
 This paper presents our modular implementation of SLAM, which allows for generic sensor
 input to the solver.  We cover our generic observation and motion models as well as
 optimization techniques applied to our solver, focusing on incremental Smoothing and
-Mapping (iSAM), which allows for realtime operations.
+Mapping (iSAM), which allows for realtime operations. \cite{Kaess08tro}
 
 We then address applying our solver to a specific robot, the AR.Drone quadcoptor.  To do
 this, we create a motion model using its internal measurements, and provide synthetic
-known data association using AprilTags.  Experimental data and results are presented
+known data association using AprilTags. \cite{olson2011tags} Experimental data and results are presented
 showing successfully building a map of the environment and localizing itself using only
 the quadrotor's odometry and arbitrarily placed landmarks in a real-world environment.
 
@@ -569,9 +569,9 @@ wireless ad-hoc network and read into the front-end using LCM.
     \subfigure[Dead Reckoning] {
       \includegraphics[width=2.1in]{images/deadreckon}
       \label{fig:deadreckon}}
-    \subfigure[Before closing the primary loop] {
-      \includegraphics[width=2.1in]{images/initial}
-      \label{fig:initial}}
+   % \subfigure[Before closing the primary loop] {
+   %   \includegraphics[width=2.1in]{images/initial}
+   %   \label{fig:initial}}
     \subfigure[After closing the primary loop] {
       \includegraphics[width=2.1in]{images/loopclosure}
       \label{fig:loopclosure}}
@@ -603,13 +603,13 @@ test runs can be seen in Figure \ref{fig:testing}.
 Our implementation was able to run and process data in realtime, providing a map that is
 qualitatively identical to the flight path and landmark setup provided.  As we run batch
 steps we see the map reorient itself into a better configurations as we gather more loop
-closures.  An example of this is seen in Figure \ref{fig:mapadjustment}, where before loop
-closures are incorporated the landmarks are skewed, and after loop closures are found, the
-landmarks form a square.  These results hold for any configuration of arbitrarily placed
-landmarks; simple shapes are used purely for ease of evaluation. Additionally, the path of
+closures, as seen in Figure \ref{fig:loopclosure}. These results hold for any configuration 
+of arbitrarily placed landmarks; simple shapes are used purely for ease of evaluation. Additionally, the path of
 the AR.Drone is significantly better than using dead-reckoning based off of the reported
-odometry.  This is expected, as the position of the AR.Drone is calculated by double
+odometry, shown in Figure \ref{fig:deadreckon}.  This is expected, as the position of the AR.Drone is calculated by double
 integrating accelerations, which can easily accumulate error and diverge over time.
+
+Without knowing a ground-truth, absolute error in odometry and landmark positions are impossible to calculate.  Therefore, we used normalized $\chi^2$ to quantitatively evaluate the map produced by SLAM.  After running on a nominal data set, we find a final value for normalized $\chi^2$ of 0.9719.  As the expected value of a normalized $\chi^2$ is 1, this shows our solution is probabilistically reasonable. 
 
 One test run of the AR.Drone took about 60 seconds and produced on the order of 1000
 updates. We were able to do all data gathering (reading and publishing LCM messages),
@@ -625,7 +625,7 @@ We have presented the development of a optimized, generic back-end solver for a 
 problem which is fast enough to allow for realtime deployment on a standard computer.  We
 have deployed it in a real-world 6 DOF application using known data association with
 demonstrably good \emph{ lawl what does good mean} results.  \emph{Is this true, do we
-  care I have no idea how to end this} We note the back-end is agnostic of the data
+  care I have no idea how to end this} We note our back-end is agnostic of the data
 association problem, and could be used with a front-end that does unknown data
 association.  Our source code and experimental results can be found at
 http://do.we.provide.this.

@@ -59,11 +59,14 @@
 \label{sec:introduction}
 
 % Schuyler's section
-Robots face two major challenges as they explore unknown environments, mapping the environment, and localizing itself within its current belief of the world.  A solution to this problem is using least-squares simultaneous localization and mapping techniques (SLAM) to build and move through a map.  We approach this problem from the context of a quadcoptor helicopter, discussed further in Section \ref{sub:quadrotor}, which presents us with a 6 Degree of Freedom (DOF) platform with which to work.\\
-SLAM problems presents many computational challenges, most of which stem from the large number of observations and states which must be reconciled.  To enable realtime operations, techniques must be used to simplify the solving of least-squares problems. We used two basic techniques, first, not solving the portions of the problem that have not changed since the last computation, and second,  preserving and exploiting the sparsity in matrices inherent in our problem.\\ 
 
-This paper presents our modular implementation of SLAM, which allows for generic sensor input to the solver.  We cover our generic observation and motion models as well as optimization techniques applied to our solver, focusing on incremental Smoothing and Mapping (iSAM), which  allows for realtime operations.\\
-We then address applying our solver to a specific robot, the AR.Drone quadcoptor.  To do this, we create a motion model using its internal measurements, and provide synthetic known data association using AprilTags.  Experimental data and results are presented showing successfully building a map of the environment and localizing itself using only the quadcoptor's odometry and arbitrarily placed landmarks in a real-world environment.     
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
+ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
+sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+est laborum.
+
 
 
 
@@ -377,9 +380,9 @@ operation is
 \label{sub:nodeinitializationandedgeresiduals}
 Every timestep in which the robot moves or a feature is observed, a new node is created
 and initialized.  To initialize a node means to assign that node a pose (for robot poses)
-or a point (for landmarks) in the global frame.  This is computed the edge (or ``factor'')
-that connects the new node to a previous node.  To initialize a node with no previously
-initialized nodes is a referred to as adding a ``prior.''
+or a point (for landmarks) in the global frame.  This is computed by the measurement
+that relates the new node to a previous node.  To initialize a node without connecting to
+a previously created node is a referred to as adding a ``prior.''
 
 For the following sections, let $g$ represent the global frame.  For each node, a
 first-order covariance projection can be computed as in Section~\ref{sec:6dof}.
@@ -400,15 +403,16 @@ arbitrary.  Then, the relative {\it position} of the landmark in the global fram
 translation vector corresponding to $ {\hat {\bf x}}_{gl} = {\bf x}_{gi} \oplus {\bf
  x}_{il} $
 
-\subsection{Node Linearization}
+\subsection{Factor Computation}
 \label{sub:nodeinitializationandedgeresiduals}
 
 To solve the least squares problem described in
 \S\ref{sec:incrementalsmoothingandmapping}, we need to compute a observation model
-Jacobian $J$ and residual vector $r$.  In the following section, we describe how these are
-computed using the notation from \S\ref{sec:6dof}.
+Jacobian $J$ and residual vector $r$.  Together, these comprise a ``factor'' between two
+unknowns in the graph.  In the following section, we describe how these are computed using
+the notation from \S\ref{sec:6dof}.
 
-\subsubsection{Pose Nodes}
+\subsubsection{Pose-to-Pose Factors}
 \label{subs:posenodelinear}
 Given two guesses of robot frames $i$ and $j$ (with respect to the global frame), then the
 predicted relative pose observation is $ {\hat {\bf x}_{ij}} = \ominus {\bf x}_{gi} \oplus
@@ -416,17 +420,16 @@ predicted relative pose observation is $ {\hat {\bf x}_{ij}} = \ominus {\bf x}_{
 \S\ref{sub:compositionoperation}.  The residual vector is simply the difference
 between the predicted ${\hat {\bf x}_{ij}}$ and the observed ${\bf x}_{ij}$.
 
-\subsubsection{Landmark Nodes}
+\subsubsection{Pose-to-Landmark Factors}
 \label{subs:pointnodelinear}
 
-For landmark measurement prediction, we create a 6-DOF relative pose vector from world to
-landmark frame $l$ whose translation components are determined directly from the best
-guess of the landmark location in the global frame.  Then, the estimated observation is $
-{\hat {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{gl} $. The residual for the
-landmark is then the difference between this prediction and what the robot actually
-measured.
+If a landmark $l$ is observed frame robot frame $i$, then we can predict this measurement
+by the ``tail-to-tail'' operation.  We simply assign the orientation of ${\bf x}_{gl}$ to
+be arbitrary.  Then, the estimated observation is the translational component of $ {\hat
+  {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{gl} $. The residual for the
+landmark is the difference between this prediction and what the robot actually measured.
 
-Note that for computation of the observation Jacobian, we drop the differentiations with
+Note that for the computation of this factor's Jacobian, we drop the differentiations with
 respect to the orientation of the landmark.  This leaves us with a $3 \times 9$ Jacobian
 and $3 \times 3$ positional covariance matrix. 
 

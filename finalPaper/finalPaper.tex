@@ -227,6 +227,21 @@ side $b$ term.
 
 After the rotations have been performed, the system can be solved with simple back-substitution.
 
+\begin{figure*}[t]
+  \begin{center}
+    \subfigure[] {
+    \includegraphics[width=2.5in]{images/reorder32}
+    \label{fig:images/reorder32}}
+    \subfigure[] {
+    \includegraphics[width=2.5in]{images/reorder33}
+    \label{fig:images/reorder33}}
+    \caption{The factorization of the $A$ matrix after 300 time steps of simulated data
+      that includes loop closures. (a) Before variable reordering, the loop closures
+      introduce many non-zero elements. (b) After variable reordering, we have a much more
+    sparse factorization. Over 50\% of the non-zero elements were removed.}
+    \label{fig:reorder}
+  \end{center}
+\end{figure*}
 
 \subsection{Variable Reordering}
 \label{sub:variablereordering}
@@ -244,24 +259,6 @@ graph are kept together. This new order influences the variable elimination whic
 has a profound effect on the sparsity of the factorization. Figure
 \ref{fig:images/reorder33} shows the result of applying variable reordering to simulated
 data that has experienced several loop closures.
-
-
-\begin{figure}[!h]
-  \begin{center}
-    \subfigure[] {
-    \includegraphics[width=2.5in]{images/reorder32}
-    \label{fig:images/reorder32}}
-    \subfigure[] {
-    \includegraphics[width=2.5in]{images/reorder33}
-    \label{fig:images/reorder33}}
-    \caption{The factorization of the $A$ matrix after 300 time steps of simulated data
-      that includes loop closures. (a) Before variable reordering, the loop closures
-      introduce many non-zero elements. (b) After variable reordering, we have a much more
-    sparse factorization. Over 50\% of the non-zero elements were removed.}
-    \label{fig:reorder}
-  \end{center}
-\end{figure}
-
 
 The best column variable ordering is NP hard, and iSAM uses COLAMD as a heuristic to
 assist in the process. \cite{davis2004column} Our implementation uses a simplified
@@ -590,12 +587,12 @@ over its own wireless ad-hoc network and read into the front-end using LCM.
 
 \begin{figure*}[t]
   \begin{center}
+    \subfigure[Experimental test run with four landmarks] {
+      \includegraphics[width=2.1in]{images/setup}
+      \label{fig:testing}}
     \subfigure[Dead Reckoning] {
       \includegraphics[width=2.1in]{images/deadreckon}
       \label{fig:deadreckon}}
-   % \subfigure[Before closing the primary loop] {
-   %   \includegraphics[width=2.1in]{images/initial}
-   %   \label{fig:initial}}
     \subfigure[After closing the primary loop] {
       \includegraphics[width=2.1in]{images/loopclosure}
       \label{fig:loopclosure}}
@@ -616,13 +613,6 @@ approach was to arrange 4 landmarks in a square and fly the AR.Drone around each
 twice to gather loop closures.  Since we did not use any ground-truth mechanisms, flying
 in a square allows us to evaluate the quality of our created map. A picture of one of our
 test runs can be seen in Figure \ref{fig:testing}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{images/setup}
-\caption{Example test run with 4 landmarks.}
-\label{fig:testing}
-\end{figure}
 
 Our implementation was able to run and process data in realtime, providing a map that is
 qualitatively identical to the flight path and landmark setup provided.  As we run batch

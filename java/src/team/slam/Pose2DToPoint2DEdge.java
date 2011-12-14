@@ -53,11 +53,11 @@ public class Pose2DToPoint2DEdge extends Edge {
             fakeDeltaPose.setX(observation.getX());
             fakeDeltaPose.setY(observation.getY());
             /*TODO HUH*/
-            // double[] prediction = SixDofCoords.headToTail(n1.getLinearizationState(), fakeDeltaPose.getArray());
-            double[] prediction = SixDofCoords.headToTail(n1.getStateArray(), fakeDeltaPose.getArray());
 
-            // Only keep the 3 important guys
-            double[] slimPrediction = new double[] {prediction[0], prediction[1], prediction[2]};
+            double[] prediction = ThreeDofCoords.headToTail(n1.getStateArray(), fakeDeltaPose.getArray());
+
+            // Only keep the 2 important guys
+            double[] slimPrediction = new double[] {prediction[0], prediction[1]};
             n2.init(new Point2D(slimPrediction));
 
         }
@@ -68,21 +68,18 @@ public class Pose2DToPoint2DEdge extends Edge {
 
         double[] pointEst = nodes.get(1).getLinearizationState();
 
-        double[] fakePose = new double[6];
+        double[] fakePose = new double[3];
         fakePose[0] = pointEst[0];
         fakePose[1] = pointEst[1];
-        fakePose[2] = pointEst[2];
-        fakePose[3] = 0.0;
-        fakePose[4] = 0.0;
-        fakePose[5] = 0.0;
+        fakePose[2] = 0.0;
 
-        Matrix JFull = new Matrix(SixDofCoords.tailToTailJacob(nodes.get(0).getLinearizationState(),
+        Matrix JFull = new Matrix(ThreeDofCoords.tailToTailJacob(nodes.get(0).getLinearizationState(),
                                                                fakePose));
 
         //We want the 3x9 jacobian that relates Pose2D's global 6DOF
         //vector and Point2D's global 2DOF vector to the x,y,z of the
         //point in the pose's frame.
-        return new Matrix(JFull.copyArray(0, 0, 3, 9));
+        return new Matrix(JFull.copyArray(0, 0, 2, 5));
 
     }
 
@@ -91,18 +88,15 @@ public class Pose2DToPoint2DEdge extends Edge {
 
         double[] pointEst = nodes.get(1).getLinearizationState();
 
-        double[] fakePose = new double[6];
+        double[] fakePose = new double[3];
         fakePose[0] = pointEst[0];
         fakePose[1] = pointEst[1];
-        fakePose[2] = pointEst[2];
-        fakePose[3] = 0.0;
-        fakePose[4] = 0.0;
-        fakePose[5] = 0.0;
+        fakePose[2] = 0.0;
 
-        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getLinearizationState(),
+        double[] relPose = ThreeDofCoords.tailToTail(nodes.get(0).getLinearizationState(),
                                                    fakePose);
 
-        double[] predictedXyz = SixDofCoords.getPosition(relPose);
+        double[] predictedXyz = ThreeDofCoords.getPosition(relPose);
 
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
 
@@ -114,18 +108,16 @@ public class Pose2DToPoint2DEdge extends Edge {
 
         double[] pointEst = nodes.get(1).getStateArray();
 
-        double[] fakePose = new double[6];
+        double[] fakePose = new double[3];
         fakePose[0] = pointEst[0];
         fakePose[1] = pointEst[1];
-        fakePose[2] = pointEst[2];
-        fakePose[3] = 0.0;
-        fakePose[4] = 0.0;
-        fakePose[5] = 0.0;
+        fakePose[2] = 0.0;
 
-        double[] relPose = SixDofCoords.tailToTail(nodes.get(0).getStateArray(),
+
+        double[] relPose = ThreeDofCoords.tailToTail(nodes.get(0).getStateArray(),
                                                    fakePose);
 
-        double[] predictedXyz = SixDofCoords.getPosition(relPose);
+        double[] predictedXyz = ThreeDofCoords.getPosition(relPose);
 
         double[] residual = LinAlg.subtract(observation.getArray(), predictedXyz);
 

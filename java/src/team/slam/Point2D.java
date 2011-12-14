@@ -1,6 +1,6 @@
 package team.slam;
 
-public class Point 2D{
+public class Point2D{
     
 
     private double x;

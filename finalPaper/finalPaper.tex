@@ -550,10 +550,34 @@ measurements, along with the AR.Drone's reported altitude, into relative poses (
 Both the camera images and state measurements are transmitted by the AR.Drone over its own
 wireless ad-hoc network and read into the front-end using LCM.
 
+\begin{figure*}[t]
+  \begin{center}
+    \subfigure[Dead Reckoning] {
+      \includegraphics[width=2.1in]{images/deadreckon}
+      \label{fig:deadreckon}}
+    \subfigure[Before closing the primary loop] {
+      \includegraphics[width=2.1in]{images/initial}
+      \label{fig:initial}}
+    \subfigure[After closing the primary loop] {
+      \includegraphics[width=2.1in]{images/loopclosure}
+      \label{fig:loopclosure}}
+    \caption{The map of the world created by the AR.Drone quadcoptor with landmarks
+      arranged in square.  In \subref{fig:deadreckon} the dead reckoning trajectory has
+      significant drift in the $z$ direction (up/down).  This drift is corrected when
+      using our SLAM implementation.}
+    \label{fig:mapadjustment}
+  \end{center}
+\end{figure*}
+
 \subsection{Results}
 \label{sub:results}
 
-By arranging the landmarks in a known orientation, and flying the AR.Drone in a set pattern, we are able to qualitatively evaluate the results of our experiments.  Our basic approach was to arrange 4 landmarks in a square and fly the AR.Drone around each edge twice to gather loop closures.  Since we did not use any ground-truth mechanisms, flying in a square allows us to evaluate the quality of our created map. A picture of one of our test runs can be seen in Figure \ref{fig:testing}.
+By arranging the landmarks in a known orientation, and flying the AR.Drone in a set
+pattern, we are able to qualitatively evaluate the results of our experiments.  Our basic
+approach was to arrange 4 landmarks in a square and fly the AR.Drone around each edge
+twice to gather loop closures.  Since we did not use any ground-truth mechanisms, flying
+in a square allows us to evaluate the quality of our created map. A picture of one of our
+test runs can be seen in Figure \ref{fig:testing}.
 
 \begin{figure}[H]
 \centering
@@ -562,31 +586,35 @@ By arranging the landmarks in a known orientation, and flying the AR.Drone in a 
 \label{fig:testing}
 \end{figure}
 
-Our implementation was able to run and process data in realtime, providing a map that is qualitatively identical to the flight path and landmark setup provided.  As we run batch steps we see the map reorient itself into a better configurations as we gather more loop closures.  An example of this is seen in Figure \ref{fig:mapadjustment}, where before loop closures are incorporated the landmarks are skewed, and after loop closures are found, the landmarks form a square.  These results hold for any configuration of arbitrarily placed landmarks; simple shapes are used purely for ease of evaluation. Additionally, the path of the AR.Drone is significantly better than using dead-reckoning based off of the reported odometry.  This is expected, as the position of the AR.Drone is calculated by double integrating accelerations, which can easily accumulate error and diverge over time.  
+Our implementation was able to run and process data in realtime, providing a map that is
+qualitatively identical to the flight path and landmark setup provided.  As we run batch
+steps we see the map reorient itself into a better configurations as we gather more loop
+closures.  An example of this is seen in Figure \ref{fig:mapadjustment}, where before loop
+closures are incorporated the landmarks are skewed, and after loop closures are found, the
+landmarks form a square.  These results hold for any configuration of arbitrarily placed
+landmarks; simple shapes are used purely for ease of evaluation. Additionally, the path of
+the AR.Drone is significantly better than using dead-reckoning based off of the reported
+odometry.  This is expected, as the position of the AR.Drone is calculated by double
+integrating accelerations, which can easily accumulate error and diverge over time.
 
-
-\begin{figure}[H]
-  \begin{center}
-    \subfigure[] {
-    \includegraphics[width=2.5in]{images/initial}
-    \label{fig:initial}}
-    \subfigure[] {
-    \includegraphics[width=2.5in]{images/loopclosure}
-    \label{fig:loopclosure}}
-    \caption{The map of the world created by the AR.Drone quadcoptor with landmarks arranged in square. (a) Before a loop closure is made, the landmarks are skewed (b) After a loop closure landmarks are repositioned into square.}
-    \label{fig:mapadjustment}
-  \end{center}
-\end{figure}
-\emph{This looks a lot better when switching back and forth, cant really tell with them side by side, do we need this, is there a better example? Do we want a picture of dead reckoning vs SLAM? I don't have any}
-
-One test run of the AR.Drone took about 60 seconds and produced on the order of 1000 updates. We were able to do all data gathering (reading and publishing LCM messages), pre-processing (video decoding and AprilTag homography), and SLAM solving using a personal laptop with standard specs in realtime.   
+One test run of the AR.Drone took about 60 seconds and produced on the order of 1000
+updates. We were able to do all data gathering (reading and publishing LCM messages),
+pre-processing (video decoding and AprilTag homography), and SLAM solving using a personal
+laptop with standard specs in realtime.
 
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 % Schuyler's section
-We have presented the development of a optimized, generic back-end solver for a 6 DOF SLAM problem which is fast enough to allow for realtime deployment on a standard computer.  We have deployed it in a real-world 6 DOF application using known data association with demonstrably good \emph{ lawl what does good mean} results.  \emph{Is this true, do we care I have no idea how to end this} We note the back-end is agnostic of the data association problem, and could be used with a front-end that does unknown data association.  Our source code and experimental results can be found at http://do.we.provide.this.
+We have presented the development of a optimized, generic back-end solver for a 6 DOF SLAM
+problem which is fast enough to allow for realtime deployment on a standard computer.  We
+have deployed it in a real-world 6 DOF application using known data association with
+demonstrably good \emph{ lawl what does good mean} results.  \emph{Is this true, do we
+  care I have no idea how to end this} We note the back-end is agnostic of the data
+association problem, and could be used with a front-end that does unknown data
+association.  Our source code and experimental results can be found at
+http://do.we.provide.this.
 
 
 \section{Acknowledgment}

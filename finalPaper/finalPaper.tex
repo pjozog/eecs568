@@ -533,24 +533,46 @@ The AR.Drone itself fuses measurements from its inertial sensors and cameras to 
 of velocities and Euler angles of the robot. The velocities reported by the AR.Drone are not body-frame 
 velocities, but rather velocities oriented with the yaw angle of the body-frame and always parallel 
 with the ground. The data available from the AR.Drone that we used in our experiments is reported by 
-a single LCM datatype. An overview of this datatype is given in Table XXX.
+a single LCM datatype. An overview of this datatype is given in Table~\ref{tab:telemetry}.
 
-% struct ardrone_state_t
-% {
-%     int64_t utime;
-% 	
-%     //State
-%     float pitch;			// radians	                % Euler angle about body-frame Y	
-%     float yaw;				// radians              % Euler angle about body-frame Z
-%     float roll;				// radians              % Euler angle about body-frame X
-%     float altitude;			// meters               % Height above ground
-%     float vx; 				// meters / sec         % Forward velocity, parallel to the ground
-%     float vy;				// meters / sec             % Velocity to the right, parallel to the ground
-%     float vz;				// meters / sec             % Downward vertical velocity, perpendicular to the ground
-%     float battery;          // percent                % Percentage of battery remaining
-% 
-%     boolean flying;                                   % Flag for when the AR.Drone is in the air
-% }
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{Telemetry from AR.Drone}
+\label{tab:telemetry}
+\centering
+% BEGIN RECEIVE ORGTBL ardrone_state
+\begin{tabular}{|l|l|}
+\hline
+Field & Description \\
+\hline
+Pitch & Euler angle about body-frame Y \\
+Yaw & Euler angle about body-frame Z \\
+Roll & Euler angle about body-frame X \\
+Altitude & Height above ground \\
+Vx & Forward velocity, parallel to the ground \\
+Vy & Velocity to the right, parallel to the ground \\
+Vz & Downward velocity, ground-perpendicular \\
+Battery & Percentage of battery remaining \\
+\hline
+\end{tabular}
+% END RECEIVE ORGTBL ardrone_state
+\end{table}
+
+\begin{comment}
+#+ORGTBL: SEND ardrone_state orgtbl-to-latex :splice nil :skip 0
+|----------+-----------------------------------------------|
+| Field    | Description                                   |
+|----------+-----------------------------------------------|
+| Pitch    | Euler angle about body-frame Y                |
+| Yaw      | Euler angle about body-frame Z                |
+| Roll     | Euler angle about body-frame X                |
+| Altitude | Height above ground                           |
+| Vx       | Forward velocity, parallel to the ground      |
+| Vy       | Velocity to the right, parallel to the ground |
+| Vz       | Downward velocity, ground-perpendicular       |
+| Battery  | Percentage of battery remaining               |
+|----------+-----------------------------------------------|
+\end{comment}
 
 The front-end we implemented manipulates the measurements from the AR.Drone into relative poses 
 (quadrotor odometry). Both the camera images and state measurements are transmitted by the AR.Drone 

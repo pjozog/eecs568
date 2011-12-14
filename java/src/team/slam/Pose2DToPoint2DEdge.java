@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import april.jmat.Matrix;
 import april.jmat.LinAlg;
 import april.jmat.CholeskyDecomposition;
-import team.common.SixDofCoords;
+import team.common.ThreeDofCoords;
 
 public class Pose2DToPoint2DEdge extends Edge {
 

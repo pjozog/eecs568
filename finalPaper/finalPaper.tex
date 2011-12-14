@@ -379,9 +379,9 @@ operation is
 \label{sub:nodeinitializationandedgeresiduals}
 Every timestep in which the robot moves or a feature is observed, a new node is created
 and initialized.  To initialize a node means to assign that node a pose (for robot poses)
-or a point (for landmarks) in the global frame.  This is computed the edge (or ``factor'')
-that connects the new node to a previous node.  To initialize a node with no previously
-initialized nodes is a referred to as adding a ``prior.''
+or a point (for landmarks) in the global frame.  This is computed by the measurement
+that relates the new node to a previous node.  To initialize a node without connecting to
+a previously created node is a referred to as adding a ``prior.''
 
 For the following sections, let $g$ represent the global frame.  For each node, a
 first-order covariance projection can be computed as in Section~\ref{sec:6dof}.
@@ -402,15 +402,16 @@ arbitrary.  Then, the relative {\it position} of the landmark in the global fram
 translation vector corresponding to $ {\hat {\bf x}}_{gl} = {\bf x}_{gi} \oplus {\bf
  x}_{il} $
 
-\subsection{Node Linearization}
+\subsection{Factor Computation}
 \label{sub:nodeinitializationandedgeresiduals}
 
 To solve the least squares problem described in
 \S\ref{sec:incrementalsmoothingandmapping}, we need to compute a observation model
-Jacobian $J$ and residual vector $r$.  In the following section, we describe how these are
-computed using the notation from \S\ref{sec:6dof}.
+Jacobian $J$ and residual vector $r$.  Together, these comprise a ``factor'' between two
+unknowns in the graph.  In the following section, we describe how these are computed using
+the notation from \S\ref{sec:6dof}.
 
-\subsubsection{Pose Nodes}
+\subsubsection{Pose-to-Pose Factors}
 \label{subs:posenodelinear}
 Given two guesses of robot frames $i$ and $j$ (with respect to the global frame), then the
 predicted relative pose observation is $ {\hat {\bf x}_{ij}} = \ominus {\bf x}_{gi} \oplus
@@ -418,19 +419,18 @@ predicted relative pose observation is $ {\hat {\bf x}_{ij}} = \ominus {\bf x}_{
 \S\ref{sub:compositionoperation}.  The residual vector is simply the difference
 between the predicted ${\hat {\bf x}_{ij}}$ and the observed ${\bf x}_{ij}$.
 
-\subsubsection{Landmark Nodes}
+\subsubsection{Pose-to-Landmark Factors}
 \label{subs:pointnodelinear}
 
-For landmark measurement prediction, we create a 6-DOF relative pose vector from world to
-landmark frame $l$ whose translation components are determined directly from the best
-guess of the landmark location in the global frame.  Then, the estimated observation is $
-{\hat {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{gl} $. The residual for the
-landmark is then the difference between this prediction and what the robot actually
-measured.
+If a landmark $l$ is observed frame robot frame $i$, then we can predict this measurement
+by the ``tail-to-tail'' operation.  We simply assign the orientation of ${\bf x}_{gl}$ to
+be arbitrary.  Then, the estimated observation is the translational component of $ {\hat
+  {\bf x}}_{il} = \ominus {\bf x}_{gi} \oplus {\bf x}_{gl} $. The residual for the
+landmark is the difference between this prediction and what the robot actually measured.
 
-Note that for computation of the observation Jacobian, we drop the differentiations with
+Note that for the computation of this factor's Jacobian, we drop the differentiations with
 respect to the orientation of the landmark.  This leaves us with a $3 \times 9$ Jacobian
-and $3 \times 3$ positional covariance matrix. 
+and $3 \times 3$ positional covariance matrix.
 
 \section{AprilTag Relative Pose Covariance Estimate}
 \label{sec:apriltags}
@@ -557,9 +557,16 @@ reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Ex
 sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
 est laborum.
 
+\subsection{Interactive Demonstration}
+\label{sub:interactiveDemo}
 
-
-
+\begin{figure}[!h]
+  \begin{center}
+    \includegraphics[width=2.5in]{images/interactiveDemo}
+    \caption{asdf}
+    \label{fig:interactiveDemo}
+  \end{center}
+\end{figure}
 
 
 \section{Conclusion}

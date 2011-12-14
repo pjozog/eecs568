@@ -52,7 +52,7 @@ public class Pose2DToPose2DEdge extends Edge {
 
             n1.init(new Pose2D(prediction));
 
-        } else (!n1.isInitialized() && !n2.isInitialized()) {
+        } else if (!n1.isInitialized() && !n2.isInitialized()) {
                 System.out.println("One of the nodes has to have a value to make a prediction!");
                 assert(false);
             }

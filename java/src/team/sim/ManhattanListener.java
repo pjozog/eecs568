@@ -123,7 +123,7 @@ public class ManhattanListener {
                                double deltaT) {
 
 
-        System.out.println("Adding measurement node indices "+indexOne+" "+indexTwo+" "+" totalNodes "+numNodes);
+        // System.out.println("Adding measurement node indices "+indexOne+" "+indexTwo+" "+" totalNodes "+numNodes);
 
 
         Pose2DNode p2dnOne;
@@ -135,7 +135,7 @@ public class ManhattanListener {
             numNodes++;
         } else {
             p2dnOne = (Pose2DNode)slam.getNodes().get(indexOne);
-            System.out.println("Getting old node one");
+            // System.out.println("Getting old node one");
         }
 
         if (indexTwo > numNodes) {
@@ -144,7 +144,7 @@ public class ManhattanListener {
             numNodes++;
         } else {
             p2dnTwo = (Pose2DNode)slam.getNodes().get(indexTwo);
-            System.out.println("Getting old node two");
+            // System.out.println("Getting old node two");
         }
 
         Pose2D deltaMotion = new Pose2D(deltaX, deltaY, deltaT);

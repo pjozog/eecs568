@@ -732,12 +732,13 @@ especially for students who may not be familiar with least-squares SLAM.
 \label{sec:conclusion}
 
 % Schuyler's section
-We have presented the development of a optimized, generic back-end solver for a 6-\ac{DOF}
+We have presented the development of an optimized, generic back-end solver for a 6-\ac{DOF}
 \ac{SLAM} problem which is fast enough to allow for realtime deployment on a standard
-computer.  We have deployed it in a real-world 6-\ac{DOF} application using known data
-association with acceptable quality and $\chi^2$ error.  We note our back-end is agnostic
-of the data association problem, and could even be used with front-ends that solve for
-data association.
+computer.  Realtime operation was accomplished by using techniques from iSAM. We have 
+deployed it in a real-world 6-\ac{DOF} application using known data
+association with acceptable quality and $\chi^2$ error.  Note that our back-end is agnostic
+of the data association problem, and can be used with front-ends that solve for unknown
+data association SLAM problems.
 
 
 \bibliographystyle{IEEEtran}

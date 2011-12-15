@@ -58,32 +58,49 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% Schuyler's section
-Robots face two major challenges as they explore unknown environments: mapping the
-environment, and localization within their current belief of the world.  Least-squares
-\ac{SLAM} techniques are a popular solution for building a map and localizing within it.
-% We approach this problem from the context of a quadrotor helicopter, discussed further in
-% Section~\ref{sub:quadrotor}, presenting us a 6-\ac{DOF} platform with which to work.
+
+% Robots face two major challenges as they explore unknown environments: mapping the
+% environment, and localization within their current belief of the world. 
+
 
 \ac{SLAM} problems present many computational challenges, most of which stem from the
-large number of observations and states which must be reconciled.  To enable realtime
-operations, techniques must be used to simplify the solving of least-squares problems. We
-used two basic techniques, first, not solving the portions of the problem that have not
-changed since the last computation, and second, preserving and exploiting the sparsity in
-matrices inherent in our problem.  In Section~\ref{sec:incrementalsmoothingandmapping}, we
-provide a detailed explanation of these linear algebra techniques.
- 
-This paper also covers our generic observation and motion models as well as optimization
-techniques applied to our solver, focusing on iSAM, which allows for realtime
-operations~\cite{Kaess08tro}.  This is covered and applied to least-squares
-in~Section~\ref{sec:backendModels}.
+large number of observations and states which must be reconciled. Least-squares approaches
+are particularly affected by these problems. Work from \cite{dellaert2005square} was the
+basis for incremental approaches such as iSAM \cite{Kaess08tro}. For this work, we seek to
+implement and apply these techniques to a quadrotor helicopter.
 
-In~Section~\ref{sec:experiments}, we experimentally apply our solver to a specific robot, the
-AR.Drone quadrotor.  To do this, we create a motion model using its internal measurements,
-and provide synthetic features with known data association using
-AprilTags~\cite{olson2011tags}.  Experimental data and results are presented showing
-successful construction of a map of the environment and localization of the robot using
-only odometry and arbitrarily placed landmarks in a real-world environment.
+
+Quadrotor helicopters are a popular platform for their maneuverability, stability, and
+relatively low mechanical complexity. In \cite{whateverthis}, an \ac{EKF} was successfully
+used for realtime \ac{SLAM} on a quadrotor platform. 
+
+% Previous work that applies \ac{SLAM} to quadrotor helicopters was often accomplished using 
+
+
+
+%  To enable realtime
+% operations, techniques must be used to expedite the solving of least-squares problems. 
+
+
+% We used two basic techniques, first, not solving the portions of the problem that have not
+% changed since the last computation, and second, preserving and exploiting the sparsity in
+% matrices inherent in our problem.
+
+
+ %  In Section~\ref{sec:incrementalsmoothingandmapping}, we
+% provide a detailed explanation of these linear algebra techniques.
+ 
+% This paper also covers our generic observation and motion models as well as optimization
+% techniques applied to our solver, focusing on iSAM, which allows for realtime
+% operations~\cite{Kaess08tro}.  This is covered and applied to least-squares
+% in~Section~\ref{sec:backendModels}.
+
+% In~Section~\ref{sec:experiments}, we experimentally apply our solver to a specific robot, the
+% AR.Drone quadrotor.  To do this, we create a motion model using its internal measurements,
+% and provide synthetic features with known data association using
+% AprilTags~\cite{olson2011tags}.  Experimental data and results are presented showing
+% successful construction of a map of the environment and localization of the robot using
+% only odometry and arbitrarily placed landmarks in a real-world environment.
 
 \section{System Architecture}
 \label{sec:systemarchitecture}

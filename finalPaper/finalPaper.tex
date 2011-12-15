@@ -601,7 +601,7 @@ smoothing and mapping with variable reordering.
 
 
 To evaluate the speed of the three different methods, we used the simulator developed by
-the April lab used in the EECS568 homeworks. Before each test, we seeded the random number
+the University of Michigan APRIL lab. Before each test, we seeded the random number
 generator to ensure the exact same data was being generated. The simulator represents a 2D
 world, so we set the $z$ position, roll, and pitch observations to be zero with high
 certainty. We chose to do this instead of using 2D nodes and factors to see the system
@@ -609,7 +609,7 @@ grow at the same rate of a full 6-\ac{DOF} application.
 
 The three different methods of \ac{SLAM} that were evaluated had enormous speed
 differences. Table \ref{tab:timing} shows the total simulation time for two loops of the
-simulator. This ensured that there were many loop closures.
+simulator which ensured that there were many loop closures.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.3}

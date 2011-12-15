@@ -156,6 +156,7 @@ public class ManhattanListener {
         cov = cov.times(1.0/2000.0);
 
 
+
         Pose2DToPose2DEdge poseToPose = new Pose2DToPose2DEdge(p2dnOne, p2dnTwo, deltaMotion, cov);
 
         slam.addEdge(poseToPose);

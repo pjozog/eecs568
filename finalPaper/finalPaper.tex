@@ -603,17 +603,17 @@ smoothing and mapping with variable reordering.
 \label{sub:simulation}
 
 % Pat's section
-For the simulated data, we used the simulator developed by the April lab. When evaluating
-different \ac{SLAM} back-ends, we seeded the random number generator to ensure the exact
-same data was being generated. The data from the simulator is from a 2D world, so we set
-the z, roll, and pitch observations to be zero with high certainty. Because of the
-flexibility in our \ac{SLAM} back-end, it would be easy to create nodes and edges for a 2D
-world. However, we chose to use the 3D nodes and edges to see the system grow at the same
-rate of a full 6-\ac{DOF} application.
+For the simulated data, we used the simulator developed by the April lab for the EECS568
+homeworks. When evaluating different \ac{SLAM} back-ends, we seeded the random number
+generator to ensure the exact same data was being generated. The data from the simulator
+is from a 2D world, so we set the z, roll, and pitch observations to be zero with high
+certainty. Because of the flexibility in our \ac{SLAM} back-end, it would be easy to
+create nodes and edges for a 2D world. However, we chose to use the 3D nodes and edges to
+see the system grow at the same rate of a full 6-\ac{DOF} application.
 
 The three different methods of \ac{SLAM} that we evaluated had enormous speed differences.
-Table \ref{tab:timing} shows the total simulation time for two loops of the simulator. This
-ensured that there were many loop closures.
+Table \ref{tab:timing} shows the total simulation time for two loops of the
+simulator. This ensured that there were many loop closures.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.3}
@@ -650,7 +650,26 @@ speeds when working with real-world data.
 \subsection{Manhattan Dataset}
 \label{sub:manhattandataset}
 
-Our final $\chi^2$ value is 1.0399274.
+We ran our back-end on the Manhattan dataset from~\cite{olson2006fast} to assess the
+computational performance and accuracy of our implementation.  Our final normalized
+$\chi^2$ error value is 1.0399274, which is comparable to that of iSAM's.  A plot of the
+$\chi^2$ error over time is shown in Figure~\ref{fig:manhattan}.  On a cheap
+workstation (less than \$1000 US), we finished the computations in about 253 seconds.
+
+\begin{figure*}[!t]
+  \begin{center}
+    \subfigure[Manhattan dataset from~\cite{olson2006fast}] {
+      \includegraphics[width=2.5in]{images/manhattanOlson}
+      \label{fig:manhattanResult}}
+    \subfigure[Normalized $\chi^2$ error] {
+      \includegraphics[width=2.5in]{images/chi2}
+      \label{fig:manhattanChi2}}
+  \end{center}
+  \caption{\subref{fig:manhattanResult} shows the final result of our SLAM back-end on the
+    Manhattan dataset. The normalized $\chi^2$ error vs. number of constraints shown in
+    \subref{fig:manhattanChi2} is nearly identical to that of iSAM's.}
+  \label{fig:manhattan}
+\end{figure*}
 
 
 \subsection{Quadrotor Helicopter}
@@ -688,20 +707,17 @@ laptop with standard specs in realtime.
 
 \section{Interactive Demonstration}
 
-To interactively demonstrate our \ac{SLAM} back-end to the layman, we
-used a consumer-grade webcam tracking a pre-assigned AprilTag to
-simulate odometry.  Five other unique tags acting as positional
-landmarks were added to the scene, and tracked from a camera being
-waved by a student.  The program is shown in
+To interactively demonstrate our \ac{SLAM} back-end to the layman, we used a
+consumer-grade webcam tracking a pre-assigned AprilTag to simulate odometry.  Five other
+unique tags acting as positional landmarks were added to the scene, and tracked from a
+camera being waved by a student.  A screen-capture of the program is shown in
 Figure~\ref{fig:interactiveDemo}.
 
-This setup visually explained weighted least-squares in the context of
-\ac{SLAM}.  The user could induce residuals for certain poses by
-physically moving a tag once the map has been built.  The back-end
-would find an optimal graph, and display it to the screen much like
-our quadrotor.  Watching this unfold in 3D \texttt{Vis} scene proved
-to be a creative learning tool for the student who may not be familiar
-with least-squares SLAM.
+This setup visually explained weighted least-squares in the context of \ac{SLAM}.  The
+user could induce residuals for certain poses by physically moving a tag once the map has
+been built.  The back-end would find an optimal graph, and display it realtime.  Watching
+this unfold in 3D \texttt{Vis} scene proved to be a creative learning tool for the student
+who may not be familiar with least-squares SLAM.
 
 \begin{figure}[h]
   \centering
@@ -720,8 +736,8 @@ We have presented the development of a optimized, generic back-end solver for a 
 \ac{SLAM} problem which is fast enough to allow for realtime deployment on a standard
 computer.  We have deployed it in a real-world 6-\ac{DOF} application using known data
 association with acceptable quality and $\chi^2$ error.  We note our back-end is agnostic
-of the data association problem, and could be used with a front-end that have unknown data
-association.
+of the data association problem, and could even be used with front-end that have unknown
+data association.
 
 
 \bibliographystyle{IEEEtran}

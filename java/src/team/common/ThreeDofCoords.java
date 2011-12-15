@@ -85,9 +85,9 @@ public class ThreeDofCoords {
         J[1][0] = jacobFull[1][0]; J[1][1] = jacobFull[1][1]; J[1][2] = jacobFull[1][5];
         J[2][0] = jacobFull[5][0]; J[2][1] = jacobFull[5][1]; J[2][2] = jacobFull[5][5];
 
-        J[0][3] = jacobFull[0][6]; J[0][7] = jacobFull[0][7]; J[0][5] = jacobFull[0][11];
-        J[1][3] = jacobFull[1][6]; J[1][7] = jacobFull[1][7]; J[1][5] = jacobFull[1][11];
-        J[2][3] = jacobFull[5][6]; J[2][7] = jacobFull[5][7]; J[2][5] = jacobFull[5][11];
+        J[0][3] = jacobFull[0][6]; J[0][4] = jacobFull[0][7]; J[0][5] = jacobFull[0][11];
+        J[1][3] = jacobFull[1][6]; J[1][4] = jacobFull[1][7]; J[1][5] = jacobFull[1][11];
+        J[2][3] = jacobFull[5][6]; J[2][4] = jacobFull[5][7]; J[2][5] = jacobFull[5][11];
 
         return J;
 

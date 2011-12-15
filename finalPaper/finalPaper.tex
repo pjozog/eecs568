@@ -681,6 +681,32 @@ updates. We were able to do all data gathering (reading and publishing LCM messa
 pre-processing (video decoding and AprilTag homography), and \ac{SLAM} solving using a personal
 laptop with standard specs in realtime.
 
+\section{Interactive Demonstration}
+
+To interactively demonstrate our \ac{SLAM} back-end to the layman, we
+used a consumer-grade webcam tracking a pre-assigned AprilTag to
+simulate odometry.  Five other unique tags acting as positional
+landmarks were added to the scene, and tracked from a camera being
+waved by a student.  The program is shown in
+Figure~\ref{fig:interactiveDemo}.
+
+This setup visually explained weighted least-squares in the context of
+\ac{SLAM}.  The user could induce residuals for certain poses by
+physically moving a tag once the map has been built.  The back-end
+would find an optimal graph, and display it to the screen much like
+our quadrotor.  Watching this unfold in 3D \texttt{Vis} scene proved
+to be a creative learning tool for the student who may not be familiar
+with least-squares SLAM.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=2.5in]{images/interactiveDemo}
+  \caption{A screen-capture of our table-top interactive
+    demonstration.  The center tag provided us with simulated odometry
+  and the remaining tags acted as landmarks.}
+  \label{fig:interactiveDemo}
+\end{figure}
+
 \section{Conclusion}
 \label{sec:conclusion}
 

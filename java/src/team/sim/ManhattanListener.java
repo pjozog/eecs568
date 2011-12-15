@@ -17,7 +17,7 @@ import april.util.*;
 public class ManhattanListener {
 
 
-    private boolean saveChi2 = true;
+    private boolean saveChi2 = false;
     private int numNodes = 0;
 
 
@@ -161,6 +161,19 @@ public class ManhattanListener {
         slam.addEdge(poseToPose);
 
         slam.update();
+
+        double theChi2 = slam.getNormalizedChi2();
+        if (saveChi2) {
+            try {
+                FileWriter fstream = new FileWriter("analysis/chi2.txt", true);
+                BufferedWriter out = new BufferedWriter(fstream);
+                out.write(theChi2+"\n");
+                out.close();
+            } catch (Exception e){
+                System.err.println("Errorz!: " + e.getMessage());
+            }
+        }
+
 
         // drawSetup();
         // drawScene();

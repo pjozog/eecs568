@@ -53,7 +53,7 @@
 
 \begin{abstract}
 
-  This report presents a realtime implementation of a \ac{SLAM} framework for a quadrotor
+  This paper presents a realtime implementation of a \ac{SLAM} framework for a quadrotor
   helicopter.  The framework features a front-end interface to the helicopter and a
   back-end solver of the graph representation of the robot and its environment. The
   back-end implements techniques from incremental Smoothing and Mapping (iSAM) in order to
@@ -681,7 +681,7 @@ Figure~\ref{fig:manhattan} shows these results.
     \subfigure[Experimental test run with four landmarks] {
       \includegraphics[width=2.1in]{images/setup}
       \label{fig:testing}}
-    \subfigure[Dead Reckoning] {
+    \subfigure[Dead reckoning] {
       \includegraphics[width=2.1in]{images/deadreckon}
       \label{fig:deadreckon}}
     \subfigure[After closing the primary loop] {
@@ -699,7 +699,7 @@ By arranging the landmarks in a known orientation, and flying the AR.Drone in a 
 pattern, we were able to qualitatively evaluate the results of our experiments. Our
 approach was to arrange 4 landmarks in a square and fly the AR.Drone around each edge
 twice to gather loop closures. Since we did not use any ground-truth mechanisms, flying in
-a square allows us to evaluate the quality of our created map. A picture of one of our
+a square allowed us to evaluate the quality of our created map. A picture of one of our
 test runs can be seen in Figure \ref{fig:testing}.
 
 Our implementation was able to run and process data in realtime, providing a map that is

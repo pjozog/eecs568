@@ -61,8 +61,8 @@ public class ManhattanListener {
 
             // Read from file, add to slam, draw stuff
 
-            String pathToData = "/Users/patokeefe/Projects/Graduate/568-ps1-ps2/java/src/team/sim/manhattanOlson3500.txt";
-
+            //String pathToData = "/Users/patokeefe/Projects/Graduate/568-ps1-ps2/java/src/team/sim/manhattanOlson3500.txt";
+            String pathToData = "./src/team/sim/manhattanOlson3500.txt";
 
             FileReader fRead = null;
 
@@ -111,6 +111,7 @@ public class ManhattanListener {
 
         } catch (Exception ex) {
             System.out.println("Caught exception: "+ex);
+            ex.printStackTrace();
         }
     }
 

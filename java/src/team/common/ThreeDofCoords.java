@@ -134,7 +134,7 @@ public class ThreeDofCoords {
 
         assert(x.length == 3);
 
-        double[] x6Dof = new double[3];
+        double[] x6Dof = new double[6];
         x6Dof[0] = x[0];
         x6Dof[1] = x[1];
         x6Dof[5] = x[2];

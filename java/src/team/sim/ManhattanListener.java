@@ -38,7 +38,7 @@ public class ManhattanListener {
 
 
     BackEnd slam;
-    Pose3DNode prevPose; //Pointer to most recently created pose3d node
+    Pose2DNode prevPose; //Pointer to most recently created pose3d node
 
     ArrayList<double[]> poses        = new ArrayList<double[]>();
     ArrayList<VzLines> trajectory    = new ArrayList<VzLines>();
@@ -122,7 +122,7 @@ public class ManhattanListener {
                                double deltaT) {
 
 
-        // System.out.println("Adding measurement node indices "+indexOne+" "+indexTwo+" "+" totalNodes "+numNodes);
+        System.out.println("Adding measurement node indices "+indexOne+" "+indexTwo+" "+" totalNodes "+numNodes);
 
 
         Pose2DNode p2dnOne;
@@ -134,7 +134,7 @@ public class ManhattanListener {
             numNodes++;
         } else {
             p2dnOne = (Pose2DNode)slam.getNodes().get(indexOne);
-            // System.out.println("Getting old node one");
+            System.out.println("Getting old node one");
         }
 
         if (indexTwo > numNodes) {
@@ -143,7 +143,7 @@ public class ManhattanListener {
             numNodes++;
         } else {
             p2dnTwo = (Pose2DNode)slam.getNodes().get(indexTwo);
-            // System.out.println("Getting old node two");
+            System.out.println("Getting old node two");
         }
 
         Pose2D deltaMotion = new Pose2D(deltaX, deltaY, deltaT);
@@ -161,22 +161,14 @@ public class ManhattanListener {
         drawSetup();
         drawScene();
 
-        // try {
-        //     Thread.sleep(1000);
-        // } catch (IOException ex) {
-        //     System.out.println("Caught exception: "+ex);
-        // } catch (InterruptedException ex) {
-
-        // }
-
-        // try{
-        //     //do what you want to do before sleeping
-        //     Thread.currentThread().sleep(1000);//sleep for 1000 ms
-        //     //do what you want to do after sleeptig
-        // }
-        // catch(InterruptedException ie){
-        //     //If this thread was intrrupted by nother thread
-        // }
+        try{
+            //do what you want to do before sleeping
+            Thread.currentThread().sleep(1000);//sleep for 1000 ms
+            //do what you want to do after sleeptig
+        }
+        catch(InterruptedException ie){
+            //If this thread was intrrupted by nother thread
+        }
 
 
 

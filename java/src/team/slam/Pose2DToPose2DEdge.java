@@ -48,7 +48,7 @@ public class Pose2DToPose2DEdge extends Edge {
         } else if (!n1.isInitialized() && n2.isInitialized()) {
 
             double[] prediction = ThreeDofCoords.headToTail(n2.getStateArray(),
-                                                            SixDofCoords.inverse(deltaMotion.getArray()));
+                                                            ThreeDofCoords.inverse(deltaMotion.getArray()));
 
             n1.init(new Pose2D(prediction));
 

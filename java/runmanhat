@@ -7,7 +7,7 @@ CLASSPATH=${SCRIPTDIR}/april.jar:${SCRIPTDIR}/lcm.jar
 
 CONFIG_FILE=$SCRIPTDIR/../config/sim.config
 
-JAVA='java -Xmx2g'
+JAVA='java -ea -Xmx2g'
 CLASSPATH="${SCRIPTDIR}/april.jar:${SCRIPTDIR}/lcm.jar"
 
 ${JAVA} team.sim.ManhattanListener ${CONFIG_FILE}

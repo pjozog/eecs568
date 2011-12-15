@@ -79,9 +79,9 @@ public class Pose2DToPoint2DEdge extends Edge {
         //We want the 3x9 jacobian that relates Pose2D's global 6DOF
         //vector and Point2D's global 2DOF vector to the x,y,z of the
         //point in the pose's frame.
-        System.out.println("Bout to shit?");
+
         Matrix asdf =  new Matrix(JFull.copyArray(0, 0, 2, 5));
-        System.out.println("Didn't shit!");
+
         return asdf;
 
     }

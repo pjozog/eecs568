@@ -17,7 +17,7 @@ import april.util.*;
 public class ManhattanListener {
 
 
-    private boolean saveChi2 = false;
+    private boolean saveChi2 = true;
     private int numNodes = 0;
 
 
@@ -74,6 +74,8 @@ public class ManhattanListener {
 
             Scanner scan = new Scanner(fRead);
 
+            long startTime = System.nanoTime();
+
             while (scan.hasNext()) {
 
                 String tmp = scan.next("ODOMETRY");
@@ -95,10 +97,11 @@ public class ManhattanListener {
 
             }
 
-
+            long endTime = System.nanoTime();
+            double elapsedTime = (endTime-startTime)/1000000000f;
             // Print finishing stats
             System.out.println("DONE WITH SIMULATION");
-
+            System.out.printf("\nTotal Simulation Time: %.4f\n", elapsedTime);
 
 
             try {
@@ -150,7 +153,7 @@ public class ManhattanListener {
         Pose2D deltaMotion = new Pose2D(deltaX, deltaY, deltaT);
 
         Matrix cov = Matrix.identity(3, 3);
-        cov.times(2000);
+        cov = cov.times(1.0/2000.0);
 
 
         Pose2DToPose2DEdge poseToPose = new Pose2DToPose2DEdge(p2dnOne, p2dnTwo, deltaMotion, cov);
@@ -159,8 +162,8 @@ public class ManhattanListener {
 
         slam.update();
 
-        drawSetup();
-        drawScene();
+        // drawSetup();
+        // drawScene();
 
         // try{
         //     //do what you want to do before sleeping
@@ -200,7 +203,7 @@ public class ManhattanListener {
         vb.setDrawOrder(-100);
         vb.addBack(new VisDepthTest(false,vg));
         vb.swap();
-        vl.cameraManager.fit2D(new double[]{-2,-2}, new double[]{2,2}, true);
+        vl.cameraManager.fit2D(new double[]{-20,-20}, new double[]{20,20}, true);
 
         slam = new BackEnd(config);
 
@@ -219,7 +222,7 @@ public class ManhattanListener {
 
 
         Matrix cov = Matrix.identity(3, 3);
-        cov.times(.0001);
+        cov = cov.times(1.0/2000);
 
         // Create Pose2D at origin
         Pose2D p2d = new Pose2D();
@@ -305,8 +308,8 @@ public class ManhattanListener {
 
             if (theNodes.size() == 2) {
 
-                allEdgeLinks.add(LinAlg.resize(theNodes.get(0).getStateArray(), 3));
-                allEdgeLinks.add(LinAlg.resize(theNodes.get(1).getStateArray(), 3));
+                allEdgeLinks.add(LinAlg.resize(theNodes.get(0).getStateArray(), 2));
+                allEdgeLinks.add(LinAlg.resize(theNodes.get(1).getStateArray(), 2));
 
             }
 

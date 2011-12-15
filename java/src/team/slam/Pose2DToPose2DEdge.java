@@ -70,6 +70,7 @@ public class Pose2DToPose2DEdge extends Edge {
 
         double[] predictedOdom = ThreeDofCoords.tailToTail(nodes.get(0).getLinearizationState(),
                                                            nodes.get(1).getLinearizationState());
+        // predictedOdom[2] = MathUtil.mod2pi(predictedOdom[2]);
 
         double[] residual = LinAlg.subtract(deltaMotion.getArray(), predictedOdom);
 
@@ -85,6 +86,8 @@ public class Pose2DToPose2DEdge extends Edge {
         double[] predictedOdom = ThreeDofCoords.tailToTail(nodes.get(0).getStateArray(),
                                                            nodes.get(1).getStateArray());
 
+        // predictedOdom[2] = MathUtil.mod2pi(predictedOdom[2]);
+
         double[] residual = LinAlg.subtract(deltaMotion.getArray(), predictedOdom);
 
         residual[2] = MathUtil.mod2pi(residual[2]);
@@ -94,6 +97,7 @@ public class Pose2DToPose2DEdge extends Edge {
             CholeskyDecomposition myDecomp = new CholeskyDecomposition(cov.inverse());
             cholInvCov = myDecomp.getL().transpose();
         }
+
 
         return LinAlg.matrixAB(cholInvCov.copyArray(), residual);
 

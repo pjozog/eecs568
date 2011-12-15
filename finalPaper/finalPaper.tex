@@ -59,48 +59,30 @@
 \label{sec:introduction}
 
 
-% Robots face two major challenges as they explore unknown environments: mapping the
-% environment, and localization within their current belief of the world. 
-
-
 \ac{SLAM} problems present many computational challenges, most of which stem from the
 large number of observations and states which must be reconciled. Least-squares approaches
-are particularly affected by these problems. Work from \cite{dellaert2005square} was the
-basis for incremental approaches such as iSAM \cite{Kaess08tro}. For this work, we seek to
-implement and apply these techniques to a quadrotor helicopter.
+are particularly affected by these problems; naive implementations are too slow to be used
+in realtime scenarios. Work from \cite{dellaert2005square} was the basis for incremental
+approaches such as iSAM \cite{Kaess08tro}, which allow least-squares based methods to run
+in realtime. For this work, we seek to implement and apply these techniques to a quadrotor
+helicopter.
 
 
-Quadrotor helicopters are a popular platform for their maneuverability, stability, and
-relatively low mechanical complexity. In \cite{whateverthis}, an \ac{EKF} was successfully
-used for realtime \ac{SLAM} on a quadrotor platform. 
-
-% Previous work that applies \ac{SLAM} to quadrotor helicopters was often accomplished using 
-
-
-
-%  To enable realtime
-% operations, techniques must be used to expedite the solving of least-squares problems. 
+For robotics reseach, quadrotor helicopters are a popular platform because of their
+maneuverability, stability, and relatively low mechanical complexity. In
+\cite{achtelik2008autonomous}, an \ac{EKF} was successfully used for realtime \ac{SLAM} on
+a quadrotor platform, which avoids the problems associated with least-squares altogether. Very
+recent work \cite{ghadiok2011autonomous} has allowed for fully autonomous quadrotors with
+SLAM capabilities. However, the sensor suite on their platform is very expensive.
 
 
-% We used two basic techniques, first, not solving the portions of the problem that have not
-% changed since the last computation, and second, preserving and exploiting the sparsity in
-% matrices inherent in our problem.
+In this paper, we present a modular implementation of a \ac{SLAM} system. We then discuss
+optimizations to our SLAM algorithm -- inspired by iSAM -- which allow for realtime
+operation. This paper also covers our generic observation and motion models for 6-\ac{DOF}
+systems. Finally, we apply our system to a number of simulations and real-world datasets
+including a quadrotor helicopter.
 
 
- %  In Section~\ref{sec:incrementalsmoothingandmapping}, we
-% provide a detailed explanation of these linear algebra techniques.
- 
-% This paper also covers our generic observation and motion models as well as optimization
-% techniques applied to our solver, focusing on iSAM, which allows for realtime
-% operations~\cite{Kaess08tro}.  This is covered and applied to least-squares
-% in~Section~\ref{sec:backendModels}.
-
-% In~Section~\ref{sec:experiments}, we experimentally apply our solver to a specific robot, the
-% AR.Drone quadrotor.  To do this, we create a motion model using its internal measurements,
-% and provide synthetic features with known data association using
-% AprilTags~\cite{olson2011tags}.  Experimental data and results are presented showing
-% successful construction of a map of the environment and localization of the robot using
-% only odometry and arbitrarily placed landmarks in a real-world environment.
 
 \section{System Architecture}
 \label{sec:systemarchitecture}

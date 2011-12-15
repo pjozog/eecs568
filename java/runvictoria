@@ -1,0 +1,13 @@
+#!/bin/bash
+
+SCRIPTNAME=$(basename $0)
+SCRIPTDIR=$(dirname $0)
+
+CLASSPATH=${SCRIPTDIR}/april.jar:${SCRIPTDIR}/lcm.jar
+
+CONFIG_FILE=$SCRIPTDIR/../config/sim.config
+
+JAVA='java -ea -Xmx2g'
+CLASSPATH="${SCRIPTDIR}/april.jar:${SCRIPTDIR}/lcm.jar"
+
+${JAVA} team.sim.VictoriaListener ${CONFIG_FILE}

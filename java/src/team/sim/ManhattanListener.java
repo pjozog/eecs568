@@ -162,14 +162,14 @@ public class ManhattanListener {
         drawSetup();
         drawScene();
 
-        try{
-            //do what you want to do before sleeping
-            Thread.currentThread().sleep(1000);//sleep for 1000 ms
-            //do what you want to do after sleeptig
-        }
-        catch(InterruptedException ie){
-            //If this thread was intrrupted by nother thread
-        }
+        // try{
+        //     //do what you want to do before sleeping
+        //     Thread.currentThread().sleep(1000);//sleep for 1000 ms
+        //     //do what you want to do after sleeptig
+        // }
+        // catch(InterruptedException ie){
+        //     //If this thread was intrrupted by nother thread
+        // }
 
 
 

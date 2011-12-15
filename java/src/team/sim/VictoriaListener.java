@@ -17,7 +17,7 @@ import april.util.*;
 public class VictoriaListener {
 
 
-    private boolean saveChi2 = false;
+    private boolean saveChi2 = true;
     private int numNodes = 0;
     private int numConstraints = 0;
 
@@ -190,6 +190,19 @@ public class VictoriaListener {
 
         numConstraints++;
 
+        double theChi2 = slam.getNormalizedChi2();
+        if (saveChi2) {
+            try {
+                FileWriter fstream = new FileWriter("analysis/chi2.txt", true);
+                BufferedWriter out = new BufferedWriter(fstream);
+                out.write(theChi2+"\n");
+                out.close();
+            } catch (Exception e){
+                System.err.println("Errorz!: " + e.getMessage());
+            }
+        }
+
+
     }
 
 
@@ -240,6 +253,19 @@ public class VictoriaListener {
         }
 
         numConstraints++;
+
+        double theChi2 = slam.getNormalizedChi2();
+        if (saveChi2) {
+            try {
+                FileWriter fstream = new FileWriter("analysis/chi2.txt", true);
+                BufferedWriter out = new BufferedWriter(fstream);
+                out.write(theChi2+"\n");
+                out.close();
+            } catch (Exception e){
+                System.err.println("Errorz!: " + e.getMessage());
+            }
+        }
+
 
     }
 
@@ -466,16 +492,16 @@ public class VictoriaListener {
                                                                            "<<center,sansserif-bold-10>>"+theChi2+"\n"))));
 
 
-            if (saveChi2) {
-                try {
-                    FileWriter fstream = new FileWriter("analysis/chi2.txt", true);
-                    BufferedWriter out = new BufferedWriter(fstream);
-                    out.write(theChi2+"\n");
-                    out.close();
-                } catch (Exception e){
-                    System.err.println("Errorz!: " + e.getMessage());
-                }
-            }
+            // if (saveChi2) {
+            //     try {
+            //         FileWriter fstream = new FileWriter("analysis/chi2.txt", true);
+            //         BufferedWriter out = new BufferedWriter(fstream);
+            //         out.write(theChi2+"\n");
+            //         out.close();
+            //     } catch (Exception e){
+            //         System.err.println("Errorz!: " + e.getMessage());
+            //     }
+            // }
 
 
             vb.swap();

@@ -101,9 +101,9 @@ three dimensional position. These poses and positions make up the state vector s
 the back-end.  The factors contain three components: relative measurements between two
 nodes, a Jacobian of the function that predicts measurements from the state vector, and
 the residual corresponding to the two nodes.  Together, this creates an elegant
-representation of any least-squares problem.  This technique was made popular for the
-\ac{SLAM} problem in~\cite{dellaert2005square}.  These factors can relate two robot nodes,
-or a landmark node and a robot node.  Factors are the constraints that the back-end
+representation of any least-squares problem.  This representation was successfully applied
+to the \ac{SLAM} problem in~\cite{dellaert2005square}.  These factors can relate two robot
+nodes, or a landmark node and a robot node.  Factors are the constraints that the back-end
 \ac{SLAM} solver uses to optimize the estimate of the state vector. \S\ref{sec:6dof}
 describes the mathematical 6-\ac{DOF} spatial relationships we use frequently in the
 factor graph representation.
@@ -659,7 +659,7 @@ workstation (less than \$1000 US), we finished the computations in about 253 sec
 \begin{figure*}[!t]
   \begin{center}
     \subfigure[Manhattan dataset from~\cite{olson2006fast}] {
-      \includegraphics[width=2.5in]{images/manhattanOlson}
+      \includegraphics[width=3.0in]{images/manhattanOlson}
       \label{fig:manhattanResult}}
     \subfigure[Normalized $\chi^2$ error] {
       \includegraphics[width=2.5in]{images/chi2}
@@ -667,7 +667,7 @@ workstation (less than \$1000 US), we finished the computations in about 253 sec
   \end{center}
   \caption{\subref{fig:manhattanResult} shows the final result of our SLAM back-end on the
     Manhattan dataset. The normalized $\chi^2$ error vs. number of constraints shown in
-    \subref{fig:manhattanChi2} is nearly identical to that of iSAM's.}
+    \subref{fig:manhattanChi2} is quite similar to that of iSAM's.}
   \label{fig:manhattan}
 \end{figure*}
 
@@ -715,13 +715,13 @@ Figure~\ref{fig:interactiveDemo}.
 
 This setup visually explained weighted least-squares in the context of \ac{SLAM}.  The
 user could induce residuals for certain poses by physically moving a tag once the map has
-been built.  The back-end would find an optimal graph, and display it realtime.  Watching
-this unfold in 3D \texttt{Vis} scene proved to be a creative learning tool for the student
-who may not be familiar with least-squares SLAM.
+been built.  The back-end optimized the graph and displayed it in realtime.  Watching this
+unfold in a 3D \texttt{Vis} scene proved to be a creative visualization of the problem,
+especially for students who may not be familiar with least-squares SLAM.
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=2.5in]{images/interactiveDemo}
+  \includegraphics[width=3.0in]{images/interactiveDemo}
   \caption{A screen-capture of our table-top interactive
     demonstration.  The center tag provided us with simulated odometry
   and the remaining tags acted as landmarks.}
@@ -736,7 +736,7 @@ We have presented the development of a optimized, generic back-end solver for a 
 \ac{SLAM} problem which is fast enough to allow for realtime deployment on a standard
 computer.  We have deployed it in a real-world 6-\ac{DOF} application using known data
 association with acceptable quality and $\chi^2$ error.  We note our back-end is agnostic
-of the data association problem, and could even be used with front-end that have unknown
+of the data association problem, and could even be used with front-ends that solve for
 data association.
 
 

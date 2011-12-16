@@ -61,7 +61,7 @@
   trajectory and landmark positions. iSAM incrementally updates the information matrix
   factorization, providing significant time savings over other \ac{SLAM} solvers. The speedups
   resulting from iSAM allow the 6-\ac{DOF} \ac{SLAM} problem to be solved in real time on a
-  consumer-grade computer. Our software implementation was successfully tested in simulations
+  consumer-grade computer. Our software implementation was successfully tested in simulation
   and using an AR.Drone quadrotor helicopter.
 
 \end{abstract}
@@ -665,7 +665,7 @@ Figure~\ref{fig:manhattan} shows these results.
       \includegraphics[width=2.5in]{images/chi2vic}
       \label{fig:victoriaChi2}}
   \end{center}
-  \caption{The maps created and normalized $\chi^2$ values for each step from our SLAM
+  \caption{The final maps and normalized $\chi^2$ values for each step from our SLAM
     implementation on two datasets.  As evidenced by the peaks in
     \subref{fig:manhattanChi2} and \subref{fig:victoriaChi2}, iSAM occasionally suffers
     from linearization errors. This is an inevitable consequence of the incremental update

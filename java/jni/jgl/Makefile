@@ -5,7 +5,7 @@ ifeq "$(shell uname)" "Linux"
 CC = gcc
 CCFLAGS = -std=gnu99 -fPIC -O2 -D_REENTRANT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wno-unused-parameter -Wno-format-zero-length -fno-stack-protector
 
-JNI_INCLUDES = -I/usr/lib/jvm/java-6-sun/include/ -I/usr/lib/jvm/java-6-sun/include/linux -I/usr/lib/jvm/java-6-openjdk/include/
+JNI_INCLUDES = -I/usr/lib/jvm/java-6-sun/include/ -I/usr/lib/jvm/java-6-sun/include/linux -I/usr/lib/jvm/java-6-openjdk/include/ -I/usr/lib/jvm/java-6-openjdk-amd64/include
 
 LD = ld
 LDFLAGS = -shared -lX11 -lGL
@@ -21,7 +21,7 @@ ifeq "$(shell uname)" "Darwin"
 
 CC = gcc
 CCFLAGS = -std=gnu99 -O2 -D_REENTRANT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wno-unused-parameter -Wno-format-zero-length
-JNI_INCLUDES = -I/System/Library/Frameworks/JavaVM.framework/Headers/ -I/usr/X11/include/
+JNI_INCLUDES = -I/System/Library/Frameworks/JavaVM.framework/Headers/ -I/usr/X11/include/ -I/usr/lib/jvm/java-6-openjdk-amd64/include
 
 LD = gcc
 LDFLAGS = -dynamiclib -framework OpenGL -framework JavaVM -L/usr/X11/lib -lX11 -lGL

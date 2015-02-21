@@ -30,7 +30,7 @@ all: $(ALL)
 
 
 istest: main.o $(LIBIMAGESOURCE_OBJS)
-	gcc -o $@ main.o $(LIBIMAGESOURCE_OBJS) -ldc1394
+	gcc -o $@ main.o $(LIBIMAGESOURCE_OBJS) -ldc1394 -lm
 
 
 $(DESTLIB): $(LIB)
@@ -50,7 +50,7 @@ clean:
 # jni_md.h, locate those files and add the directories using the -I
 # flag. See example below
 
-JNI_INCLUDES = -I/usr/lib/jvm/java-6-sun/include/ -I/usr/lib/jvm/java-6-sun/include/linux -I/usr/lib/jvm/java-6-openjdk/include/
+JNI_INCLUDES = -I/usr/lib/jvm/java-6-sun/include/ -I/usr/lib/jvm/java-6-sun/include/linux -I/usr/lib/jvm/java-6-openjdk/include/ -I/usr/lib/jvm/java-6-openjdk-amd64/include
 DC1394_INCLUDES = -I/usr/local/include/
 
 %.o: %.c
